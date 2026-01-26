@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { mcpService } from '../routes/mcp';
 
 export interface TaskConstraints {
   stack?: string[];
@@ -6,6 +7,7 @@ export interface TaskConstraints {
   mobileFirst?: boolean;
   externalAPIs?: boolean;
   maxIterations?: number;
+  mcpTools?: string[]; // Liste des outils MCP à utiliser
 }
 
 export interface Task {

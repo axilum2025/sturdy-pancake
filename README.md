@@ -105,6 +105,12 @@ Ce projet implémente une plateforme de construction d'applications pilotée par
 - ✅ Timeline des actions de l'agent
 - ✅ Gestion des sessions
 - ✅ Pipeline de déploiement Azure
+- ✅ **Intégration MCP complète (Model Context Protocol)**
+  - Connexion à des serveurs MCP personnalisés
+  - Outils (tools) pour actions externes
+  - Ressources (resources) pour accès aux données
+  - Prompts réutilisables
+  - Système de stockage persistant
 
 ### Phase 2 - Intégration Copilot SDK
 - ⏳ Connexion au Copilot SDK
@@ -129,6 +135,23 @@ Ce projet implémente une plateforme de construction d'applications pilotée par
 - `POST /api/agent/task` - Envoyer une tâche à l'agent
 - `GET /api/agent/task/:taskId` - Statut d'une tâche
 - `GET /api/agent/stream/:sessionId` - Stream SSE des événements
+
+### MCP (Model Context Protocol)
+- `GET /api/mcp/servers` - Liste des serveurs MCP
+- `POST /api/mcp/servers` - Ajouter un serveur
+- `PATCH /api/mcp/servers/:id` - Modifier un serveur
+- `DELETE /api/mcp/servers/:id` - Supprimer un serveur
+- `GET /api/mcp/tools` - Liste des outils disponibles
+- `POST /api/mcp/tools/execute` - Exécuter un outil
+- `GET /api/mcp/resources` - Liste des ressources
+- `POST /api/mcp/resources/read` - Lire une ressource
+- `GET /api/mcp/prompts` - Liste des prompts
+
+### Storage
+- `POST /api/storage/projects` - Créer un projet
+- `GET /api/storage/projects` - Lister les projets
+- `GET /api/storage/projects/:id` - Récupérer un projet
+- `POST /api/storage/projects/:id/files` - Sauvegarder un fichier
 
 ## 🌐 Déploiement sur Azure
 
@@ -159,7 +182,27 @@ PORT=8080
 NODE_ENV=production
 GITHUB_TOKEN=<votre-token>
 ALLOWED_ORIGINS=https://lovable-ai-builder.azurewebsites.net
+MCP_STORAGE_DIR=/home/data
 ```
+
+## 🔌 Intégration MCP
+
+Le système MCP permet de connecter votre AI à des outils et ressources externes.
+
+### Serveurs MCP disponibles
+
+**Configuration via l'interface :**
+1. Cliquer sur "Paramètres" dans le Builder
+2. Ajouter et configurer vos serveurs MCP
+3. Activer les serveurs souhaités
+
+**Serveurs populaires :**
+- `@modelcontextprotocol/server-filesystem` - Accès fichiers
+- `@modelcontextprotocol/server-github` - Intégration GitHub
+- `@modelcontextprotocol/server-memory` - Stockage mémoire
+- `@modelcontextprotocol/server-postgres` - Base de données
+
+**Documentation complète :** [docs/MCP_INTEGRATION.md](docs/MCP_INTEGRATION.md)
 
 ## 🛠️ Développement
 

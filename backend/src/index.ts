@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
+import { mcpRouter } from './routes/mcp';
+import { storageRouter } from './routes/storage';
 
 dotenv.config();
 
@@ -19,6 +21,8 @@ app.use(express.json());
 // Routes
 app.use('/api/sessions', sessionRouter);
 app.use('/api/agent', agentRouter);
+app.use('/api/mcp', mcpRouter);
+app.use('/api/storage', storageRouter);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
