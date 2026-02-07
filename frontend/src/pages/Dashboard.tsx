@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Zap, Cloud } from 'lucide-react';
+import { Plus, LogOut, Zap, Cloud, FolderOpen, HardDrive, Rocket, Crown, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { listProjects, createProject, Project, TechStack } from '../services/api';
 import AuthModal from '../components/AuthModal';
@@ -46,28 +46,51 @@ export default function Dashboard() {
     }
   };
 
+  const getInitials = (email: string) => {
+    return email.split('@')[0].slice(0, 2).toUpperCase();
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier) {
+      case 'pro': return 'from-purple-500 to-pink-500';
+      case 'team': return 'from-yellow-500 to-orange-500';
+      default: return 'from-blue-500 to-cyan-500';
+    }
+  };
+
+  const getTierGlow = (tier: string) => {
+    switch (tier) {
+      case 'pro': return 'glow-purple';
+      case 'team': return 'glow-cyan';
+      default: return 'glow-blue';
+    }
+  };
+
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-white/40">Chargement...</p>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="text-center">
-          <div className="mb-8">
-            <Zap className="w-16 h-16 text-blue-500 mx-auto mb-4" />
+          <div className="mb-8 animate-fade-in-up">
+            <Zap className="w-16 h-16 text-blue-400 mx-auto mb-4 glow-icon" />
             <h1 className="text-4xl font-bold text-white mb-4">AI App Builder</h1>
-            <p className="text-gray-400 text-xl">Sign in to access your projects</p>
+            <p className="text-white/40 text-xl">Connectez-vous pour accéder à vos projets</p>
           </div>
           <button
             onClick={() => setShowAuth(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg"
+            className="btn-gradient px-8 py-3 rounded-xl text-white font-semibold animate-fade-in-up delay-100"
           >
-            Sign In
+            Se connecter
           </button>
           <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
         </div>
@@ -75,133 +98,256 @@ export default function Dashboard() {
     );
   }
 
+  const projectsProgress = user && (user?.quotas.projectsMax || 1) > 0 
+    ? (projects.length / user.quotas.projectsMax) * 100 
+    : 0;
+  
+  const storageProgress = user && (user?.quotas.storageMax || 1) > 0 
+    ? ((user?.usage.storageUsed || 0) / (1024 * 1024) / user.quotas.storageMax) * 100 
+    : 0;
+  
+  const deploymentsProgress = user && (user?.quotas.deploymentsPerMonth || 1) > 0 
+    ? ((user?.usage.deploymentsThisMonth || 0) / user.quotas.deploymentsPerMonth) * 100 
+    : 0;
+
   return (
-    <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Zap className="w-8 h-8 text-blue-500" />
-            <h1 className="text-xl font-bold text-white">AI App Builder</h1>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-white font-medium">{user?.email}</p>
-              <p className="text-gray-400 text-sm capitalize">{user?.tier} Plan</p>
+    <div className="min-h-screen bg-[#0a0a0f]">
+      {/* Background effects */}
+      <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
+      <div className="fixed inset-0 bg-grid pointer-events-none opacity-40" />
+
+      {/* Header/Navbar */}
+      <header className="relative z-40 border-b border-white/5 glass">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span className="text-lg font-bold tracking-tight">
+                AI App Builder
+              </span>
             </div>
-            <button
-              onClick={logout}
-              className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg"
-            >
-              <LogOut className="w-5 h-5 text-gray-300" />
-            </button>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="text-right hidden sm:block">
+                  <p className="text-white/90 font-medium text-sm">{user?.email}</p>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className={`text-xs font-medium capitalize ${
+                      user?.tier === 'pro' ? 'text-purple-400' : 
+                      user?.tier === 'team' ? 'text-yellow-400' : 'text-blue-400'
+                    }`}>
+                      {user?.tier} Plan
+                    </span>
+                    {user?.tier === 'pro' && (
+                      <Crown className="w-3 h-3 text-purple-400" />
+                    )}
+                  </div>
+                </div>
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getTierColor(user?.tier || 'free')} flex items-center justify-center text-white font-bold text-sm ${getTierGlow(user?.tier || 'free')}`}>
+                  {getInitials(user?.email || 'U')}
+                </div>
+              </div>
+              <button
+                onClick={logout}
+                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+              >
+                <LogOut className="w-4 h-4 text-white/60" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Stats */}
-      <div className="bg-gray-800 border-b border-gray-700 py-6">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-4 gap-6">
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Projects</p>
-              <p className="text-2xl font-bold text-white">
-                {projects.length} <span className="text-gray-500 text-base">/ {user?.quotas.projectsMax}</span>
+      {/* Stats Section */}
+      <div className="relative z-10 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Projects Stat */}
+            <div className="glass-card rounded-2xl p-5 animate-fade-in-up">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <FolderOpen className="w-5 h-5 text-blue-400 glow-icon" />
+                </div>
+                <span className="text-xs text-white/40">Projets</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">
+                {projects.length} <span className="text-white/30 text-base font-normal">/ {user?.quotas.projectsMax}</span>
               </p>
+              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(projectsProgress, 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Storage Used</p>
-              <p className="text-2xl font-bold text-white">
-                {user ? Math.round(user.usage.storageUsed / 1024 / 1024) : 0} MB
+
+            {/* Storage Stat */}
+            <div className="glass-card rounded-2xl p-5 animate-fade-in-up delay-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <HardDrive className="w-5 h-5 text-purple-400 glow-icon" />
+                </div>
+                <span className="text-xs text-white/40">Stockage</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">
+                {user ? Math.round(user.usage.storageUsed / 1024 / 1024) : 0} <span className="text-white/30 text-base font-normal">MB</span>
               </p>
+              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(storageProgress, 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Deployments</p>
-              <p className="text-2xl font-bold text-white">
-                {user?.usage.deploymentsThisMonth} <span className="text-gray-500 text-base">/ {user?.quotas.deploymentsPerMonth}</span>
+
+            {/* Deployments Stat */}
+            <div className="glass-card rounded-2xl p-5 animate-fade-in-up delay-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                  <Rocket className="w-5 h-5 text-cyan-400 glow-icon" />
+                </div>
+                <span className="text-xs text-white/40">Déploiements</span>
+              </div>
+              <p className="text-2xl font-bold text-white mb-2">
+                {user?.usage.deploymentsThisMonth} <span className="text-white/30 text-base font-normal">/ {user?.quotas.deploymentsPerMonth}</span>
               </p>
+              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(deploymentsProgress, 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="bg-gray-700/50 rounded-lg p-4">
-              <p className="text-gray-400 text-sm">Tier</p>
-              <p className="text-2xl font-bold text-white capitalize">{user?.tier}</p>
+
+            {/* Tier Stat */}
+            <div className="glass-card rounded-2xl p-5 animate-fade-in-up delay-300">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-white/10`}>
+                  <Crown className={`w-5 h-5 ${user?.tier === 'pro' ? 'text-purple-400' : user?.tier === 'team' ? 'text-yellow-400' : 'text-blue-400'} glow-icon`} />
+                </div>
+                <span className="text-xs text-white/40">Tier</span>
+              </div>
+              <p className="text-2xl font-bold capitalize text-white mb-2">
+                {user?.tier}
+              </p>
+              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                user?.tier === 'pro' ? 'bg-purple-500/20 text-purple-300' : 
+                user?.tier === 'team' ? 'bg-yellow-500/20 text-yellow-300' : 
+                'bg-blue-500/20 text-blue-300'
+              }`}>
+                {user?.tier === 'pro' && <Crown className="w-3 h-3" />}
+                {user?.tier === 'team' && <Zap className="w-3 h-3" />}
+                {user?.tier === 'free' && <Sparkles className="w-3 h-3" />}
+                {user?.tier?.toUpperCase()}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Projects */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-bold text-white">Your Projects</h2>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            disabled={projects.length >= (user?.quotas.projectsMax || 0)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg"
-          >
-            <Plus className="w-5 h-5" />
-            New Project
-          </button>
-        </div>
-
-        {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-gray-400">Loading projects...</p>
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-12 bg-gray-800 rounded-lg">
-            <Cloud className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 mb-4">No projects yet</p>
+      {/* Projects Section */}
+      <main className="relative z-10 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="text-2xl font-bold text-white mb-1">
+                Vos <span className="gradient-text">Projets</span>
+              </h2>
+              <p className="text-white/40 text-sm">Gérez et développez vos applications</p>
+            </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+              disabled={projects.length >= (user?.quotas.projectsMax || 0)}
+              className="btn-gradient px-5 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Your First Project
+              <Plus className="w-4 h-4" />
+              Nouveau Projet
             </button>
           </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <ProjectCard
-                key={project.id}
-                project={project}
-                onClick={() => navigate(`/builder/${project.id}`)}
-              />
-            ))}
-          </div>
-        )}
+
+          {isLoading ? (
+            <div className="text-center py-20">
+              <div className="animate-spin w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
+              <p className="text-white/40">Chargement des projets...</p>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="glass-card rounded-2xl p-12 text-center animate-fade-in-up">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
+                <Cloud className="w-10 h-10 text-white/30" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Aucun projet</h3>
+              <p className="text-white/40 mb-6 max-w-md mx-auto">
+                Commencez par créer votre premier projet avec l'aide de notre IA
+              </p>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn-gradient px-6 py-3 rounded-xl text-white font-semibold inline-flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Créer mon premier projet
+              </button>
+            </div>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {projects.map((project, index) => (
+                <div key={project.id} style={{ animationDelay: `${index * 100}ms` }}>
+                  <ProjectCard
+                    project={project}
+                    onClick={() => navigate(`/builder/${project.id}`)}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Create Project Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-lg p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Create New Project</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => setShowCreateModal(false)}
+          />
+          <div className="relative glass-strong rounded-2xl w-full max-w-lg p-8 border-gradient animate-fade-in-scale">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Plus className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">Nouveau Projet</h2>
+                <p className="text-white/40 text-sm">Créez une nouvelle application</p>
+              </div>
+            </div>
             
             <div className="mb-6">
-              <label className="block text-gray-300 mb-2">Project Name</label>
+              <label className="block text-white/70 text-sm font-medium mb-2">Nom du projet</label>
               <input
                 type="text"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="My Awesome App"
-                className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Mon application incroyable"
+                className="input-futuristic w-full px-4 py-3 rounded-xl text-white"
+                autoFocus
+                onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
               />
             </div>
 
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg"
+                className="flex-1 px-4 py-3 rounded-xl text-white/70 font-medium border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-200"
               >
-                Cancel
+                Annuler
               </button>
               <button
                 onClick={handleCreateProject}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg"
+                disabled={!newProjectName.trim()}
+                className="flex-1 btn-gradient px-4 py-3 rounded-xl text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create
+                Créer
               </button>
             </div>
           </div>
