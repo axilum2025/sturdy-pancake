@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles } from 'lucide-react';
+import AuthModal from '../components/AuthModal';
 
 export default function Home() {
+  const [showAuth, setShowAuth] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <div className="container mx-auto px-4 py-16">
@@ -15,12 +19,12 @@ export default function Home() {
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
             Construisez des applications complètes avec l'IA - inspiré par Lovable
           </p>
-          <Link
-            to="/builder"
+          <button
+            onClick={() => setShowAuth(true)}
             className="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors"
           >
             Commencer à construire
-          </Link>
+          </button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mt-16">
@@ -52,6 +56,8 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </div>
   );
 }
