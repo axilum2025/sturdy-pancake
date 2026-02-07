@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { mcpService } from '../routes/mcp';
+import { copilotService } from './copilotService';
 
 export interface TaskConstraints {
   stack?: string[];
@@ -63,30 +64,36 @@ export class AgentService {
     task.status = 'running';
     
     try {
-      // TODO: Integrate with Copilot SDK
-      // This is a placeholder for the actual agent execution
-      console.log(`🤖 Executing task ${task.id}`);
+      // Use GitHub Copilot for intelligent task execution
+      console.log(`🤖 Executing task ${task.id} via GitHub Copilot`);
       console.log(`   Prompt: ${task.prompt}`);
       console.log(`   Constraints:`, task.constraints);
 
-      // Simulate streaming output
       this.emitStream(task.sessionId, {
         type: 'status',
-        message: 'Agent started planning...'
+        message: 'Agent started planning via GitHub Copilot...'
       });
 
-      // Placeholder for Copilot SDK integration
-      // await copilotSession.send({
-      //   prompt: task.prompt,
-      //   constraints: task.constraints
-      // });
-
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Execute via Copilot
+      const copilotResponse = await copilotService.chat({
+        messages: [
+          {
+            role: 'user',
+            content: `En tant qu'agent de développement, exécute cette tâche:\n\n${task.prompt}\n\nContraintes: ${JSON.stringify(task.constraints || {})}`,
+          },
+        ],
+        projectContext: {
+          projectId: task.sessionId,
+          techStack: task.constraints?.stack,
+        },
+      });
 
       task.status = 'completed';
       task.completedAt = new Date();
       task.result = {
-        message: 'Task completed (placeholder)',
+        message: copilotResponse.content,
+        model: copilotResponse.model,
+        usage: copilotResponse.usage,
         filesCreated: [],
         commandsRun: []
       };

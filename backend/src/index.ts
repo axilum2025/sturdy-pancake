@@ -8,6 +8,7 @@ import { storageRouter } from './routes/storage';
 import { authRouter } from './routes/auth';
 import { projectsRouter } from './routes/projects';
 import { deploymentRouter } from './routes/deploy';
+import { copilotRouter } from './routes/copilot';
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/storage', storageRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/deploy', deploymentRouter);
+app.use('/api/copilot', copilotRouter);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
@@ -48,6 +50,7 @@ app.get('/api', (req: Request, res: Response) => {
       auth: '/api/auth',
       projects: '/api/projects',
       deploy: '/api/deploy',
+      copilot: '/api/copilot',
       sessions: '/api/sessions',
       agent: '/api/agent',
       mcp: '/api/mcp',

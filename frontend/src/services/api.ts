@@ -249,3 +249,114 @@ export const deleteMCPServer = async (serverId: string) => {
   const response = await api.delete(`/mcp/servers/${serverId}`);
   return response.data;
 };
+
+// ============ Copilot (GitHub Copilot Integration) ============
+
+export interface CopilotMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface CopilotChatRequest {
+  messages: CopilotMessage[];
+  model?: string;
+  temperature?: number;
+  maxTokens?: number;
+  stream?: boolean;
+  projectContext?: {
+    projectId: string;
+    techStack?: string[];
+    files?: string[];
+  };
+}
+
+export interface CopilotChatResponse {
+  id: string;
+  content: string;
+  model: string;
+  usage?: {
+    promptTokens: number;
+    completionTokens: number;
+    totalTokens: number;
+  };
+  finishReason: string;
+}
+
+export interface CopilotStatus {
+  available: boolean;
+  model: string;
+  error?: string;
+}
+
+/** Non-streaming Copilot chat */
+export const copilotChat = async (request: CopilotChatRequest): Promise<CopilotChatResponse> => {
+  const response = await api.post('/copilot/chat', request);
+  return response.data;
+};
+
+/**
+ * Streaming Copilot chat – returns a ReadableStream via fetch (not axios).
+ * The caller is responsible for reading SSE events from the stream.
+ */
+export const copilotChatStream = async (
+  request: CopilotChatRequest,
+): Promise<Response> => {
+  const token = localStorage.getItem('authToken');
+  const userId = localStorage.getItem('userId');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (userId) headers['x-user-id'] = userId;
+
+  const response = await fetch('/api/copilot/chat/stream', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Copilot stream failed: ${response.statusText}`);
+  }
+
+  return response;
+};
+
+/** Generate code via Copilot */
+export const copilotGenerateCode = async (params: {
+  prompt: string;
+  language?: string;
+  projectContext?: CopilotChatRequest['projectContext'];
+}): Promise<{ code: string }> => {
+  const response = await api.post('/copilot/generate', params);
+  return response.data;
+};
+
+/** Review / explain / refactor code via Copilot */
+export const copilotReviewCode = async (params: {
+  code: string;
+  language?: string;
+  action?: 'review' | 'explain' | 'refactor' | 'test';
+}): Promise<{ result: string }> => {
+  const response = await api.post('/copilot/review', params);
+  return response.data;
+};
+
+/** Check Copilot availability */
+export const getCopilotStatus = async (): Promise<CopilotStatus> => {
+  const response = await api.get('/copilot/status');
+  return response.data;
+};
+
+/** Get GitHub repo info */
+export const getRepoInfo = async (owner: string, repo: string) => {
+  const response = await api.post('/copilot/repo/info', { owner, repo });
+  return response.data;
+};
+
+/** Get GitHub repo file tree */
+export const getRepoTree = async (owner: string, repo: string, branch?: string) => {
+  const response = await api.post('/copilot/repo/tree', { owner, repo, branch });
+  return response.data;
+};
