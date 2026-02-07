@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Code, Save, X, FileText, Folder, ChevronDown, Plus, Trash2, FileCode, FileJson, FileImage, File } from 'lucide-react';
+import { Code, Save, X, FileText, Folder, ChevronDown, Plus, Trash2, FileCode, FileJson, FileImage, File, Copy } from 'lucide-react';
 import { listFiles, getFile, saveFile, deleteFile } from '../services/api';
 import { useBuilderStore } from '../store/builderStore';
 
@@ -132,6 +132,22 @@ export default function FileEditor({ projectId }: FileEditorProps) {
     }
   };
 
+  const handleDuplicateFile = async (path: string) => {
+    const parts = path.split('/');
+    const fileName = parts.pop();
+    const newFileName = fileName?.replace(/(\.[^.]+)$/, '-copy$1') || `${fileName}-copy`;
+    const newPath = [...parts, newFileName].join('/');
+    
+    try {
+      const content = files[path];
+      await saveFile(projectId, newPath, content);
+      loadFiles();
+      handleFileSelect(newPath);
+    } catch (error) {
+      console.error('Error duplicating file:', error);
+    }
+  };
+
   const handleCreateFile = async () => {
     if (!newFilePath.trim()) return;
     try {
@@ -178,7 +194,7 @@ export default function FileEditor({ projectId }: FileEditorProps) {
     return (
       <div key={item.path}>
         <div
-          className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg ${
+          className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg group ${
             selectedFilePath === item.path 
               ? 'bg-blue-500/20 border border-blue-500/30' 
               : 'hover:bg-white/5'
@@ -201,7 +217,31 @@ export default function FileEditor({ projectId }: FileEditorProps) {
           ) : (
             getFileIcon(item.name)
           )}
-          <span className="text-sm text-white/80 truncate">{item.name}</span>
+          <span className="text-sm text-white/80 truncate flex-1">{item.name}</span>
+          {item.type === 'file' && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDuplicateFile(item.path);
+                }}
+                className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-blue-400"
+                title="Dupliquer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteFile(item.path);
+                }}
+                className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-red-400"
+                title="Supprimer"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
         {item.type === 'directory' && isExpanded && item.children && (
           <div className="animate-fade-in-up">

@@ -47,9 +47,8 @@ export default function ChatPanel() {
     <div className="h-full flex flex-col">
       {/* Header */}
       <div className="px-4 py-3 border-b border-white/10">
-        <h2 className="text-lg font-semibold gradient-text flex items-center gap-2">
-          <Bot className="w-5 h-5 glow-icon" />
-          Assistant AI
+        <h2 className="text-lg font-semibold gradient-text">
+          GiLo AI
         </h2>
       </div>
 
@@ -91,42 +90,43 @@ export default function ChatPanel() {
             </div>
           ))
         )}
-        {isTyping && (
-          <div className="flex gap-3 animate-fade-in-up">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 border border-purple-500/30">
-              <Bot className="w-4 h-4 text-purple-400 glow-icon" />
-            </div>
-            <div className="glass-card bg-purple-500/10 border-purple-500/20 px-4 py-3 rounded-lg">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Input */}
       <div className="p-4 border-t border-white/10">
-        <div className="flex gap-2">
-          <input
-            type="text"
+        <div className="relative">
+          <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && e.shiftKey === false && (e.preventDefault(), handleSend())}
             placeholder="Décrivez ce que vous voulez construire..."
-            className="flex-1 input-futuristic text-white px-4 py-3 rounded-lg"
+            rows={4}
+            className="w-full input-futuristic text-white px-4 py-3 pr-12 rounded-lg resize-none h-24"
           />
           <button
             onClick={handleSend}
             disabled={!message.trim() || isTyping}
-            className="btn-gradient px-4 py-3 rounded-lg text-white flex items-center justify-center disabled:opacity-50"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-white flex items-center justify-center disabled:opacity-50 hover:bg-white/10 transition-colors"
           >
             {isTyping ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="20" 
+                height="20" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round"
+                className="w-5 h-5"
+              >
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
             )}
           </button>
         </div>

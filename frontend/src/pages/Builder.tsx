@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Package, Code2, Rocket, Loader2, CheckCircle, XCircle, ArrowLeft, MessageSquare, FileCode, Layers } from 'lucide-react';
+import { Settings, Package, Code2, Rocket, Loader2, CheckCircle, XCircle, ArrowLeft, Eye, Clock } from 'lucide-react';
 import ChatPanel from '../components/ChatPanel';
 import PreviewPanel from '../components/PreviewPanel';
 import TimelinePanel from '../components/TimelinePanel';
@@ -20,7 +20,9 @@ export default function Builder() {
   const [showMCPSettings, setShowMCPSettings] = useState(false);
   const [showMCPBrowser, setShowMCPBrowser] = useState(false);
   const [showFileEditor, setShowFileEditor] = useState(true);
-  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'mcp' | 'settings'>('chat');
+  const [showHistory, setShowHistory] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+
   const [pollingInterval, setPollingInterval] = useState<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -125,161 +127,145 @@ export default function Builder() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-mesh bg-grid">
-      {/* Header */}
-      <header className="glass-strong border-b border-white/10 px-6 py-4 flex items-center justify-between animate-fade-in-down">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="btn-outline-glow px-3 py-2 rounded-lg flex items-center gap-2 text-white/80 hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Retour</span>
-          </button>
-          <div className="h-6 w-px bg-white/10"></div>
-          <h1 className="text-xl font-bold gradient-text">
-            AI App Builder
-          </h1>
-          <span className="text-white/60 text-sm">/</span>
-          <span className="text-white/80 text-sm font-medium">{projectId || 'Nouveau Projet'}</span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowFileEditor(!showFileEditor)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-              showFileEditor 
-                ? 'btn-gradient text-white glow-blue' 
-                : 'btn-outline-glow text-white/70 hover:text-white'
-            }`}
-            title="Éditeur de fichiers"
-          >
-            <Code2 className="w-4 h-4" />
-            <span className="hidden sm:inline">Fichiers</span>
-          </button>
-          <button
-            onClick={handleDeploy}
-            disabled={isDeploying}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
-              isDeploying
-                ? 'bg-white/10 text-white/50 cursor-not-allowed'
-                : deployment?.status === 'deployed'
-                ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                : deployment?.status === 'failed'
-                ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
-                : 'btn-gradient text-white glow-blue'
-            }`}
-            title="Déployer le projet"
-          >
-            {getDeploymentStatusIcon()}
-            <span className="hidden sm:inline">{getDeploymentStatusText()}</span>
-          </button>
-          <button
-            onClick={() => setShowMCPBrowser(true)}
-            className="btn-outline-glow px-4 py-2 rounded-lg flex items-center gap-2 text-white/70 hover:text-white"
-            title="Outils et Ressources MCP"
-          >
-            <Package className="w-4 h-4 glow-icon" />
-            <span className="hidden sm:inline">MCP</span>
-          </button>
-          <button
-            onClick={() => setShowMCPSettings(true)}
-            className="btn-outline-glow px-4 py-2 rounded-lg flex items-center gap-2 text-white/70 hover:text-white"
-            title="Paramètres MCP"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Paramètres</span>
-          </button>
-        </div>
-        {deploymentError && (
-          <div className="absolute top-20 right-6 glass-card bg-red-500/20 border-red-500/30 text-red-300 px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in-up">
-            {deploymentError}
-          </div>
-        )}
-      </header>
-
-      {/* Modals */}
-      {showMCPSettings && <MCPSettings onClose={() => setShowMCPSettings(false)} />}
-      {showMCPBrowser && <MCPBrowser onClose={() => setShowMCPBrowser(false)} />}
+    <div className="h-screen w-full flex pb-12 md:pb-8 bg-gradient-mesh bg-grid">
+      {/* Sidebar */}
+      <aside className="w-20 glass-strong border-r border-white/10 flex flex-col items-center py-4 gap-2 animate-fade-in-left">
+        {/* Navigation Buttons */}
+        <button
+          onClick={() => setShowPreview(!showPreview)}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            showPreview
+              ? 'btn-gradient text-white glow-blue'
+              : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+          title="Prévisualisation"
+        >
+          <Eye className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            showHistory
+              ? 'btn-gradient text-white glow-blue'
+              : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+          title="Historique"
+        >
+          <Clock className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setShowFileEditor(!showFileEditor)}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            showFileEditor
+              ? 'btn-gradient text-white glow-blue'
+              : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
+          }`}
+          title="Fichiers"
+        >
+          <Code2 className="w-5 h-5" />
+        </button>
+        <button
+          onClick={handleDeploy}
+          disabled={isDeploying}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
+            isDeploying
+              ? 'bg-white/10 text-white/50 cursor-not-allowed'
+              : deployment?.status === 'deployed'
+              ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
+              : deployment?.status === 'failed'
+              ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
+              : 'btn-gradient text-white glow-blue'
+          }`}
+          title={getDeploymentStatusText()}
+        >
+          {getDeploymentStatusIcon()}
+        </button>
+        <button
+          onClick={() => setShowMCPBrowser(true)}
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
+          title="Outils MCP"
+        >
+          <Package className="w-5 h-5 glow-icon" />
+        </button>
+        <button
+          onClick={() => setShowMCPSettings(true)}
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
+          title="Paramètres"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+        <div className="flex-1"></div>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left: Chat + Timeline */}
-        <div className="w-96 flex flex-col border-r border-white/10 glass-card animate-fade-in-left">
-          {/* Tabs */}
-          <div className="flex border-b border-white/10">
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                activeTab === 'chat'
-                  ? 'text-white border-b-2 border-blue-500 bg-white/5'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-              }`}
-            >
-              <MessageSquare className={`w-4 h-4 ${activeTab === 'chat' ? 'glow-icon' : ''}`} />
-              Chat
-            </button>
-            <button
-              onClick={() => setActiveTab('files')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                activeTab === 'files'
-                  ? 'text-white border-b-2 border-purple-500 bg-white/5'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-              }`}
-            >
-              <FileCode className={`w-4 h-4 ${activeTab === 'files' ? 'glow-icon' : ''}`} />
-              Fichiers
-            </button>
-            <button
-              onClick={() => setActiveTab('mcp')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
-                activeTab === 'mcp'
-                  ? 'text-white border-b-2 border-cyan-500 bg-white/5'
-                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
-              }`}
-            >
-              <Layers className={`w-4 h-4 ${activeTab === 'mcp' ? 'glow-icon' : ''}`} />
-              MCP
-            </button>
-          </div>
-          
-          {/* Tab Content */}
-          <div className="flex-1 overflow-hidden">
-            {activeTab === 'chat' && (
-              <div className="h-full flex flex-col">
-                <div className="flex-1 overflow-hidden">
-                  <ChatPanel />
-                </div>
-                <div className="h-64 border-t border-white/10">
-                  <TimelinePanel />
-                </div>
-              </div>
-            )}
-            {activeTab === 'files' && projectId && (
-              <div className="h-full">
-                <FileEditor projectId={projectId} />
-              </div>
-            )}
-            {activeTab === 'mcp' && (
-              <div className="h-full flex items-center justify-center text-white/50">
-                <div className="text-center">
-                  <Layers className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Outils MCP</p>
-                </div>
-              </div>
-            )}
-          </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="glass-strong border-b border-white/10 px-6 py-3 flex items-center gap-4 animate-fade-in-down">
+          <h1 className="text-xl font-bold text-white">AI Builder Hub</h1>
+          <span className="text-white/40 text-sm">/</span>
+          <span className="text-white/60 text-sm">{projectId || 'Nouveau Projet'}</span>
+          <div className="flex-1"></div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="px-3 py-1.5 rounded-lg btn-outline-glow text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300 text-sm flex items-center gap-2"
+            title="Retour"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour
+          </button>
+        </header>
+
+        {/* Modals */}
+        {showMCPSettings && <MCPSettings onClose={() => setShowMCPSettings(false)} />}
+        {showMCPBrowser && <MCPBrowser onClose={() => setShowMCPBrowser(false)} />}
+
+        {/* Main Content */}
+        <div className="flex-1 flex overflow-hidden">
+        {/* Left: Chat */}
+        <div className="min-w-80 max-w-[30rem] flex-1 flex flex-col border-r border-white/10 glass-card animate-fade-in-left">
+          <ChatPanel />
         </div>
 
-        {/* Center: File Editor (when showFileEditor is true) */}
+        {/* Right: File Editor or History Panel */}
         {showFileEditor && projectId && (
-          <div className="w-80 border-r border-white/10 glass-card animate-fade-in-up delay-100">
+          <div className="min-w-64 max-w-[24rem] flex-1 border-r border-white/10 glass-card animate-fade-in-up delay-100">
             <FileEditor projectId={projectId} />
           </div>
         )}
 
-        {/* Right: Preview */}
-        <div className="flex-1 glass-card animate-fade-in-right delay-200">
-          <PreviewPanel />
+        {/* History Panel */}
+        {showHistory && (
+          <div className="min-w-80 max-w-[30rem] flex-1 glass-card animate-fade-in-up delay-100">
+            <TimelinePanel />
+          </div>
+        )}
+
+        {/* Preview Modal */}
+        {showPreview && (
+          <>
+            {/* Backdrop */}
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in"
+              onClick={() => setShowPreview(false)}
+            />
+            {/* Modal */}
+            <div className="fixed inset-4 md:inset-8 lg:inset-12 z-50 flex items-center justify-center animate-fade-in-up">
+              <div className="w-full h-full glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative">
+                {/* Close button */}
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-200 z-10"
+                  aria-label="Close preview"
+                >
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <PreviewPanel onClose={() => setShowPreview(false)} />
+              </div>
+            </div>
+          </>
+        )}
         </div>
       </div>
     </div>

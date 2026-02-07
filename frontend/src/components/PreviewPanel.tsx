@@ -1,8 +1,12 @@
 import { useBuilderStore } from '../store/builderStore';
-import { Play, ExternalLink, RefreshCw, Loader2, CheckCircle, XCircle, Globe, Eye, Code2 } from 'lucide-react';
+import { Play, ExternalLink, RefreshCw, Loader2, CheckCircle, XCircle, Globe, Eye, Code2, X } from 'lucide-react';
 import { useState } from 'react';
 
-export default function PreviewPanel() {
+interface PreviewPanelProps {
+  onClose?: () => void;
+}
+
+export default function PreviewPanel({ onClose }: PreviewPanelProps) {
   const { selectedFile, selectedFileContent, deployment, isDeploying } = useBuilderStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -99,6 +103,15 @@ export default function PreviewPanel() {
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Actualiser</span>
               </button>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                  title="Fermer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </div>
           </div>
           <div className="flex-1 bg-white/5">
@@ -138,6 +151,15 @@ export default function PreviewPanel() {
               <Code2 className="w-4 h-4" />
               <span className="hidden sm:inline">Code Preview</span>
             </div>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                title="Fermer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
         <div className="flex-1 bg-black/30 p-4 overflow-auto">
