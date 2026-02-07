@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { Settings, Package, Code2, Rocket, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Settings, Package, Code2, Rocket, Loader2, CheckCircle, XCircle, ArrowLeft, MessageSquare, FileCode, Layers } from 'lucide-react';
 import ChatPanel from '../components/ChatPanel';
 import PreviewPanel from '../components/PreviewPanel';
 import TimelinePanel from '../components/TimelinePanel';
@@ -13,12 +13,14 @@ import { deployProject, getDeployment } from '../services/api';
 
 export default function Builder() {
   const { projectId } = useParams();
+  const navigate = useNavigate();
   const { currentSession, createSession } = useSessionStore();
   const { setProjectId, deployment, isDeploying, deploymentError, setDeployment, setIsDeploying, setDeploymentError, clearDeployment } = useBuilderStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showMCPSettings, setShowMCPSettings] = useState(false);
   const [showMCPBrowser, setShowMCPBrowser] = useState(false);
   const [showFileEditor, setShowFileEditor] = useState(true);
+  const [activeTab, setActiveTab] = useState<'chat' | 'files' | 'mcp' | 'settings'>('chat');
   const [pollingInterval, setPollingInterval] = useState<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -116,66 +118,80 @@ export default function Builder() {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-gray-900">
-        <div className="text-white text-xl">Initialisation...</div>
+      <div className="h-screen flex items-center justify-center bg-gradient-mesh bg-grid">
+        <div className="text-white text-xl animate-pulse-glow">Initialisation...</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900">
+    <div className="h-screen flex flex-col bg-gradient-mesh bg-grid">
       {/* Header */}
-      <header className="relative bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-white">
-          AI App Builder - {projectId || 'Nouveau Projet'}
-        </h1>
+      <header className="glass-strong border-b border-white/10 px-6 py-4 flex items-center justify-between animate-fade-in-down">
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="btn-outline-glow px-3 py-2 rounded-lg flex items-center gap-2 text-white/80 hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="hidden sm:inline">Retour</span>
+          </button>
+          <div className="h-6 w-px bg-white/10"></div>
+          <h1 className="text-xl font-bold gradient-text">
+            AI App Builder
+          </h1>
+          <span className="text-white/60 text-sm">/</span>
+          <span className="text-white/80 text-sm font-medium">{projectId || 'Nouveau Projet'}</span>
+        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setShowFileEditor(!showFileEditor)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
-              showFileEditor ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
+              showFileEditor 
+                ? 'btn-gradient text-white glow-blue' 
+                : 'btn-outline-glow text-white/70 hover:text-white'
             }`}
             title="Éditeur de fichiers"
           >
             <Code2 className="w-4 h-4" />
-            Fichiers
+            <span className="hidden sm:inline">Fichiers</span>
           </button>
           <button
             onClick={handleDeploy}
             disabled={isDeploying}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 ${
               isDeploying
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                ? 'bg-white/10 text-white/50 cursor-not-allowed'
                 : deployment?.status === 'deployed'
-                ? 'bg-green-600 hover:bg-green-700 text-white'
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
                 : deployment?.status === 'failed'
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-orange-600 hover:bg-orange-700 text-white'
+                ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
+                : 'btn-gradient text-white glow-blue'
             }`}
             title="Déployer le projet"
           >
             {getDeploymentStatusIcon()}
-            {getDeploymentStatusText()}
+            <span className="hidden sm:inline">{getDeploymentStatusText()}</span>
           </button>
           <button
             onClick={() => setShowMCPBrowser(true)}
-            className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+            className="btn-outline-glow px-4 py-2 rounded-lg flex items-center gap-2 text-white/70 hover:text-white"
             title="Outils et Ressources MCP"
           >
-            <Package className="w-4 h-4" />
-            MCP
+            <Package className="w-4 h-4 glow-icon" />
+            <span className="hidden sm:inline">MCP</span>
           </button>
           <button
             onClick={() => setShowMCPSettings(true)}
-            className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
+            className="btn-outline-glow px-4 py-2 rounded-lg flex items-center gap-2 text-white/70 hover:text-white"
             title="Paramètres MCP"
           >
             <Settings className="w-4 h-4" />
-            Paramètres
+            <span className="hidden sm:inline">Paramètres</span>
           </button>
         </div>
         {deploymentError && (
-          <div className="absolute top-20 right-6 bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          <div className="absolute top-20 right-6 glass-card bg-red-500/20 border-red-500/30 text-red-300 px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in-up">
             {deploymentError}
           </div>
         )}
@@ -188,24 +204,81 @@ export default function Builder() {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left: Chat + Timeline */}
-        <div className="w-96 flex flex-col border-r border-gray-700">
-          <div className="flex-1 overflow-hidden">
-            <ChatPanel />
+        <div className="w-96 flex flex-col border-r border-white/10 glass-card animate-fade-in-left">
+          {/* Tabs */}
+          <div className="flex border-b border-white/10">
+            <button
+              onClick={() => setActiveTab('chat')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                activeTab === 'chat'
+                  ? 'text-white border-b-2 border-blue-500 bg-white/5'
+                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+              }`}
+            >
+              <MessageSquare className={`w-4 h-4 ${activeTab === 'chat' ? 'glow-icon' : ''}`} />
+              Chat
+            </button>
+            <button
+              onClick={() => setActiveTab('files')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                activeTab === 'files'
+                  ? 'text-white border-b-2 border-purple-500 bg-white/5'
+                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+              }`}
+            >
+              <FileCode className={`w-4 h-4 ${activeTab === 'files' ? 'glow-icon' : ''}`} />
+              Fichiers
+            </button>
+            <button
+              onClick={() => setActiveTab('mcp')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all duration-300 ${
+                activeTab === 'mcp'
+                  ? 'text-white border-b-2 border-cyan-500 bg-white/5'
+                  : 'text-white/50 hover:text-white/80 hover:bg-white/5'
+              }`}
+            >
+              <Layers className={`w-4 h-4 ${activeTab === 'mcp' ? 'glow-icon' : ''}`} />
+              MCP
+            </button>
           </div>
-          <div className="h-64 border-t border-gray-700">
-            <TimelinePanel />
+          
+          {/* Tab Content */}
+          <div className="flex-1 overflow-hidden">
+            {activeTab === 'chat' && (
+              <div className="h-full flex flex-col">
+                <div className="flex-1 overflow-hidden">
+                  <ChatPanel />
+                </div>
+                <div className="h-64 border-t border-white/10">
+                  <TimelinePanel />
+                </div>
+              </div>
+            )}
+            {activeTab === 'files' && projectId && (
+              <div className="h-full">
+                <FileEditor projectId={projectId} />
+              </div>
+            )}
+            {activeTab === 'mcp' && (
+              <div className="h-full flex items-center justify-center text-white/50">
+                <div className="text-center">
+                  <Layers className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Outils MCP</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Center: File Editor */}
+        {/* Center: File Editor (when showFileEditor is true) */}
         {showFileEditor && projectId && (
-          <div className="w-80 border-r border-gray-700">
+          <div className="w-80 border-r border-white/10 glass-card animate-fade-in-up delay-100">
             <FileEditor projectId={projectId} />
           </div>
         )}
 
         {/* Right: Preview */}
-        <div className="flex-1">
+        <div className="flex-1 glass-card animate-fade-in-right delay-200">
           <PreviewPanel />
         </div>
       </div>

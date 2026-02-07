@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Code, Save, X, FileText, Folder, ChevronDown, Plus, Trash2 } from 'lucide-react';
+import { Code, Save, X, FileText, Folder, ChevronDown, Plus, Trash2, FileCode, FileJson, FileImage, File } from 'lucide-react';
 import { listFiles, getFile, saveFile, deleteFile } from '../services/api';
 import { useBuilderStore } from '../store/builderStore';
 
@@ -145,6 +145,32 @@ export default function FileEditor({ projectId }: FileEditorProps) {
     }
   };
 
+  const getFileIcon = (filename: string) => {
+    const ext = filename.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'tsx':
+      case 'jsx':
+        return <FileCode className="w-4 h-4 text-blue-400 glow-icon" />;
+      case 'ts':
+      case 'js':
+        return <FileCode className="w-4 h-4 text-yellow-400 glow-icon" />;
+      case 'json':
+        return <FileJson className="w-4 h-4 text-green-400 glow-icon" />;
+      case 'css':
+        return <FileText className="w-4 h-4 text-purple-400 glow-icon" />;
+      case 'html':
+        return <FileText className="w-4 h-4 text-orange-400 glow-icon" />;
+      case 'png':
+      case 'jpg':
+      case 'jpeg':
+      case 'gif':
+      case 'svg':
+        return <FileImage className="w-4 h-4 text-pink-400 glow-icon" />;
+      default:
+        return <File className="w-4 h-4 text-gray-400" />;
+    }
+  };
+
   const renderTreeItem = (item: FileTreeItem, depth: number = 0) => {
     const isExpanded = expandedDirs.has(item.path);
     const hasChildren = item.type === 'directory' && item.children && item.children.length > 0;
@@ -152,8 +178,10 @@ export default function FileEditor({ projectId }: FileEditorProps) {
     return (
       <div key={item.path}>
         <div
-          className={`flex items-center gap-1 px-2 py-1 cursor-pointer hover:bg-gray-700 ${
-            selectedFilePath === item.path ? 'bg-blue-600' : ''
+          className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg ${
+            selectedFilePath === item.path 
+              ? 'bg-blue-500/20 border border-blue-500/30' 
+              : 'hover:bg-white/5'
           }`}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => {
@@ -165,18 +193,18 @@ export default function FileEditor({ projectId }: FileEditorProps) {
           }}
         >
           {hasChildren && (
-            <ChevronDown className={`w-4 h-4 ${!isExpanded ? 'transform rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${!isExpanded ? 'transform -rotate-90' : ''}`} />
           )}
           {!hasChildren && <span className="w-4" />}
           {item.type === 'directory' ? (
-            <Folder className="w-4 h-4 text-yellow-500" />
+            <Folder className="w-4 h-4 text-yellow-400 glow-icon" />
           ) : (
-            <FileText className="w-4 h-4 text-blue-400" />
+            getFileIcon(item.name)
           )}
-          <span className="text-sm text-gray-300 truncate">{item.name}</span>
+          <span className="text-sm text-white/80 truncate">{item.name}</span>
         </div>
         {item.type === 'directory' && isExpanded && item.children && (
-          <div>
+          <div className="animate-fade-in-up">
             {item.children.map((child) => renderTreeItem(child, depth + 1))}
           </div>
         )}
@@ -185,28 +213,31 @@ export default function FileEditor({ projectId }: FileEditorProps) {
   };
 
   return (
-    <div className="h-full flex flex-col bg-gray-800">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <Code className="w-5 h-5 text-blue-400" />
-          <span className="font-semibold text-white">Fichiers</span>
+          <Code className="w-5 h-5 text-blue-400 glow-icon" />
+          <span className="font-semibold gradient-text">Fichiers</span>
         </div>
         <button
           onClick={() => setShowNewFileModal(true)}
-          className="p-1 bg-gray-700 hover:bg-gray-600 rounded"
+          className="btn-outline-glow p-2 rounded-lg"
           title="Nouveau fichier"
         >
-          <Plus className="w-4 h-4 text-gray-300" />
+          <Plus className="w-4 h-4 text-white/70" />
         </button>
       </div>
 
       {/* File Tree */}
       <div className="flex-1 overflow-auto py-2">
         {isLoading ? (
-          <div className="text-gray-400 text-sm px-4">Chargement...</div>
+          <div className="text-white/40 text-sm px-4 animate-pulse">Chargement...</div>
         ) : fileTree.length === 0 ? (
-          <div className="text-gray-400 text-sm px-4">Aucun fichier</div>
+          <div className="text-center py-8 animate-fade-in-up">
+            <FileText className="w-12 h-12 mx-auto mb-3 text-white/20" />
+            <p className="text-white/40 text-sm">Aucun fichier</p>
+          </div>
         ) : (
           fileTree.map((item) => renderTreeItem(item))
         )}
@@ -214,22 +245,22 @@ export default function FileEditor({ projectId }: FileEditorProps) {
 
       {/* Editor Panel */}
       {selectedFilePath && (
-        <div className="border-t border-gray-700 flex flex-col h-1/2">
+        <div className="border-t border-white/10 flex flex-col h-1/2 animate-fade-in-up">
           {/* Editor Header */}
-          <div className="flex items-center justify-between px-4 py-2 bg-gray-900 border-b border-gray-700">
-            <span className="text-sm text-gray-300">{selectedFilePath}</span>
+          <div className="flex items-center justify-between px-4 py-2 glass-card border-b border-white/10">
+            <span className="text-sm text-white/80 truncate">{selectedFilePath}</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleDeleteFile(selectedFilePath)}
-                className="p-1 bg-red-600 hover:bg-red-700 rounded"
+                className="btn-outline-glow p-2 rounded-lg text-red-400 hover:text-red-300"
                 title="Supprimer"
               >
-                <Trash2 className="w-4 h-4 text-white" />
+                <Trash2 className="w-4 h-4" />
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className="flex items-center gap-1 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm"
+                className="btn-gradient px-3 py-2 rounded-lg text-sm flex items-center gap-1"
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
@@ -239,9 +270,9 @@ export default function FileEditor({ projectId }: FileEditorProps) {
                   setSelectedFile(null);
                   setFileContent('');
                 }}
-                className="p-1 bg-gray-700 hover:bg-gray-600 rounded"
+                className="btn-outline-glow p-2 rounded-lg"
               >
-                <X className="w-4 h-4 text-gray-300" />
+                <X className="w-4 h-4 text-white/70" />
               </button>
             </div>
           </div>
@@ -250,7 +281,7 @@ export default function FileEditor({ projectId }: FileEditorProps) {
           <textarea
             value={fileContent}
             onChange={(e) => setFileContent(e.target.value)}
-            className="flex-1 bg-gray-900 text-gray-100 p-4 font-mono text-sm resize-none focus:outline-none"
+            className="flex-1 bg-black/30 text-white/90 p-4 font-mono text-sm resize-none focus:outline-none border-none"
             spellCheck={false}
           />
         </div>
@@ -258,26 +289,26 @@ export default function FileEditor({ projectId }: FileEditorProps) {
 
       {/* New File Modal */}
       {showNewFileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Nouveau Fichier</h3>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="glass-card rounded-xl shadow-2xl w-full max-w-md p-6 border border-white/10 animate-fade-in-scale">
+            <h3 className="text-lg font-bold gradient-text mb-4">Nouveau Fichier</h3>
             <input
               type="text"
               value={newFilePath}
               onChange={(e) => setNewFilePath(e.target.value)}
               placeholder="src/App.tsx"
-              className="w-full bg-gray-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+              className="w-full input-futuristic text-white px-4 py-3 rounded-lg mb-4"
             />
             <div className="flex gap-4">
               <button
                 onClick={() => setShowNewFileModal(false)}
-                className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 rounded-lg"
+                className="flex-1 btn-outline-glow text-white font-medium py-2 rounded-lg"
               >
                 Annuler
               </button>
               <button
                 onClick={handleCreateFile}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg"
+                className="flex-1 btn-gradient text-white font-medium py-2 rounded-lg"
               >
                 Créer
               </button>
