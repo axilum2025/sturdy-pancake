@@ -47,11 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const { user, token } = await apiLogin(email, password);
-      if (token) {
-        localStorage.setItem('authToken', token);
-      }
-      localStorage.setItem('userId', user.id);
+      const { user } = await apiLogin(email, password);
       setUser(user);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -65,11 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const { user, token } = await apiRegister(email, password);
-      if (token) {
-        localStorage.setItem('authToken', token);
-      }
-      localStorage.setItem('userId', user.id);
+      const { user } = await apiRegister(email, password);
       setUser(user);
     } catch (err: any) {
       setError(err.message || 'Registration failed');
