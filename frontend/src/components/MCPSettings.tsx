@@ -98,172 +98,162 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Settings className="w-6 h-6 text-blue-400" />
-            <h2 className="text-2xl font-bold text-white">Configuration MCP</h2>
-          </div>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Settings className="w-5 h-5 text-blue-400 glow-icon" />
+          <span className="font-semibold gradient-text">Configuration MCP</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        <div>
+          <p className="text-xs text-white/35 mb-3">
+            Le Model Context Protocol (MCP) permet de connecter votre AI à des outils, ressources et systèmes externes.
+          </p>
+          
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
+            onClick={() => setShowAddForm(!showAddForm)}
+            className="btn-gradient px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5"
           >
-            <X className="w-6 h-6" />
+            <Plus className="w-3.5 h-3.5" />
+            Ajouter un serveur MCP
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6">
-            <p className="text-gray-300 mb-4">
-              Le Model Context Protocol (MCP) permet de connecter votre AI à des outils, ressources et systèmes externes.
-            </p>
-            
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter un serveur MCP
-            </button>
+        {/* Add Server Form */}
+        {showAddForm && (
+          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3 animate-fade-in-up">
+            <h4 className="text-sm font-medium text-white/70">Nouveau serveur MCP</h4>
+            <input
+              type="text"
+              placeholder="Nom (ex: Filesystem)"
+              value={newServer.name}
+              onChange={(e) => setNewServer({ ...newServer, name: e.target.value })}
+              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+              autoFocus
+            />
+            <input
+              type="text"
+              placeholder="Commande (ex: npx)"
+              value={newServer.command}
+              onChange={(e) => setNewServer({ ...newServer, command: e.target.value })}
+              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+            />
+            <input
+              type="text"
+              placeholder="Arguments (ex: -y @modelcontextprotocol/server-filesystem /tmp)"
+              value={newServer.args}
+              onChange={(e) => setNewServer({ ...newServer, args: e.target.value })}
+              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+            />
+            <textarea
+              placeholder="Description (optionnel)"
+              value={newServer.description}
+              onChange={(e) => setNewServer({ ...newServer, description: e.target.value })}
+              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+              rows={2}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-white/10 text-white/50 hover:bg-white/5"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={addServer}
+                disabled={!newServer.name || !newServer.command}
+                className="flex-1 btn-gradient px-3 py-2 text-sm rounded-lg disabled:opacity-50 flex items-center justify-center gap-1.5"
+              >
+                <Check className="w-3.5 h-3.5" />
+                Ajouter
+              </button>
+            </div>
           </div>
+        )}
 
-          {/* Add Server Form */}
-          {showAddForm && (
-            <div className="mb-6 p-4 bg-gray-700 rounded-lg border border-gray-600">
-              <h3 className="text-lg font-semibold text-white mb-4">Nouveau serveur MCP</h3>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Nom (ex: Filesystem)"
-                  value={newServer.name}
-                  onChange={(e) => setNewServer({ ...newServer, name: e.target.value })}
-                  className="w-full bg-gray-600 text-white px-3 py-2 rounded border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Commande (ex: npx)"
-                  value={newServer.command}
-                  onChange={(e) => setNewServer({ ...newServer, command: e.target.value })}
-                  className="w-full bg-gray-600 text-white px-3 py-2 rounded border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  placeholder="Arguments (ex: -y @modelcontextprotocol/server-filesystem /tmp)"
-                  value={newServer.args}
-                  onChange={(e) => setNewServer({ ...newServer, args: e.target.value })}
-                  className="w-full bg-gray-600 text-white px-3 py-2 rounded border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <textarea
-                  placeholder="Description (optionnel)"
-                  value={newServer.description}
-                  onChange={(e) => setNewServer({ ...newServer, description: e.target.value })}
-                  className="w-full bg-gray-600 text-white px-3 py-2 rounded border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={2}
-                />
-                <div className="flex gap-2">
-                  <button
-                    onClick={addServer}
-                    disabled={!newServer.name || !newServer.command}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-4 py-2 rounded transition-colors"
-                  >
-                    <Check className="w-4 h-4" />
-                    Ajouter
-                  </button>
-                  <button
-                    onClick={() => setShowAddForm(false)}
-                    className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Servers List */}
-          {loading ? (
-            <div className="text-center text-gray-400 py-8">Chargement...</div>
-          ) : servers.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">
-              Aucun serveur MCP configuré
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {servers.map((server) => (
-                <div
-                  key={server.id}
-                  className="bg-gray-700 rounded-lg p-4 border border-gray-600"
+        {/* Servers List */}
+        {loading ? (
+          <div className="text-center py-8 animate-fade-in-up">
+            <div className="animate-pulse text-white/40">Chargement...</div>
+          </div>
+        ) : servers.length === 0 ? (
+          <div className="text-center py-8 animate-fade-in-up">
+            <Settings className="w-12 h-12 mx-auto mb-3 text-white/20" />
+            <p className="text-white/40 text-sm">Aucun serveur MCP configuré</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {servers.map((server) => (
+              <div
+                key={server.id}
+                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                  server.enabled
+                    ? 'bg-white/[0.04] border-white/10'
+                    : 'bg-white/[0.02] border-white/5 opacity-60'
+                }`}
+              >
+                <button
+                  onClick={() => toggleServer(server.id, !server.enabled)}
+                  className="flex-shrink-0"
+                  title={server.enabled ? 'Désactiver' : 'Activer'}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white">
-                          {server.name}
-                        </h3>
-                        <span
-                          className={`px-2 py-1 rounded text-xs font-medium ${
-                            server.enabled
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-600 text-gray-300'
-                          }`}
-                        >
-                          {server.enabled ? 'Actif' : 'Inactif'}
-                        </span>
-                      </div>
-                      {server.description && (
-                        <p className="text-gray-300 text-sm mb-2">
-                          {server.description}
-                        </p>
-                      )}
-                      <div className="text-gray-400 text-sm font-mono">
-                        {server.command} {server.args.join(' ')}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <button
-                        onClick={() => toggleServer(server.id, !server.enabled)}
-                        className={`p-2 rounded transition-colors ${
-                          server.enabled
-                            ? 'bg-yellow-600 hover:bg-yellow-700 text-white'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
-                        title={server.enabled ? 'Désactiver' : 'Activer'}
-                      >
-                        {server.enabled ? (
-                          <PowerOff className="w-4 h-4" />
-                        ) : (
-                          <Power className="w-4 h-4" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => deleteServer(server.id)}
-                        className="p-2 bg-red-600 hover:bg-red-700 text-white rounded transition-colors"
-                        title="Supprimer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                  {server.enabled ? (
+                    <Power className="w-5 h-5 text-green-400" />
+                  ) : (
+                    <PowerOff className="w-5 h-5 text-white/30" />
+                  )}
+                </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white/80">{server.name}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${
+                        server.enabled
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-white/10 text-white/40'
+                      }`}
+                    >
+                      {server.enabled ? 'Actif' : 'Inactif'}
+                    </span>
                   </div>
+                  {server.description && (
+                    <p className="text-xs text-white/35 mt-0.5 truncate">{server.description}</p>
+                  )}
+                  <p className="text-xs text-white/25 font-mono mt-0.5 truncate">
+                    {server.command} {server.args.join(' ')}
+                  </p>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-700 bg-gray-750">
-          <div className="text-sm text-gray-400">
-            <p className="mb-2">📚 <strong>Serveurs MCP populaires :</strong></p>
-            <ul className="list-disc list-inside space-y-1 ml-4">
-              <li>@modelcontextprotocol/server-filesystem - Accès fichiers</li>
-              <li>@modelcontextprotocol/server-github - Intégration GitHub</li>
-              <li>@modelcontextprotocol/server-memory - Stockage en mémoire</li>
-              <li>@modelcontextprotocol/server-postgres - Base de données</li>
-            </ul>
+                <button
+                  onClick={() => deleteServer(server.id)}
+                  className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
+                  title="Supprimer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
           </div>
+        )}
+
+        {/* Footer hint */}
+        <div className="mt-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+          <p className="text-xs text-white/30 mb-1.5">📚 <strong className="text-white/40">Serveurs MCP populaires :</strong></p>
+          <ul className="text-xs text-white/25 space-y-0.5 ml-4 list-disc list-inside">
+            <li>@modelcontextprotocol/server-filesystem — Accès fichiers</li>
+            <li>@modelcontextprotocol/server-github — Intégration GitHub</li>
+            <li>@modelcontextprotocol/server-memory — Stockage en mémoire</li>
+            <li>@modelcontextprotocol/server-postgres — Base de données</li>
+          </ul>
         </div>
       </div>
     </div>

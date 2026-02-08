@@ -249,9 +249,31 @@ export default function Builder() {
           </button>
         </header>
 
-        {/* Modals */}
-        {showMCPSettings && <MCPSettings onClose={() => setShowMCPSettings(false)} />}
-        {showMCPBrowser && <MCPBrowser onClose={() => setShowMCPBrowser(false)} />}
+        {/* MCP Settings Slidebar */}
+        {showMCPSettings && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
+              onClick={() => setShowMCPSettings(false)}
+            />
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+              <MCPSettings onClose={() => setShowMCPSettings(false)} />
+            </div>
+          </>
+        )}
+
+        {/* MCP Browser Slidebar */}
+        {showMCPBrowser && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
+              onClick={() => setShowMCPBrowser(false)}
+            />
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+              <MCPBrowser onClose={() => setShowMCPBrowser(false)} />
+            </div>
+          </>
+        )}
 
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden min-h-0">

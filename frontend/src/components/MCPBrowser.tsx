@@ -63,163 +63,172 @@ export default function MCPBrowser({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-3xl max-h-[80vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-700 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">Outils et Ressources MCP</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Wrench className="w-5 h-5 text-blue-400 glow-icon" />
+          <span className="font-semibold gradient-text">Outils & Ressources MCP</span>
         </div>
+        <button
+          onClick={onClose}
+          className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-700 bg-gray-750">
-          <button
-            onClick={() => setActiveTab('tools')}
-            className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
-              activeTab === 'tools'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            <Wrench className="w-4 h-4" />
-            Outils ({tools.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('resources')}
-            className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
-              activeTab === 'resources'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            <Database className="w-4 h-4" />
-            Ressources ({resources.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('prompts')}
-            className={`flex items-center gap-2 px-6 py-3 font-medium transition-colors ${
-              activeTab === 'prompts'
-                ? 'text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            Prompts ({prompts.length})
-          </button>
-        </div>
+      {/* Tabs */}
+      <div className="flex border-b border-white/10 px-2">
+        <button
+          onClick={() => setActiveTab('tools')}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'tools'
+              ? 'border-blue-400 text-blue-400'
+              : 'border-transparent text-white/40 hover:text-white/60'
+          }`}
+        >
+          <Wrench className="w-3.5 h-3.5" />
+          Outils ({tools.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('resources')}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'resources'
+              ? 'border-blue-400 text-blue-400'
+              : 'border-transparent text-white/40 hover:text-white/60'
+          }`}
+        >
+          <Database className="w-3.5 h-3.5" />
+          Ressources ({resources.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('prompts')}
+          className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+            activeTab === 'prompts'
+              ? 'border-blue-400 text-blue-400'
+              : 'border-transparent text-white/40 hover:text-white/60'
+          }`}
+        >
+          <MessageSquare className="w-3.5 h-3.5" />
+          Prompts ({prompts.length})
+        </button>
+      </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {loading ? (
-            <div className="text-center text-gray-400 py-8">Chargement...</div>
-          ) : (
-            <>
-              {activeTab === 'tools' && (
-                <div className="space-y-3">
-                  {tools.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
-                      Aucun outil disponible. Activez des serveurs MCP dans les paramètres.
-                    </p>
-                  ) : (
-                    tools.map((tool, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => onSelectTool?.(tool)}
-                        className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-white">
-                            {tool.name}
-                          </h3>
-                          <span className="text-xs text-gray-400 bg-gray-600 px-2 py-1 rounded">
-                            {tool.serverId.substring(0, 8)}
-                          </span>
-                        </div>
-                        {tool.description && (
-                          <p className="text-gray-300 text-sm">
-                            {tool.description}
-                          </p>
-                        )}
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-5">
+        {loading ? (
+          <div className="text-center py-8 animate-fade-in-up">
+            <div className="animate-pulse text-white/40">Chargement...</div>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'tools' && (
+              <div className="space-y-2">
+                {tools.length === 0 ? (
+                  <div className="text-center py-8 animate-fade-in-up">
+                    <Wrench className="w-12 h-12 mx-auto mb-3 text-white/20" />
+                    <p className="text-white/40 text-sm">Aucun outil disponible</p>
+                    <p className="text-xs text-white/25 mt-1">Activez des serveurs MCP dans les paramètres</p>
+                  </div>
+                ) : (
+                  tools.map((tool, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => onSelectTool?.(tool)}
+                      className="bg-white/[0.04] rounded-xl p-3 border border-white/10 hover:border-blue-500/30 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-sm font-medium text-white/80">
+                          {tool.name}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">
+                          {tool.serverId.substring(0, 8)}
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'resources' && (
-                <div className="space-y-3">
-                  {resources.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
-                      Aucune ressource disponible. Activez des serveurs MCP dans les paramètres.
-                    </p>
-                  ) : (
-                    resources.map((resource, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => onSelectResource?.(resource)}
-                        className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-white">
-                            {resource.name}
-                          </h3>
-                          <span className="text-xs text-gray-400 bg-gray-600 px-2 py-1 rounded">
-                            {resource.serverId.substring(0, 8)}
-                          </span>
-                        </div>
-                        {resource.description && (
-                          <p className="text-gray-300 text-sm mb-2">
-                            {resource.description}
-                          </p>
-                        )}
-                        <p className="text-gray-400 text-xs font-mono">
-                          {resource.uri}
+                      {tool.description && (
+                        <p className="text-xs text-white/35">
+                          {tool.description}
                         </p>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
 
-              {activeTab === 'prompts' && (
-                <div className="space-y-3">
-                  {prompts.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
-                      Aucun prompt disponible. Activez des serveurs MCP dans les paramètres.
-                    </p>
-                  ) : (
-                    prompts.map((prompt, idx) => (
-                      <div
-                        key={idx}
-                        onClick={() => onSelectPrompt?.(prompt)}
-                        className="bg-gray-700 rounded-lg p-4 border border-gray-600 hover:border-blue-500 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h3 className="text-lg font-semibold text-white">
-                            {prompt.name}
-                          </h3>
-                          <span className="text-xs text-gray-400 bg-gray-600 px-2 py-1 rounded">
-                            {prompt.serverId.substring(0, 8)}
-                          </span>
-                        </div>
-                        {prompt.description && (
-                          <p className="text-gray-300 text-sm">
-                            {prompt.description}
-                          </p>
-                        )}
+            {activeTab === 'resources' && (
+              <div className="space-y-2">
+                {resources.length === 0 ? (
+                  <div className="text-center py-8 animate-fade-in-up">
+                    <Database className="w-12 h-12 mx-auto mb-3 text-white/20" />
+                    <p className="text-white/40 text-sm">Aucune ressource disponible</p>
+                    <p className="text-xs text-white/25 mt-1">Activez des serveurs MCP dans les paramètres</p>
+                  </div>
+                ) : (
+                  resources.map((resource, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => onSelectResource?.(resource)}
+                      className="bg-white/[0.04] rounded-xl p-3 border border-white/10 hover:border-blue-500/30 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-sm font-medium text-white/80">
+                          {resource.name}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">
+                          {resource.serverId.substring(0, 8)}
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </div>
+                      {resource.description && (
+                        <p className="text-xs text-white/35 mb-1">
+                          {resource.description}
+                        </p>
+                      )}
+                      <p className="text-xs text-white/25 font-mono truncate">
+                        {resource.uri}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {activeTab === 'prompts' && (
+              <div className="space-y-2">
+                {prompts.length === 0 ? (
+                  <div className="text-center py-8 animate-fade-in-up">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-3 text-white/20" />
+                    <p className="text-white/40 text-sm">Aucun prompt disponible</p>
+                    <p className="text-xs text-white/25 mt-1">Activez des serveurs MCP dans les paramètres</p>
+                  </div>
+                ) : (
+                  prompts.map((prompt, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => onSelectPrompt?.(prompt)}
+                      className="bg-white/[0.04] rounded-xl p-3 border border-white/10 hover:border-blue-500/30 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-1">
+                        <span className="text-sm font-medium text-white/80">
+                          {prompt.name}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/40">
+                          {prompt.serverId.substring(0, 8)}
+                        </span>
+                      </div>
+                      {prompt.description && (
+                        <p className="text-xs text-white/35">
+                          {prompt.description}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
