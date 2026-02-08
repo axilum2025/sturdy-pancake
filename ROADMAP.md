@@ -1,7 +1,6 @@
 # GiLo AI — Agent Builder : Roadmap des Prochaines Phases
 
-> **État actuel** : Phase 1 (Rebrand UI) ✅ + Phase 2 (Agent Builder fonctionnel) ✅
-> **Commit courant** : `dd03c66` sur `main`
+> **État actuel** : Phase 1 (Rebrand UI) ✅ + Phase 2 (Agent Builder fonctionnel) ✅ + Phase 2.5 (Agent Store) 🚧
 > **Date** : 8 février 2026
 
 ---
@@ -39,6 +38,60 @@
 - Analytics / monitoring
 - Billing (Stripe)
 - Tests automatisés
+
+---
+
+## Phase 2.5 — Agent Store 🚧
+
+**Objectif** : Créer un App Store pour les agents IA. Les agents déployés deviennent des "applications" téléchargeables et utilisables avec une interface chat style ChatGPT/Gemini/Claude.
+
+**Durée estimée** : 1-2 semaines
+
+### 2.5.1 Agent Store — Vitrine
+- [x] Page `/store` — grille d'icônes d'agents (style écran d'accueil mobile)
+- [x] Affichage minimaliste : icône + nom (comme des apps)
+- [x] Tap/clic ouvre la page détail de l'agent
+- [x] Recherche et filtrage par catégorie
+- [x] Sections : Trending, Nouveautés, Catégories
+- [x] Responsive : mobile, tablette, desktop
+
+### 2.5.2 Page Détail Agent (`/store/:agentId`)
+- [x] Avatar/icône grand format
+- [x] Nom, description, features listées
+- [x] Catégorie, créateur, stats (conversations, rating)
+- [x] Screenshots/preview
+- [x] Boutons : "Utiliser" (ouvre le chat), "Remixer" (fork l'agent)
+- [x] Badge : Public / Privé
+- [x] Si privé : champ pour entrer le token d'accès
+
+### 2.5.3 Interface Chat Agent (`/store/:agentId/chat`)
+- [x] UI style ChatGPT/Gemini/Claude (plein écran, dark, épuré)
+- [x] Streaming SSE temps réel
+- [x] Historique de conversation
+- [x] Responsive : fonctionne parfaitement sur mobile
+- [x] Branding de l'agent (nom, icône dans le header)
+- [x] PWA-ready : installable sur mobile/desktop
+
+### 2.5.4 Publication d'Agent (PublishModal)
+- [x] Modal de publication depuis le Builder (bouton Déployer existant)
+- [x] Upload d'icône/avatar pour l'agent
+- [x] Description, features, catégorie
+- [x] Choix : Public (visible dans le Store) ou Privé (accès par token)
+- [x] Si privé : génération de token d'accès (gratuit ou payant)
+- [x] Chaque agent publié reçoit un ID unique permanent
+
+### 2.5.5 Remix / Fork
+- [ ] Bouton "Remixer" sur la page détail d'un agent public
+- [ ] Crée une copie de l'agent dans le workspace de l'utilisateur
+- [ ] Lien de parenté : "Remixé à partir de X par @creator"
+- [ ] Le créateur original voit le nombre de remixes
+
+### 2.5.6 Accès Privé & Monétisation
+- [ ] Token d'accès unique par agent privé
+- [ ] Permissions : gratuit ou payant
+- [ ] Si payant : intégration Stripe (Phase 9)
+- [ ] Révocation de tokens
+- [ ] Dashboard créateur : revenus, analytics
 
 ---
 

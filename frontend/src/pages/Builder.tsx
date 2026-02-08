@@ -1,29 +1,29 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Package, Rocket, Loader2, CheckCircle, XCircle, ArrowLeft, Eye, Clock, Sliders } from 'lucide-react';
+import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store } from 'lucide-react';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
 import TimelinePanel from '../components/TimelinePanel';
 import MCPSettings from '../components/MCPSettings';
 import MCPBrowser from '../components/MCPBrowser';
 import AgentConfig from '../components/AgentConfig';
+import PublishModal from '../components/PublishModal';
 import { useSessionStore } from '../store/sessionStore';
 import { useBuilderStore } from '../store/builderStore';
-import { deployProject, getDeployment } from '../services/api';
 
 export default function Builder() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { currentSession, createSession } = useSessionStore();
-  const { setProjectId, deployment, isDeploying, deploymentError, setDeployment, setIsDeploying, setDeploymentError, clearDeployment } = useBuilderStore();
+  const { setProjectId } = useBuilderStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showMCPSettings, setShowMCPSettings] = useState(false);
   const [showMCPBrowser, setShowMCPBrowser] = useState(false);
   const [showFileEditor, setShowFileEditor] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-
-  const [pollingInterval, setPollingInterval] = useState<ReturnType<typeof setInterval> | null>(null);
+  const [showPublish, setShowPublish] = useState(false);
+  const [publishedStoreId, setPublishedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
     const initSession = async () => {
@@ -40,83 +40,6 @@ export default function Builder() {
 
     initSession();
   }, [projectId, currentSession, createSession, setProjectId]);
-
-  // Poll deployment status when deploying
-  useEffect(() => {
-    if (deployment && (deployment.status === 'pending' || deployment.status === 'building')) {
-      const interval = setInterval(async () => {
-        try {
-          const updatedDeployment = await getDeployment(deployment.deploymentId);
-          setDeployment(updatedDeployment);
-          
-          if (updatedDeployment.status === 'deployed' || updatedDeployment.status === 'failed') {
-            setIsDeploying(false);
-            if (interval) clearInterval(interval);
-          }
-        } catch (error) {
-          console.error('Error polling deployment status:', error);
-          setDeploymentError('Erreur lors de la vérification du statut de déploiement');
-          setIsDeploying(false);
-          if (interval) clearInterval(interval);
-        }
-      }, 3000);
-      
-      setPollingInterval(interval);
-      
-      return () => {
-        if (interval) clearInterval(interval);
-      };
-    }
-  }, [deployment, setDeployment, setIsDeploying, setDeploymentError]);
-
-  const handleDeploy = async () => {
-    if (!projectId) {
-      setDeploymentError('ID de projet manquant');
-      return;
-    }
-
-    setIsDeploying(true);
-    setDeploymentError(null);
-    clearDeployment();
-
-    try {
-      const response = await deployProject(projectId);
-      setDeployment({
-        deploymentId: response.deployment.id,
-        status: response.deployment.status as any,
-      });
-    } catch (error: any) {
-      console.error('Deployment error:', error);
-      setDeploymentError(error.response?.data?.error || 'Erreur lors du déploiement');
-      setIsDeploying(false);
-    }
-  };
-
-  const getDeploymentStatusIcon = () => {
-    if (isDeploying) {
-      return <Loader2 className="w-4 h-4 animate-spin" />;
-    }
-    if (deployment?.status === 'deployed') {
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
-    }
-    if (deployment?.status === 'failed') {
-      return <XCircle className="w-4 h-4 text-red-500" />;
-    }
-    return <Rocket className="w-4 h-4" />;
-  };
-
-  const getDeploymentStatusText = () => {
-    if (isDeploying) {
-      return 'Déploiement en cours...';
-    }
-    if (deployment?.status === 'deployed') {
-      return 'Déployé';
-    }
-    if (deployment?.status === 'failed') {
-      return 'Échec';
-    }
-    return 'Déployer';
-  };
 
   if (isLoading) {
     return (
@@ -165,20 +88,22 @@ export default function Builder() {
           <Sliders className="w-5 h-5" />
         </button>
         <button
-          onClick={handleDeploy}
-          disabled={isDeploying}
+          onClick={() => setShowPublish(true)}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
-            isDeploying
-              ? 'bg-white/10 text-white/50 cursor-not-allowed'
-              : deployment?.status === 'deployed'
+            publishedStoreId
               ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-              : deployment?.status === 'failed'
-              ? 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'
               : 'btn-gradient text-white glow-blue'
           }`}
-          title={getDeploymentStatusText()}
+          title={publishedStoreId ? 'Publié sur le Store' : 'Publier sur le Store'}
         >
-          {getDeploymentStatusIcon()}
+          <Rocket className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => navigate('/store')}
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
+          title="Agent Store"
+        >
+          <Store className="w-5 h-5" />
         </button>
         <button
           onClick={() => setShowMCPBrowser(true)}
@@ -230,12 +155,11 @@ export default function Builder() {
               <Eye className="w-4 h-4" />
             </button>
             <button
-              onClick={handleDeploy}
-              disabled={isDeploying}
-              className={`p-2 rounded-lg transition-colors ${isDeploying ? 'text-white/30' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title={getDeploymentStatusText()}
+              onClick={() => setShowPublish(true)}
+              className={`p-2 rounded-lg transition-colors ${publishedStoreId ? 'text-green-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              title="Publier sur le Store"
             >
-              {getDeploymentStatusIcon()}
+              <Rocket className="w-4 h-4" />
             </button>
           </div>
 
@@ -323,6 +247,19 @@ export default function Builder() {
               </div>
             </div>
           </>
+        )}
+
+        {/* Publish Modal */}
+        {showPublish && projectId && (
+          <PublishModal
+            agentId={projectId}
+            agentName={projectId}
+            onClose={() => setShowPublish(false)}
+            onPublished={(storeId) => {
+              setPublishedStoreId(storeId);
+              setShowPublish(false);
+            }}
+          />
         )}
         </div>
       </div>

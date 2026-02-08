@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles } from 'lucide-react';
+import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { listAgents, createAgent, Agent } from '../services/api';
 import AuthModal from '../components/AuthModal';
@@ -122,6 +122,13 @@ export default function Dashboard() {
             </div>
             
             <div className="flex items-center gap-2 sm:gap-4">
+              <button
+                onClick={() => navigate('/store')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-200 group"
+              >
+                <Store className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-purple-300 hidden sm:inline">Agent Store</span>
+              </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-white/90 font-medium text-sm">{user?.email}</p>
