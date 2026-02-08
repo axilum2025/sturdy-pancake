@@ -52,16 +52,16 @@ export default function Dashboard() {
 
   const getTierColor = (tier: string) => {
     switch (tier) {
-      case 'pro': return 'from-purple-500 to-pink-500';
-      case 'team': return 'from-yellow-500 to-orange-500';
-      default: return 'from-blue-500 to-cyan-500';
+      case 'pro': return 'from-indigo-500 to-violet-500';
+      case 'team': return 'from-blue-500 to-indigo-500';
+      default: return 'from-blue-500 to-indigo-500';
     }
   };
 
   const getTierGlow = (tier: string) => {
     switch (tier) {
       case 'pro': return 'glow-purple';
-      case 'team': return 'glow-cyan';
+      case 'team': return 'glow-blue';
       default: return 'glow-blue';
     }
   };
@@ -124,23 +124,22 @@ export default function Dashboard() {
             <div className="flex items-center gap-2 sm:gap-4">
               <button
                 onClick={() => navigate('/store')}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 hover:border-purple-500/40 hover:from-purple-500/20 hover:to-pink-500/20 transition-all duration-200 group"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/15 transition-all duration-200 group"
               >
-                <Store className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium text-purple-300 hidden sm:inline">Agent Store</span>
+                <Store className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-blue-300 hidden sm:inline">Agent Store</span>
               </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-white/90 font-medium text-sm">{user?.email}</p>
                   <div className="flex items-center justify-end gap-2">
                     <span className={`text-xs font-medium capitalize ${
-                      user?.tier === 'pro' ? 'text-purple-400' : 
-                      user?.tier === 'team' ? 'text-yellow-400' : 'text-blue-400'
+                      user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
                     }`}>
                       {user?.tier} Plan
                     </span>
                     {user?.tier === 'pro' && (
-                      <Crown className="w-3 h-3 text-purple-400" />
+                      <Crown className="w-3 h-3 text-indigo-400" />
                     )}
                   </div>
                 </div>
@@ -185,8 +184,8 @@ export default function Dashboard() {
             {/* Conversations Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-100">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <div className="p-1.5 sm:p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 glow-icon" />
+                <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
                 <span className="text-[10px] sm:text-xs text-white/40">Conversations</span>
               </div>
@@ -199,8 +198,8 @@ export default function Dashboard() {
             {/* Deployed Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-200">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <div className="p-1.5 sm:p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 glow-icon" />
+                <div className="p-1.5 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 glow-icon" />
                 </div>
                 <span className="text-[10px] sm:text-xs text-white/40">Déployés</span>
               </div>
@@ -209,7 +208,7 @@ export default function Dashboard() {
               </p>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-500"
                   style={{ width: `${projects.length > 0 ? (deployedCount / projects.length) * 100 : 0}%` }}
                 />
               </div>
@@ -219,7 +218,7 @@ export default function Dashboard() {
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-300">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className={`p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-white/10`}>
-                  <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'pro' ? 'text-purple-400' : user?.tier === 'team' ? 'text-yellow-400' : 'text-blue-400'} glow-icon`} />
+                  <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'} glow-icon`} />
                 </div>
                 <span className="text-[10px] sm:text-xs text-white/40">Tier</span>
               </div>
@@ -227,8 +226,7 @@ export default function Dashboard() {
                 {user?.tier}
               </p>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                user?.tier === 'pro' ? 'bg-purple-500/20 text-purple-300' : 
-                user?.tier === 'team' ? 'bg-yellow-500/20 text-yellow-300' : 
+                user?.tier === 'pro' ? 'bg-indigo-500/20 text-indigo-300' : 
                 'bg-blue-500/20 text-blue-300'
               }`}>
                 {user?.tier === 'pro' && <Crown className="w-3 h-3" />}

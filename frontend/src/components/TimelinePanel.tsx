@@ -7,13 +7,13 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
   const getEventIcon = (type: TimelineEvent['type']) => {
     switch (type) {
       case 'planning':
-        return <Sparkles className="w-4 h-4 text-purple-400 glow-icon" />;
+        return <Sparkles className="w-4 h-4 text-indigo-400 glow-icon" />;
       case 'generation':
-        return <Zap className="w-4 h-4 text-yellow-400 glow-icon" />;
+        return <Zap className="w-4 h-4 text-blue-400 glow-icon" />;
       case 'file-create':
         return <FileText className="w-4 h-4 text-blue-400 glow-icon" />;
       case 'file-edit':
-        return <Code className="w-4 h-4 text-cyan-400 glow-icon" />;
+        return <Code className="w-4 h-4 text-indigo-400 glow-icon" />;
       case 'error':
         return <AlertCircle className="w-4 h-4 text-red-400" />;
       case 'complete':

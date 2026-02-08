@@ -212,7 +212,7 @@ export default function AgentStorePage() {
                 <span className="text-white/80">{formatCount(agent.usageCount)} utilisations</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <RefreshCw className="w-4 h-4 text-purple-400" />
+                <RefreshCw className="w-4 h-4 text-blue-400" />
                 <span className="text-white/80">{agent.remixCount} remixes</span>
               </div>
             </div>
@@ -295,28 +295,28 @@ export default function AgentStorePage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-white/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Cpu className="w-3.5 h-3.5 text-purple-400" />
+                  <Cpu className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-xs text-white/40">Modèle</span>
                 </div>
                 <p className="text-sm text-white/80 font-medium">{agent.configSnapshot.model.split('/').pop()}</p>
               </div>
               <div className="bg-white/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Thermometer className="w-3.5 h-3.5 text-orange-400" />
+                  <Thermometer className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-xs text-white/40">Température</span>
                 </div>
                 <p className="text-sm text-white/80 font-medium">{agent.configSnapshot.temperature}</p>
               </div>
               <div className="bg-white/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Tag className="w-3.5 h-3.5 text-cyan-400" />
+                  <Tag className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-xs text-white/40">Catégorie</span>
                 </div>
                 <p className="text-sm text-white/80 font-medium">{CATEGORY_LABELS[agent.category] || agent.category}</p>
               </div>
               <div className="bg-white/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Clock className="w-3.5 h-3.5 text-green-400" />
+                  <Clock className="w-3.5 h-3.5 text-blue-400" />
                   <span className="text-xs text-white/40">Publié</span>
                 </div>
                 <p className="text-sm text-white/80 font-medium">{formatDate(agent.publishedAt)}</p>

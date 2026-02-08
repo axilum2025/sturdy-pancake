@@ -17,7 +17,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
 
   const getTierStyle = (tier: string) => {
     switch (tier) {
-      case 'pro': return { bg: 'bg-purple-500/10', text: 'text-purple-300', border: 'border-purple-500/30' };
+      case 'pro': return { bg: 'bg-indigo-500/10', text: 'text-indigo-300', border: 'border-indigo-500/30' };
       default: return { bg: 'bg-blue-500/10', text: 'text-blue-300', border: 'border-blue-500/30' };
     }
   };

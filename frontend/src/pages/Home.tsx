@@ -57,29 +57,29 @@ export default function Home() {
       icon: Layers,
       title: 'Catalogue de Modèles',
       description: 'Choisissez parmi GPT-4, Claude, Mistral et d\'autres LLMs pour propulser vos agents.',
-      color: 'from-purple-500/20 to-purple-600/20',
-      iconColor: 'text-purple-400',
+      color: 'from-indigo-500/20 to-indigo-600/20',
+      iconColor: 'text-indigo-400',
     },
     {
       icon: Terminal,
       title: 'Outils & Intégrations',
       description: 'Connectez vos agents à des APIs, bases de données et services externes via MCP.',
-      color: 'from-cyan-500/20 to-cyan-600/20',
-      iconColor: 'text-cyan-400',
+      color: 'from-violet-500/20 to-violet-600/20',
+      iconColor: 'text-violet-400',
     },
     {
       icon: Globe,
       title: 'Playground Interactif',
       description: 'Testez et itérez sur vos agents en temps réel avant de les déployer.',
-      color: 'from-pink-500/20 to-pink-600/20',
-      iconColor: 'text-pink-400',
+      color: 'from-blue-500/20 to-blue-600/20',
+      iconColor: 'text-blue-400',
     },
     {
       icon: Cloud,
       title: 'Déploiement en 1 clic',
       description: 'Déployez vos agents en tant qu\'API, widget chat ou bot avec monitoring intégré.',
-      color: 'from-amber-500/20 to-amber-600/20',
-      iconColor: 'text-amber-400',
+      color: 'from-indigo-500/20 to-indigo-600/20',
+      iconColor: 'text-indigo-400',
     },
     {
       icon: Shield,
@@ -242,8 +242,8 @@ export default function Home() {
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
-                    <span className="text-cyan-400">→</span>
-                    <span className="text-cyan-400/80">https://api.gilo.ai/agents/support-client</span>
+                    <span className="text-blue-400">→</span>
+                    <span className="text-blue-400/80">https://api.gilo.ai/agents/support-client</span>
                   </div>
                 </div>
               </div>
