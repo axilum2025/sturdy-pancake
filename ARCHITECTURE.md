@@ -1,8 +1,10 @@
-# Architecture du Projet - AI App Builder
+# Architecture du Projet - GiLo AI Agent Builder
+
+> **Dernière mise à jour** : 8 février 2026
 
 ## Vue d'ensemble
 
-Ce projet est un **constructeur d'applications IA** inspiré de Lovable, utilisant le GitHub Copilot SDK. Il permet aux utilisateurs de décrire une application en langage naturel et de la faire construire automatiquement par un agent IA.
+Ce projet est un **constructeur d'agents IA** (Agent Builder) avec un **Agent Store** intégré. Il permet aux utilisateurs de créer, configurer, tester et publier des agents IA accessibles via une interface de chat style ChatGPT/Gemini/Claude.
 
 ---
 
@@ -11,57 +13,64 @@ Ce projet est un **constructeur d'applications IA** inspiré de Lovable, utilisa
 ```mermaid
 flowchart TB
     subgraph Frontend - Port 5173
-        A[React + Vite]
+        A[React + Vite + Tailwind]
         B[Pages]
         C[Composants]
         D[Services]
-        E[Store]
+        E[Store Zustand]
         
-        B --> Home
-        B --> Builder
+        B --> Home[Home - Landing]
+        B --> Dashboard[Dashboard - Liste agents]
+        B --> Builder[Builder - Agent Studio]
+        B --> AgentStore[AgentStore - Grille icônes]
+        B --> AgentStorePage[AgentStorePage - Détails]
+        B --> AgentChat[AgentChat - Chat plein écran]
         
         C --> ChatPanel
-        C --> PreviewPanel
+        C --> AgentConfig
+        C --> Playground
         C --> TimelinePanel
         C --> MCPSettings
         C --> MCPBrowser
+        C --> PublishModal
+        C --> AuthModal
         
         D --> api.ts
         E --> sessionStore
+        E --> builderStore
     end
     
     subgraph Backend - Port 3001
         F[Express Server]
         G[Routes]
         H[Services]
-        I[Storage]
+        I[Models]
         
-        G --> sessionRouter
-        G --> agentRouter
-        G --> mcpRouter
-        G --> storageRouter
+        G --> agentsRouter[/api/agents]
+        G --> storeRouter[/api/store]
+        G --> sessionRouter[/api/sessions]
+        G --> mcpRouter[/api/mcp]
+        G --> authRouter[/api/auth]
+        G --> storageRouter[/api/storage]
         
-        H --> SessionManager
         H --> AgentService
+        H --> SessionManager
         H --> MCPService
         H --> StorageService
+        
+        I --> AgentModel[Agent Model - Map]
+        I --> StoreModel[StoreAgent Model - Map]
+        I --> UserModel[User Model - Map]
     end
     
-    subgraph MCP - Model Context Protocol
-        J[Serveur Filesystem]
-        K[Serveur GitHub]
-        L[Serveur Memory]
-        M[Serveur Postgres]
+    subgraph External APIs
+        J[GitHub Models API]
+        K[OpenAI Compatible - SSE]
     end
     
-    A -- HTTP REST --> F
-    F <--> MCPClient --> J
-    F <--> MCPClient --> K
-    F <--> MCPClient --> L
-    F <--> MCPClient --> M
-    
-    I --> data[mcp-servers.json]
-    I --> projects[projects directory]
+    A -- HTTP REST + SSE --> F
+    F -- Chat Streaming --> J
+    F -- Store Chat --> K
 ```
 
 ---
@@ -148,25 +157,61 @@ MCPBrowser.tsx → GET /api/mcp/tools → MCPService
 ## Technologies Utilisées
 
 ### Frontend
-- **React 18** - Framework UI
-- **Vite** - Build tool
-- **Tailwind CSS** - Styling
-- **React Router** - Routing
-- **Zustand** - State management
-- **React Query** - Data fetching
-- **Axios** - HTTP client
-- **Lucide React** - Icônes
+- **React 18** — Framework UI
+- **Vite** — Build tool
+- **Tailwind CSS** — Styling (design system glass/gradient custom)
+- **React Router v6** — Routing
+- **Zustand** — State management (sessionStore, builderStore)
+- **Lucide React** — Icônes
+- **TypeScript** — Typage
 
 ### Backend
-- **Express.js** - Framework web
-- **TypeScript** - Langage
-- **@modelcontextprotocol/sdk** - Client MCP
-- **CORS** - Cross-origin middleware
-- **dotenv** - Variables d'environnement
+- **Express.js** — Framework web
+- **TypeScript** — Langage
+- **OpenAI SDK** — Chat completions (GitHub Models API)
+- **SSE** — Server-Sent Events pour le streaming
+- **CORS** — Cross-origin middleware
+- **dotenv** — Variables d'environnement
+
+### AI
+- **GitHub Models API** — GPT-4.1 / GPT-4.1-mini / GPT-4.1-nano
+- **OpenAI-compatible endpoint** — `https://models.github.ai/inference`
+- **SSE streaming** — Réponses en temps réel
 
 ---
 
 ## API Endpoints
+
+### Auth
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| POST | `/api/auth/login` | Connexion (demo) |
+| POST | `/api/auth/register` | Inscription (demo) |
+| GET | `/api/auth/me` | Utilisateur courant |
+
+### Agents
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/agents` | Lister les agents de l'utilisateur |
+| POST | `/api/agents` | Créer un agent |
+| GET | `/api/agents/:id` | Détail d'un agent |
+| PATCH | `/api/agents/:id` | Modifier un agent |
+| DELETE | `/api/agents/:id` | Supprimer un agent |
+| PATCH | `/api/agents/:id/config` | Modifier la config (model, temperature, tools) |
+| POST | `/api/agents/:id/chat` | Chat SSE avec l'agent |
+| POST | `/api/agents/:id/deploy` | Déployer un agent |
+
+### Agent Store
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| GET | `/api/store` | Lister les agents du Store (cards) |
+| GET | `/api/store/categories` | Catégories disponibles |
+| GET | `/api/store/:id` | Détail d'un agent du Store |
+| POST | `/api/store/publish` | Publier un agent dans le Store |
+| POST | `/api/store/:id/chat` | Chat SSE avec un agent du Store |
+| POST | `/api/store/:id/use` | Incrémenter le compteur d'utilisation |
+| POST | `/api/store/:id/validate-token` | Valider un token d'accès privé |
+| DELETE | `/api/store/:id` | Retirer un agent du Store |
 
 ### Sessions
 | Méthode | Endpoint | Description |
@@ -174,13 +219,6 @@ MCPBrowser.tsx → GET /api/mcp/tools → MCPService
 | POST | `/api/sessions` | Créer une session |
 | GET | `/api/sessions/:sessionId` | Récupérer une session |
 | DELETE | `/api/sessions/:sessionId` | Supprimer une session |
-
-### Agent
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/agent/task` | Envoyer une tâche |
-| GET | `/api/agent/task/:taskId` | Statut d'une tâche |
-| GET | `/api/agent/stream/:sessionId` | Stream SSE |
 
 ### MCP
 | Méthode | Endpoint | Description |
@@ -192,8 +230,6 @@ MCPBrowser.tsx → GET /api/mcp/tools → MCPService
 | GET | `/api/mcp/tools` | Liste des outils |
 | POST | `/api/mcp/tools/execute` | Exécuter un outil |
 | GET | `/api/mcp/resources` | Liste des ressources |
-| POST | `/api/mcp/resources/read` | Lire une ressource |
-| GET | `/api/mcp/prompts` | Liste des prompts |
 
 ### Storage
 | Méthode | Endpoint | Description |
@@ -202,65 +238,63 @@ MCPBrowser.tsx → GET /api/mcp/tools → MCPService
 | GET | `/api/storage/projects` | Lister les projets |
 | GET | `/api/storage/projects/:id` | Récupérer un projet |
 | POST | `/api/storage/projects/:id/files` | Sauvegarder un fichier |
-| GET | `/api/storage/projects/:id/files/:filename` | Récupérer un fichier |
 
 ---
 
 ## Fonctionnalités Actuelles
 
-### Phase 1 - MVP ✅
-- Architecture frontend/backend complète
-- Interface de chat pour les instructions
-- Panneau d'aperçu en direct (placeholder)
-- Timeline des actions de l'agent (placeholder)
-- Gestion des sessions
-- Pipeline de déploiement Azure CI/CD
-- **Intégration MCP complète**
-  - Connexion aux serveurs MCP
-  - Outils, ressources et prompts
-  - Stockage persistant
+### Phase 1 - Rebrand UI ✅
+- Design system glass/gradient (glass-strong, gradient-text, glow-icon, btn-gradient)
+- Landing page "GiLo AI — Agent Builder"
+- Responsive mobile/tablette/desktop
+- Animations (fade-in-up, slide-in-right, pulse-glow)
 
-### Phase 2 - Intégration Copilot SDK ⏳
-- Connexion au Copilot SDK (placeholder)
-- Planification et exécution des tâches (placeholder)
-- Création/édition de fichiers (placeholder)
-- Exécution de commandes (placeholder)
+### Phase 2 - Agent Builder ✅
+- CRUD agents avec config (model, temperature, system prompt, tools)
+- Chat SSE temps réel (GitHub Models API — GPT-4.1)
+- AgentConfig UI (3 onglets : Instructions, Modèle, Outils)
+- Playground intégré pour tester les agents
+- Dashboard avec stats et création rapide
+- MCP Settings + Browser (design glass/gradient)
+- Timeline des actions
+- Auth demo (demo@example.com / demo)
 
-### Phase 3 - Fonctionnalités avancées ⏳
-- Templates UI prédéfinis
-- Outils de design system
-- Déploiement automatique
-- Export de projets
+### Phase 2.5 - Agent Store ✅ (core)
+- Agent Store (grille d'icônes style app mobile)
+- Page détail agent (stats, features, boutons Utiliser/Remixer)
+- Interface chat plein écran style ChatGPT/Gemini/Claude
+- Publication depuis le Builder (3 étapes)
+- 9 catégories (support, dev, creative, data, education, marketing, gaming, hr, general)
+- Agents publics et privés (validation par token)
+
+### À venir (voir ROADMAP.md)
+- Phase 3 : Persistance DB + Auth JWT/OAuth
+- Phase 4 : Déploiement réel (API endpoints, widget, webhooks)
+- Phase 5 : Knowledge Base / RAG
+- Phase 6 : Outils & MCP fonctionnel
+- Phase 7-10 : Analytics, Versioning, Billing, Production
 
 ---
 
-## Points d'Extension Futurs
+## Points d'Extension Prioritaires
 
-### 1. Intégration Copilot SDK
-Le `AgentService` contient déjà les structures pour l'intégration mais utilise un placeholder:
+### 1. Persistance (Phase 3)
+Actuellement tout est en mémoire (`Map`). Au restart, toutes les données sont perdues.
+→ Migration vers PostgreSQL + drizzle-orm
 
+### 2. Auth Réelle (Phase 3)
+Le système actuel utilise un header `x-user-id` avec un user demo fixe.
+→ JWT + OAuth GitHub/Google
+
+### 3. MCP Fonctionnel (Phase 6)
+Le `mcpService.ts` contient des stubs/placeholders :
 ```typescript
-// backend/src/services/agentService.ts:66-82
-// TODO: Integrate with Copilot SDK
-// await copilotSession.send({
-//   prompt: task.prompt,
-//   constraints: task.constraints
-// });
+// Toutes les méthodes retournent des données statiques
+// TODO: Connecter de vrais serveurs MCP
 ```
 
-### 2. Streaming SSE Complet
-Le streaming est configuré mais pas complètement implémenté:
-
-```typescript
-// backend/src/routes/agent.ts:54-57
-// TODO: Implement SSE streaming for agent output
-agentService.streamOutput(sessionId, (data) => {
-  res.write(`data: ${JSON.stringify(data)}\n\n`);
-});
-```
-
-### 3. Preview Panel
-Le panneau d'aperçu est un placeholder qui attend la connexion avec le serveur de développement de l'utilisateur.
+### 4. Knowledge Base / RAG (Phase 5)
+Pas encore implémenté. Objectif : permettre aux agents d'accéder à des documents personnalisés via embeddings + recherche vectorielle.
 
 ---
 
@@ -285,4 +319,4 @@ Le panneau d'aperçu est un placeholder qui attend la connexion avec le serveur 
 
 ---
 
-*Document généré le 2026-02-06*
+*Document mis à jour le 8 février 2026*

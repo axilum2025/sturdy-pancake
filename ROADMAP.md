@@ -1,13 +1,36 @@
 # GiLo AI — Agent Builder : Roadmap des Prochaines Phases
 
-> **État actuel** : Phase 1 (Rebrand UI) ✅ + Phase 2 (Agent Builder fonctionnel) ✅ + Phase 2.5 (Agent Store) 🚧
-> **Date** : 8 février 2026
+> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → **Phase 3** 🎯 prochaine
+> **Dernière mise à jour** : 8 février 2026
+
+---
+
+## Tableau de bord des phases
+
+| Phase | Nom | Statut | Priorité |
+|-------|-----|--------|----------|
+| 1 | Rebrand UI | ✅ Terminé | — |
+| 2 | Agent Builder fonctionnel | ✅ Terminé | — |
+| 2.5 | Agent Store + Chat Interface | ✅ Core terminé | — |
+| **3** | **Persistance & Auth réelle** | 🎯 **Prochaine** | **CRITIQUE** |
+| 4 | Déploiement réel des agents | ⏳ Planifié | Haute |
+| 5 | Knowledge Base & RAG | ⏳ Planifié | Haute |
+| 6 | Outils & MCP fonctionnel | ⏳ Planifié | Moyenne |
+| 7 | Analytics & Monitoring | ⏳ Planifié | Moyenne |
+| 8 | Versioning & Collaboration | ⏳ Planifié | Basse |
+| 9 | Billing Stripe | ⏳ Planifié | Haute |
+| 10 | Production & DevOps | ⏳ Planifié | CRITIQUE |
 
 ---
 
 ## Résumé de ce qui existe aujourd'hui
 
-### ✅ Fonctionnel
+### ✅ Phase 1 — Rebrand UI (terminé)
+- Landing page "GiLo AI — Agent Builder" avec design system glass/gradient
+- Dashboard avec stats (agents, conversations, déployés, tier)
+- Design responsive mobile/tablette/desktop
+
+### ✅ Phase 2 — Agent Builder fonctionnel (terminé)
 | Composant | Description |
 |-----------|-------------|
 | **Agent Model** | CRUD complet en mémoire (`Map`), config (model/temperature/tools), status (draft/active/deployed), stats |
@@ -15,21 +38,31 @@
 | **Agent Chat SSE** | `POST /api/agents/:id/chat` — streaming temps réel via OpenAI SDK |
 | **AgentConfig UI** | 3 onglets : Instructions (system prompt), Modèle (GPT-4.1/Mini/Nano, température), Outils |
 | **Playground UI** | Chat live SSE pour tester un agent, historique messages, clear |
-| **Dashboard** | Liste des agents, stats (agents/conversations/déployés), création rapide |
-| **Landing Page** | Rebrandée "Agent Builder" avec features, stats, témoignages |
+| **Dashboard** | Liste des agents, stats, création rapide, lien vers Agent Store |
 | **Copilot Chat** | ChatPanel avec streaming SSE vers GitHub Models API |
 | **Auth Demo** | `demo@example.com` / `demo` — header `x-user-id` |
+
+### ✅ Phase 2.5 — Agent Store (core terminé)
+| Composant | Description |
+|-----------|-------------|
+| **Store Backend** | Modèle `StoreAgent` (in-memory), 8 agents samples, routes REST + SSE chat |
+| **Agent Store UI** | Page `/store` — grille d'icônes style app mobile, catégories, recherche, trending |
+| **Agent Detail** | Page `/store/:agentId` — fiche détaillée, stats, features, bouton Utiliser/Remixer |
+| **Agent Chat** | Page `/store/:agentId/chat` — interface plein écran style ChatGPT/Gemini/Claude |
+| **PublishModal** | Wizard 3 étapes (infos → features → visibilité) pour publier depuis le Builder |
+| **Navigation** | Bouton Store dans Dashboard + Builder |
 
 ### ⚠️ Partiellement implémenté (stubs/placeholders)
 | Composant | État |
 |-----------|------|
 | **MCP Service** | Interfaces définies, toutes les méthodes retournent des placeholders |
-| **Deployment Service** | Logique de base mais `TODO: Integrate with Azure Static Web Apps API` |
 | **Storage Service** | Filesystem local seulement, pas de cloud storage |
-| **Agent Deploy** | Change le status à "deployed" + génère un endpoint fictif, pas de vrai déploiement |
+| **Agent Deploy** | Remplacé par PublishModal → Store (l'ancien deploy est retiré) |
 | **Auth** | Demo uniquement, pas de JWT/OAuth réel, pas de hash de mot de passe |
+| **Remix/Fork** | Bouton UI présent mais logique pas encore implémentée |
+| **Accès privé** | Token validation côté backend, pas encore de monétisation |
 
-### ❌ Manquant
+### ❌ Manquant pour la production
 - Base de données (tout est en mémoire — perdu au restart)
 - Authentification réelle (OAuth GitHub / Google, JWT)
 - Déploiement réel des agents (API endpoint, webhook, widget)
@@ -38,58 +71,58 @@
 - Analytics / monitoring
 - Billing (Stripe)
 - Tests automatisés
+- CI/CD pipeline
 
 ---
 
-## Phase 2.5 — Agent Store 🚧
+## Phase 2.5 — Agent Store ✅ (core)
 
 **Objectif** : Créer un App Store pour les agents IA. Les agents déployés deviennent des "applications" téléchargeables et utilisables avec une interface chat style ChatGPT/Gemini/Claude.
 
-**Durée estimée** : 1-2 semaines
+**Statut** : Core implémenté ✅ — Remix et monétisation restants
 
-### 2.5.1 Agent Store — Vitrine
+### 2.5.1 Agent Store — Vitrine ✅
 - [x] Page `/store` — grille d'icônes d'agents (style écran d'accueil mobile)
 - [x] Affichage minimaliste : icône + nom (comme des apps)
 - [x] Tap/clic ouvre la page détail de l'agent
 - [x] Recherche et filtrage par catégorie
-- [x] Sections : Trending, Nouveautés, Catégories
+- [x] Sections : Trending, Top Rated, Toutes catégories
 - [x] Responsive : mobile, tablette, desktop
 
-### 2.5.2 Page Détail Agent (`/store/:agentId`)
-- [x] Avatar/icône grand format
+### 2.5.2 Page Détail Agent (`/store/:agentId`) ✅
+- [x] Avatar/icône grand format avec couleur gradient
 - [x] Nom, description, features listées
-- [x] Catégorie, créateur, stats (conversations, rating)
-- [x] Screenshots/preview
+- [x] Catégorie, créateur, stats (rating, utilisations, remixes)
+- [x] Informations techniques (modèle, température)
 - [x] Boutons : "Utiliser" (ouvre le chat), "Remixer" (fork l'agent)
 - [x] Badge : Public / Privé
 - [x] Si privé : champ pour entrer le token d'accès
 
-### 2.5.3 Interface Chat Agent (`/store/:agentId/chat`)
+### 2.5.3 Interface Chat Agent (`/store/:agentId/chat`) ✅
 - [x] UI style ChatGPT/Gemini/Claude (plein écran, dark, épuré)
 - [x] Streaming SSE temps réel
-- [x] Historique de conversation
-- [x] Responsive : fonctionne parfaitement sur mobile
+- [x] Historique de conversation local
+- [x] Responsive : fonctionne sur mobile
 - [x] Branding de l'agent (nom, icône dans le header)
-- [x] PWA-ready : installable sur mobile/desktop
+- [x] Message d'accueil personnalisé
 
-### 2.5.4 Publication d'Agent (PublishModal)
-- [x] Modal de publication depuis le Builder (bouton Déployer existant)
-- [x] Upload d'icône/avatar pour l'agent
-- [x] Description, features, catégorie
+### 2.5.4 Publication d'Agent (PublishModal) ✅
+- [x] Modal de publication depuis le Builder (3 étapes)
+- [x] Icône avec couleur personnalisable
+- [x] Description, features, catégorie, tags
 - [x] Choix : Public (visible dans le Store) ou Privé (accès par token)
-- [x] Si privé : génération de token d'accès (gratuit ou payant)
 - [x] Chaque agent publié reçoit un ID unique permanent
 
-### 2.5.5 Remix / Fork
-- [ ] Bouton "Remixer" sur la page détail d'un agent public
-- [ ] Crée une copie de l'agent dans le workspace de l'utilisateur
+### 2.5.5 Remix / Fork ⏳
+- [ ] Bouton "Remixer" présent dans l'UI mais logique backend pas encore implémentée
+- [ ] Créer une copie de l'agent dans le workspace de l'utilisateur
 - [ ] Lien de parenté : "Remixé à partir de X par @creator"
 - [ ] Le créateur original voit le nombre de remixes
 
-### 2.5.6 Accès Privé & Monétisation
-- [ ] Token d'accès unique par agent privé
+### 2.5.6 Accès Privé & Monétisation ⏳
+- [x] Token d'accès unique par agent privé (validation backend)
 - [ ] Permissions : gratuit ou payant
-- [ ] Si payant : intégration Stripe (Phase 9)
+- [ ] Si payant : intégration Stripe (lié à Phase 9)
 - [ ] Révocation de tokens
 - [ ] Dashboard créateur : revenus, analytics
 
@@ -483,21 +516,23 @@
 ## Ordre de priorité recommandé
 
 ```
-Phase 3 (Persistance + Auth)     ← Fondation — CRITIQUE
+Phase 2.5 restants (Remix + Tokens) ← Finir le Store — rapide
   ↓
-Phase 4 (Déploiement réel)       ← Valeur #1 pour les utilisateurs
+Phase 3 (Persistance + Auth)        ← Fondation — CRITIQUE
   ↓
-Phase 5 (Knowledge Base / RAG)   ← Différenciateur clé
+Phase 4 (Déploiement réel)          ← Valeur #1 pour les utilisateurs
   ↓
-Phase 6 (Outils & MCP)           ← Puissance des agents
+Phase 5 (Knowledge Base / RAG)      ← Différenciateur clé
   ↓
-Phase 9 (Billing Stripe)         ← Monétisation
+Phase 6 (Outils & MCP)              ← Puissance des agents
   ↓
-Phase 7 (Analytics)              ← Rétention
+Phase 9 (Billing Stripe)            ← Monétisation
   ↓
-Phase 8 (Versioning + Équipes)   ← Scale & entreprise
+Phase 7 (Analytics)                  ← Rétention
   ↓
-Phase 10 (Production)            ← Go-live
+Phase 8 (Versioning + Équipes)      ← Scale & entreprise
+  ↓
+Phase 10 (Production)               ← Go-live
 ```
 
 ---
@@ -523,17 +558,20 @@ Phase 10 (Production)            ← Go-live
 
 ## Estimation globale
 
-| Phase | Effort | Impact |
-|-------|--------|--------|
-| Phase 3 — Persistance & Auth | ~1 semaine | ⭐⭐⭐⭐⭐ |
-| Phase 4 — Déploiement Agents | ~1-2 semaines | ⭐⭐⭐⭐⭐ |
-| Phase 5 — Knowledge Base / RAG | ~1-2 semaines | ⭐⭐⭐⭐ |
-| Phase 6 — Outils & MCP | ~1-2 semaines | ⭐⭐⭐⭐ |
-| Phase 7 — Analytics | ~1 semaine | ⭐⭐⭐ |
-| Phase 8 — Versioning & Collab | ~1 semaine | ⭐⭐⭐ |
-| Phase 9 — Billing Stripe | ~1 semaine | ⭐⭐⭐⭐⭐ |
-| Phase 10 — Production | ~1-2 semaines | ⭐⭐⭐⭐⭐ |
-| **Total** | **~8-12 semaines** | |
+| Phase | Effort | Statut | Impact |
+|-------|--------|--------|--------|
+| Phase 1 — Rebrand UI | ~3 jours | ✅ Terminé | ⭐⭐⭐ |
+| Phase 2 — Agent Builder | ~1 semaine | ✅ Terminé | ⭐⭐⭐⭐⭐ |
+| Phase 2.5 — Agent Store | ~1 semaine | ✅ Core fait | ⭐⭐⭐⭐ |
+| Phase 3 — Persistance & Auth | ~1 semaine | 🎯 Prochaine | ⭐⭐⭐⭐⭐ |
+| Phase 4 — Déploiement Agents | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐⭐ |
+| Phase 5 — Knowledge Base / RAG | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐ |
+| Phase 6 — Outils & MCP | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐ |
+| Phase 7 — Analytics | ~1 semaine | ⏳ Planifié | ⭐⭐⭐ |
+| Phase 8 — Versioning & Collab | ~1 semaine | ⏳ Planifié | ⭐⭐⭐ |
+| Phase 9 — Billing Stripe | ~1 semaine | ⏳ Planifié | ⭐⭐⭐⭐⭐ |
+| Phase 10 — Production | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐⭐ |
+| **Total restant** | **~8-12 semaines** | | |
 
 ---
 

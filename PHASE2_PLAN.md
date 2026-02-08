@@ -1,4 +1,31 @@
-# Phase 2 - AI App Builder v2: Architecture Finale
+# Phase 2 - AI App Builder v2: Architecture Finale ✅
+
+> **Statut** : Phase 2 terminée — Phase 2.5 (Agent Store) implémentée
+> **Dernière mise à jour** : 8 février 2026
+
+---
+
+## Ce qui a été implémenté
+
+### ✅ Phase 2 — Agent Builder fonctionnel
+- Agent Model complet (CRUD, config, status, stats)
+- API REST Agents (GET/POST/PATCH/DELETE + config + deploy + chat SSE)
+- AgentConfig UI (3 onglets : Instructions, Modèle, Outils)
+- Playground UI (chat live SSE, historique, clear)
+- Dashboard (liste agents, stats, création rapide)
+- MCP UI (MCPSettings + MCPBrowser, design glass/gradient)
+- TimelinePanel (historique des actions)
+- Auth Demo (demo@example.com / demo)
+
+### ✅ Phase 2.5 — Agent Store
+- Store Backend (modèle StoreAgent, 8 agents samples, routes REST + SSE)
+- Agent Store UI (grille icônes style app mobile, filtres, trending)
+- Agent Detail (fiche complète, stats, features, Utiliser/Remixer)
+- Agent Chat (interface plein écran style ChatGPT/Gemini/Claude)
+- PublishModal (wizard 3 étapes depuis le Builder)
+- Navigation Store dans Dashboard + Builder
+
+---
 
 ## Modèle de Revenue Révisé
 
@@ -105,31 +132,32 @@
 
 ## Plan d'Implémentation Révisé
 
-### Étape 1: Core + Starter Tier (Priorité Haute)
-- [ ] User/Auth Models avec tiers (starter/pro/team)
-- [ ] Project storage (string-based)
+### Étape 1: Core + Starter Tier ✅ (partiel)
+- [x] User/Auth Models avec tiers (starter/pro/team) — demo mode
+- [x] Project storage (string-based) — in-memory
 - [ ] Deployment Service pour Starter:
   - [ ] Azure Static Web Apps API integration
   - [ ] DNS management (Azure DNS ou Cloudflare)
   - [ ] SSL certificate automation
 
-### Étape 2: Copilot Agent Integration
-- [ ] GitHub Copilot SDK integration
-- [ ] Tools pour génération fichiers
+### Étape 2: Copilot Agent Integration ✅ (partiel)
+- [x] GitHub Models API integration (chat SSE)
+- [x] Agent configuration (model, temperature, system prompt)
+- [ ] Tools pour génération fichiers — MCP stub only
 - [ ] Tools pour déploiement Starter
 
-### Étape 3: Pro Tier (OAuth GitHub + Azure)
+### Étape 3: Pro Tier (OAuth GitHub + Azure) ⏳
 - [ ] GitHub OAuth App (pour créer repos)
 - [ ] Azure Service Principal (pour déployer)
 - [ ] Template CI/CD GitHub Actions
 
-### Étape 4: Frontend v2
-- [ ] Auth + Dashboard
-- [ ] File Editor
-- [ ] Deployment Panel
-- [ ] Upgrade UI
+### Étape 4: Frontend v2 ✅
+- [x] Auth + Dashboard
+- [x] Agent Builder (Chat + Config + Playground)
+- [x] Agent Store + Chat Interface
+- [x] PublishModal (remplace Deployment Panel)
 
-### Étape 5: Billing (Stripe)
+### Étape 5: Billing (Stripe) ⏳
 - [ ] Stripe Checkout
 - [ ] Webhooks
 - [ ] Portal client
