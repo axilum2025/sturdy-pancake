@@ -4,6 +4,7 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import { initDb, closeDb } from './db';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
 import { mcpRouter } from './routes/mcp';
@@ -14,58 +15,89 @@ import { deploymentRouter } from './routes/deploy';
 import { copilotRouter } from './routes/copilot';
 import { agentsRouter } from './routes/agents';
 import { storeRouter } from './routes/store';
+import { authMiddleware, optionalAuth } from './middleware/auth';
 
-const app: Express = express();
 const port = process.env.PORT || 3001;
 
-// Middleware
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5173',
-  credentials: true
-}));
-app.use(express.json());
+async function main() {
+  // ---- Initialize database ----
+  await initDb();
+  console.log('✅ Database ready');
 
-// Routes
-app.use('/api/sessions', sessionRouter);
-app.use('/api/agent', agentRouter);
-app.use('/api/mcp', mcpRouter);
-app.use('/api/storage', storageRouter);
-app.use('/api/auth', authRouter);
-app.use('/api/projects', projectsRouter);
-app.use('/api/deploy', deploymentRouter);
-app.use('/api/copilot', copilotRouter);
-app.use('/api/agents', agentsRouter);
-app.use('/api/store', storeRouter);
+  const app: Express = express();
 
-// Health check
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    version: '2.0.0'
+  // Middleware
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5173',
+    credentials: true
+  }));
+  app.use(express.json());
+
+  // Public routes (no auth required)
+  app.use('/api/auth', authRouter);
+  app.use('/api/store', optionalAuth, storeRouter);
+
+  // Protected routes (JWT required)
+  app.use('/api/sessions', authMiddleware, sessionRouter);
+  app.use('/api/agent', authMiddleware, agentRouter);
+  app.use('/api/mcp', authMiddleware, mcpRouter);
+  app.use('/api/storage', authMiddleware, storageRouter);
+  app.use('/api/projects', authMiddleware, projectsRouter);
+  app.use('/api/deploy', authMiddleware, deploymentRouter);
+  app.use('/api/copilot', authMiddleware, copilotRouter);
+  app.use('/api/agents', authMiddleware, agentsRouter);
+
+  // Health check
+  app.get('/health', (req: Request, res: Response) => {
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      version: '3.0.0'
+    });
   });
-});
-
-// API documentation endpoint
-app.get('/api', (req: Request, res: Response) => {
-  res.json({
-    name: 'GiLo AI — Agent Builder API',
-    version: '2.0.0',
-    endpoints: {
-      auth: '/api/auth',
-      projects: '/api/projects',
-      deploy: '/api/deploy',
-      copilot: '/api/copilot',
-      agents: '/api/agents',
-      store: '/api/store',
-      sessions: '/api/sessions',
-      agent: '/api/agent',
-      mcp: '/api/mcp',
-      storage: '/api/storage',
-    }
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      version: '3.0.0'
+    });
   });
-});
 
-app.listen(port, () => {
-  console.log('Server running on port ' + port);
+  // API documentation endpoint
+  app.get('/api', (req: Request, res: Response) => {
+    res.json({
+      name: 'GiLo AI — Agent Builder API',
+      version: '3.0.0',
+      endpoints: {
+        auth: '/api/auth',
+        projects: '/api/projects',
+        deploy: '/api/deploy',
+        copilot: '/api/copilot',
+        agents: '/api/agents',
+        store: '/api/store',
+        sessions: '/api/sessions',
+        agent: '/api/agent',
+        mcp: '/api/mcp',
+        storage: '/api/storage',
+      }
+    });
+  });
+
+  app.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+  });
+
+  // Graceful shutdown
+  const shutdown = async () => {
+    console.log('\n🛑 Shutting down...');
+    await closeDb();
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
+
+main().catch((err) => {
+  console.error('❌ Failed to start server:', err);
+  process.exit(1);
 });

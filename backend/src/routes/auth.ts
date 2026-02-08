@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { userModel } from '../models/user';
+import { authMiddleware, generateToken, AuthenticatedRequest } from '../middleware/auth';
 
 export const authRouter = Router();
 
 /**
  * POST /api/auth/register
- * Register a new user
+ * Register a new user — returns JWT
  */
 authRouter.post('/register', async (req: Request, res: Response) => {
   try {
@@ -15,11 +16,17 @@ authRouter.post('/register', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
     const user = await userModel.create({ email, password, githubId });
+    const token = generateToken(user);
     const response = userModel.toResponse(user);
 
     res.status(201).json({
       user: response,
+      token,
       message: 'User created successfully',
     });
   } catch (error: any) {
@@ -32,7 +39,7 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 
 /**
  * POST /api/auth/login
- * Login with email/password
+ * Login with email/password — returns JWT
  */
 authRouter.post('/login', async (req: Request, res: Response) => {
   try {
@@ -47,16 +54,18 @@ authRouter.post('/login', async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Demo: accept any password for demo user
-    if (user.email === 'demo@example.com' && password === 'demo') {
-      const response = userModel.toResponse(user);
-      return res.json({
-        user: response,
-        token: `demo-token-${user.id}`,
-      });
+    const valid = await userModel.verifyPassword(user, password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    res.status(401).json({ error: 'Invalid credentials' });
+    const token = generateToken(user);
+    const response = userModel.toResponse(user);
+
+    res.json({
+      user: response,
+      token,
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -64,21 +73,11 @@ authRouter.post('/login', async (req: Request, res: Response) => {
 
 /**
  * GET /api/auth/me
- * Get current user profile
+ * Get current user profile (requires JWT)
  */
-authRouter.get('/me', async (req: Request, res: Response) => {
+authRouter.get('/me', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
+    const user = (req as AuthenticatedRequest).user;
     res.json(userModel.toResponse(user));
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -86,21 +85,16 @@ authRouter.get('/me', async (req: Request, res: Response) => {
 });
 
 /**
- * PATCH /api/auth/upgrade
+ * POST /api/auth/upgrade
  * Upgrade to Pro tier (demo - would integrate Stripe)
  */
-authRouter.post('/upgrade', async (req: Request, res: Response) => {
+authRouter.post('/upgrade', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
+    const userId = (req as AuthenticatedRequest).userId;
     const { stripeCustomerId, subscriptionId } = req.body;
 
-    const user = await userModel.upgradeToPro(userId, stripeCustomerId, subscriptionId);
-    
+    const user = await userModel.upgradeToPro(userId, stripeCustomerId || 'demo', subscriptionId || 'demo');
+
     res.json({
       message: 'Upgraded to Pro successfully',
       user: userModel.toResponse(user),
@@ -114,16 +108,11 @@ authRouter.post('/upgrade', async (req: Request, res: Response) => {
  * POST /api/auth/downgrade
  * Downgrade to Free tier
  */
-authRouter.post('/downgrade', async (req: Request, res: Response) => {
+authRouter.post('/downgrade', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string;
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
+    const userId = (req as AuthenticatedRequest).userId;
     const user = await userModel.downgradeToFree(userId);
-    
+
     res.json({
       message: 'Downgraded to Free successfully',
       user: userModel.toResponse(user),

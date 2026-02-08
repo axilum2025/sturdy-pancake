@@ -5,6 +5,7 @@ import {
   Copy, Check, Tag, Clock, Cpu, Thermometer, Shield, RefreshCw
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface StoreAgentDetail {
   id: string;
@@ -40,18 +41,6 @@ interface StoreAgentDetail {
   requiresToken?: boolean;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  productivity: '⚡ Productivité',
-  support: '🎧 Support Client',
-  education: '📚 Éducation',
-  creative: '🎨 Créatif',
-  'dev-tools': '💻 Dev Tools',
-  marketing: '📈 Marketing',
-  data: '📊 Data & Analytics',
-  entertainment: '🎮 Divertissement',
-  other: '📦 Autre',
-};
-
 const CATEGORY_COLORS: Record<string, string> = {
   productivity: 'from-blue-500 to-blue-600',
   support: 'from-green-500 to-emerald-600',
@@ -82,7 +71,7 @@ export default function AgentStorePage() {
     try {
       const headers: Record<string, string> = {};
       if (token) headers['x-access-token'] = token;
-      const res = await fetch(`/api/store/${agentId}`, { headers });
+      const res = await fetch(`${API_BASE}/api/store/${agentId}`, { headers });
       const data = await res.json();
       setAgent(data);
       if (token && !data.requiresToken) {
@@ -97,7 +86,7 @@ export default function AgentStorePage() {
 
   const handleValidateToken = async () => {
     try {
-      const res = await fetch(`/api/store/${agentId}/validate-token`, {
+      const res = await fetch(`${API_BASE}/api/store/${agentId}/validate-token`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: tokenInput }),
@@ -123,11 +112,6 @@ export default function AgentStorePage() {
     navigator.clipboard.writeText(agent.id);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const formatCount = (n: number) => {
-    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
-    return n.toString();
   };
 
   const formatDate = (d: string) => {

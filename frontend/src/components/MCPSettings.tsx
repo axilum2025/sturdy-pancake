@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, Plus, Power, PowerOff, Trash2, Check, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface MCPServer {
   id: string;
@@ -34,7 +35,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
 
   const fetchServers = async () => {
     try {
-      const response = await fetch('/api/mcp/servers');
+      const response = await fetch(`${API_BASE}/api/mcp/servers`);
       const data = await response.json();
       setServers(data);
     } catch (error) {
@@ -47,12 +48,12 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
   const toggleServer = async (serverId: string, enabled: boolean) => {
     try {
       const endpoint = enabled 
-        ? `/api/mcp/servers/${serverId}/connect`
-        : `/api/mcp/servers/${serverId}/disconnect`;
+        ? `${API_BASE}/api/mcp/servers/${serverId}/connect`
+        : `${API_BASE}/api/mcp/servers/${serverId}/disconnect`;
       
       await fetch(endpoint, { method: 'POST' });
       
-      await fetch(`/api/mcp/servers/${serverId}`, {
+      await fetch(`${API_BASE}/api/mcp/servers/${serverId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled }),
@@ -68,7 +69,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
     if (!confirm(t('mcp.confirmDelete'))) return;
     
     try {
-      await fetch(`/api/mcp/servers/${serverId}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/api/mcp/servers/${serverId}`, { method: 'DELETE' });
       fetchServers();
     } catch (error) {
       console.error('Error deleting server:', error);
@@ -79,7 +80,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
     try {
       const args = newServer.args.split(' ').filter(arg => arg.trim());
       
-      await fetch('/api/mcp/servers', {
+      await fetch(`${API_BASE}/api/mcp/servers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

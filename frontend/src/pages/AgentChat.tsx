@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Send, Trash2, Bot, User, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface Message {
   id: string;
@@ -70,12 +71,12 @@ export default function AgentChat() {
     try {
       const headers: Record<string, string> = {};
       if (accessToken) headers['x-access-token'] = accessToken;
-      const res = await fetch(`/api/store/${agentId}`, { headers });
+      const res = await fetch(`${API_BASE}/api/store/${agentId}`, { headers });
       const data = await res.json();
       setAgent(data);
 
       // Track usage
-      fetch(`/api/store/${agentId}/use`, { method: 'POST' });
+      fetch(`${API_BASE}/api/store/${agentId}/use`, { method: 'POST' });
 
       // Add welcome message
       if (data.configSnapshot?.welcomeMessage) {
@@ -129,7 +130,7 @@ export default function AgentChat() {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (accessToken) headers['x-access-token'] = accessToken;
 
-      const response = await fetch(`/api/store/${agentId}/chat`, {
+      const response = await fetch(`${API_BASE}/api/store/${agentId}/chat`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ messages: apiMessages }),

@@ -1,8 +1,9 @@
-import { randomUUID } from 'crypto';
+import { eq, sql } from 'drizzle-orm';
+import { getDb } from '../db';
+import { agents } from '../db/schema';
 
 // ============================================================
-// GiLo AI – Agent Model
-// Represents an AI agent created by users on the platform.
+// GiLo AI – Agent Model (PostgreSQL-backed via Drizzle ORM)
 // ============================================================
 
 export type AgentStatus = 'draft' | 'active' | 'deployed';
@@ -18,14 +19,14 @@ export interface AgentTool {
 }
 
 export interface AgentConfig {
-  model: string;               // e.g. "openai/gpt-4.1", "openai/gpt-4.1-nano"
-  temperature: number;         // 0.0 - 1.0
-  maxTokens: number;           // max response tokens
-  topP?: number;               // nucleus sampling
-  systemPrompt: string;        // the agent's system instructions
-  welcomeMessage?: string;     // first message shown to users
-  tools: AgentTool[];          // connected tools/integrations
-  knowledgeBase?: string[];    // file paths or URLs for RAG
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  topP?: number;
+  systemPrompt: string;
+  welcomeMessage?: string;
+  tools: AgentTool[];
+  knowledgeBase?: string[];
 }
 
 export interface Agent {
@@ -36,16 +37,10 @@ export interface Agent {
   tier: AgentTier;
   config: AgentConfig;
   status: AgentStatus;
-  
-  // Deployment info
-  endpoint?: string;           // e.g. /api/agents/{id}/chat
+  endpoint?: string;
   deployedAt?: Date;
-  
-  // Stats
   totalConversations: number;
   totalMessages: number;
-  
-  // Timestamps
   createdAt: Date;
   updatedAt: Date;
 }
@@ -70,10 +65,6 @@ export interface AgentResponse {
   updatedAt: string;
 }
 
-// ============================================================
-// Default agent configuration
-// ============================================================
-
 const DEFAULT_CONFIG: AgentConfig = {
   model: 'openai/gpt-4.1',
   temperature: 0.7,
@@ -84,147 +75,101 @@ const DEFAULT_CONFIG: AgentConfig = {
 };
 
 // ============================================================
-// Agent Model (in-memory store)
+// Agent Model — PostgreSQL-backed
 // ============================================================
 
 export class AgentModel {
-  private agents: Map<string, Agent>;
-  private userAgents: Map<string, Set<string>>; // userId → Agent IDs
-
-  constructor() {
-    this.agents = new Map();
-    this.userAgents = new Map();
-    this.initializeSampleAgent();
-  }
-
-  private initializeSampleAgent(): void {
-    const sample: Agent = {
-      id: 'sample-agent-id',
-      userId: 'demo-user-id',
-      name: 'Agent Support Client',
-      description: 'Un agent de support qui répond aux questions fréquentes et aide les utilisateurs.',
-      tier: 'free',
-      config: {
-        model: 'openai/gpt-4.1',
-        temperature: 0.5,
-        maxTokens: 2048,
-        systemPrompt: `Tu es un agent de support client professionnel pour une entreprise SaaS.
-Tu réponds aux questions fréquentes, tu guides les utilisateurs et tu escalades vers un humain quand nécessaire.
-Sois toujours poli, concis et utile.
-Si tu ne connais pas la réponse, dis-le honnêtement et propose d'escalader.`,
-        welcomeMessage: 'Bonjour ! Je suis votre assistant support. Comment puis-je vous aider aujourd\'hui ?',
-        tools: [
-          {
-            id: 'tool-faq',
-            name: 'FAQ Lookup',
-            type: 'function',
-            description: 'Rechercher dans la base de connaissances FAQ',
-            enabled: true,
-          },
-          {
-            id: 'tool-ticket',
-            name: 'Create Ticket',
-            type: 'api',
-            description: 'Créer un ticket de support pour escalade humaine',
-            enabled: true,
-          },
-        ],
-      },
-      status: 'active',
-      endpoint: '/api/agents/sample-agent-id/chat',
-      totalConversations: 42,
-      totalMessages: 318,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-
-    this.agents.set(sample.id, sample);
-    if (!this.userAgents.has(sample.userId)) {
-      this.userAgents.set(sample.userId, new Set());
-    }
-    this.userAgents.get(sample.userId)!.add(sample.id);
-  }
-
   async create(userId: string, data: AgentCreateDTO, userTier: AgentTier): Promise<Agent> {
-    const userAgentIds = this.userAgents.get(userId) || new Set();
+    const db = getDb();
+
+    // Check agent limit
+    const userAgents = await db.select({ count: sql<number>`count(*)::int` })
+      .from(agents)
+      .where(eq(agents.userId, userId));
+    const count = userAgents[0]?.count || 0;
     const maxAgents = userTier === 'pro' ? 20 : 5;
 
-    if (userAgentIds.size >= maxAgents) {
+    if (count >= maxAgents) {
       throw new Error(`Agent limit reached. Maximum ${maxAgents} agents for ${userTier} tier.`);
     }
 
-    const agent: Agent = {
-      id: randomUUID(),
+    const config: AgentConfig = {
+      ...DEFAULT_CONFIG,
+      ...data.config,
+      tools: data.config?.tools || [],
+    };
+
+    const [row] = await db.insert(agents).values({
       userId,
       name: data.name,
       description: data.description,
       tier: userTier,
-      config: {
-        ...DEFAULT_CONFIG,
-        ...data.config,
-        tools: data.config?.tools || [],
-      },
+      config,
       status: 'draft',
       totalConversations: 0,
       totalMessages: 0,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    }).returning();
 
-    this.agents.set(agent.id, agent);
-
-    if (!this.userAgents.has(userId)) {
-      this.userAgents.set(userId, new Set());
-    }
-    this.userAgents.get(userId)!.add(agent.id);
-
-    return agent;
+    return this.mapRow(row);
   }
 
   async findById(id: string): Promise<Agent | undefined> {
-    return this.agents.get(id);
+    const db = getDb();
+    const row = await db.query.agents.findFirst({ where: eq(agents.id, id) });
+    return row ? this.mapRow(row) : undefined;
   }
 
   async findByUserId(userId: string): Promise<Agent[]> {
-    const agentIds = this.userAgents.get(userId) || new Set();
-    return Array.from(agentIds)
-      .map((id) => this.agents.get(id))
-      .filter((a): a is Agent => a !== undefined);
+    const db = getDb();
+    const rows = await db.query.agents.findMany({
+      where: eq(agents.userId, userId),
+      orderBy: (agents, { desc }) => [desc(agents.updatedAt)],
+    });
+    return rows.map((r) => this.mapRow(r));
   }
 
-  async update(id: string, data: Partial<Agent>): Promise<Agent> {
-    const agent = this.agents.get(id);
-    if (!agent) throw new Error('Agent not found');
-    const updated = { ...agent, ...data, updatedAt: new Date() };
-    this.agents.set(id, updated);
-    return updated;
+  async update(id: string, data: Partial<Pick<Agent, 'name' | 'description' | 'status' | 'endpoint' | 'totalConversations' | 'totalMessages'>>): Promise<Agent> {
+    const db = getDb();
+    const [row] = await db.update(agents)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(agents.id, id))
+      .returning();
+    if (!row) throw new Error('Agent not found');
+    return this.mapRow(row);
   }
 
   async updateConfig(id: string, config: Partial<AgentConfig>): Promise<Agent> {
-    const agent = this.agents.get(id);
-    if (!agent) throw new Error('Agent not found');
-    agent.config = { ...agent.config, ...config };
-    agent.updatedAt = new Date();
-    this.agents.set(id, agent);
-    return agent;
+    const db = getDb();
+    const existing = await db.query.agents.findFirst({ where: eq(agents.id, id) });
+    if (!existing) throw new Error('Agent not found');
+
+    const newConfig = { ...(existing.config as AgentConfig), ...config };
+    const [row] = await db.update(agents)
+      .set({ config: newConfig, updatedAt: new Date() })
+      .where(eq(agents.id, id))
+      .returning();
+    return this.mapRow(row);
   }
 
   async delete(id: string): Promise<void> {
-    const agent = this.agents.get(id);
-    if (!agent) throw new Error('Agent not found');
-    this.agents.delete(id);
-    this.userAgents.get(agent.userId)?.delete(id);
+    const db = getDb();
+    const result = await db.delete(agents).where(eq(agents.id, id)).returning();
+    if (result.length === 0) throw new Error('Agent not found');
   }
 
   async deploy(id: string): Promise<Agent> {
-    const agent = this.agents.get(id);
-    if (!agent) throw new Error('Agent not found');
-    agent.status = 'deployed';
-    agent.endpoint = `/api/agents/${id}/chat`;
-    agent.deployedAt = new Date();
-    agent.updatedAt = new Date();
-    this.agents.set(id, agent);
-    return agent;
+    const db = getDb();
+    const [row] = await db.update(agents)
+      .set({
+        status: 'deployed',
+        endpoint: `/api/agents/${id}/chat`,
+        deployedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(agents.id, id))
+      .returning();
+    if (!row) throw new Error('Agent not found');
+    return this.mapRow(row);
   }
 
   toResponse(agent: Agent): AgentResponse {
@@ -240,6 +185,24 @@ Si tu ne connais pas la réponse, dis-le honnêtement et propose d'escalader.`,
       totalMessages: agent.totalMessages,
       createdAt: agent.createdAt.toISOString(),
       updatedAt: agent.updatedAt.toISOString(),
+    };
+  }
+
+  private mapRow(row: any): Agent {
+    return {
+      id: row.id,
+      userId: row.userId,
+      name: row.name,
+      description: row.description ?? undefined,
+      tier: row.tier as AgentTier,
+      config: row.config as AgentConfig,
+      status: row.status as AgentStatus,
+      endpoint: row.endpoint ?? undefined,
+      deployedAt: row.deployedAt ?? undefined,
+      totalConversations: row.totalConversations,
+      totalMessages: row.totalMessages,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
     };
   }
 }

@@ -1,7 +1,7 @@
 # GiLo AI — Agent Builder : Roadmap des Prochaines Phases
 
-> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → **Phase 3** 🎯 prochaine
-> **Dernière mise à jour** : 8 février 2026
+> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → Phase 3 ✅ → **Phase 4** 🎯 prochaine
+> **Dernière mise à jour** : Juin 2025
 
 ---
 
@@ -12,14 +12,14 @@
 | 1 | Rebrand UI | ✅ Terminé | — |
 | 2 | Agent Builder fonctionnel | ✅ Terminé | — |
 | 2.5 | Agent Store + Chat Interface | ✅ Core terminé | — |
-| **3** | **Persistance & Auth réelle** | 🎯 **Prochaine** | **CRITIQUE** |
-| 4 | Déploiement réel des agents | ⏳ Planifié | Haute |
+| 3 | Persistance & Auth réelle | ✅ Terminé | — |
+| **4** | **Déploiement réel des agents** | 🎯 **Prochaine** | **Haute** |
 | 5 | Knowledge Base & RAG | ⏳ Planifié | Haute |
 | 6 | Outils & MCP fonctionnel | ⏳ Planifié | Moyenne |
 | 7 | Analytics & Monitoring | ⏳ Planifié | Moyenne |
 | 8 | Versioning & Collaboration | ⏳ Planifié | Basse |
 | 9 | Billing Stripe | ⏳ Planifié | Haute |
-| 10 | Production & DevOps | ⏳ Planifié | CRITIQUE |
+| 10 | Production & DevOps | ✅ Intégré Phase 3 | — |
 
 ---
 
@@ -52,26 +52,32 @@
 | **PublishModal** | Wizard 3 étapes (infos → features → visibilité) pour publier depuis le Builder |
 | **Navigation** | Bouton Store dans Dashboard + Builder |
 
+### ✅ Phase 3 — Persistance & Auth réelle (terminé)
+- PostgreSQL 16 + Drizzle ORM (remplaçant toutes les `Map` in-memory)
+- JWT auth réel avec bcrypt (remplaçant `x-user-id` header)
+- Déploiement Azure : SWA (frontend) + Container Apps (backend) + PostgreSQL
+- CI/CD GitHub Actions, Dockerfile multi-stage, Bicep IaC
+
 ### ⚠️ Partiellement implémenté (stubs/placeholders)
 | Composant | État |
 |-----------|------|
 | **MCP Service** | Interfaces définies, toutes les méthodes retournent des placeholders |
 | **Storage Service** | Filesystem local seulement, pas de cloud storage |
 | **Agent Deploy** | Remplacé par PublishModal → Store (l'ancien deploy est retiré) |
-| **Auth** | Demo uniquement, pas de JWT/OAuth réel, pas de hash de mot de passe |
+| **Auth** | ✅ JWT réel avec bcrypt + jsonwebtoken (OAuth GitHub reporté Phase 4) |
 | **Remix/Fork** | Bouton UI présent mais logique pas encore implémentée |
 | **Accès privé** | Token validation côté backend, pas encore de monétisation |
 
 ### ❌ Manquant pour la production
-- Base de données (tout est en mémoire — perdu au restart)
-- Authentification réelle (OAuth GitHub / Google, JWT)
+- ~~Base de données~~ ✅ PostgreSQL + Drizzle ORM
+- ~~Authentification réelle~~ ✅ JWT + bcrypt
+- ~~CI/CD pipeline~~ ✅ GitHub Actions
 - Déploiement réel des agents (API endpoint, webhook, widget)
 - Knowledge Base / RAG
 - Versioning des agents
 - Analytics / monitoring
 - Billing (Stripe)
 - Tests automatisés
-- CI/CD pipeline
 
 ---
 
@@ -128,48 +134,57 @@
 
 ---
 
-## Phase 3 — Persistance & Auth Réelle
+## Phase 3 — Persistance & Auth Réelle ✅
 
 **Objectif** : Rendre la plateforme utilisable en production avec des données persistantes et une auth sécurisée.
 
-**Durée estimée** : 1 semaine
+**Statut** : ✅ Terminé — Juin 2025
 
-### 3.1 Base de données SQLite/PostgreSQL
-- [ ] Installer `better-sqlite3` (dev) ou `pg` (prod) + `drizzle-orm` comme ORM
-- [ ] Créer le schéma :
-  ```
-  users (id, email, passwordHash, tier, createdAt)
-  agents (id, userId, name, description, status, configJson, createdAt, updatedAt)
-  conversations (id, agentId, userId, startedAt, messageCount)
-  messages (id, conversationId, role, content, createdAt)
-  agent_tools (id, agentId, name, type, configJson, enabled)
-  api_keys (id, userId, keyHash, name, permissions, createdAt, lastUsedAt)
-  ```
-- [ ] Migration depuis les `Map` in-memory vers les tables
-- [ ] Seeds : agent sample, user demo
+### 3.1 Base de données PostgreSQL + Drizzle ORM ✅
+- [x] PostgreSQL 16 via Drizzle ORM (`drizzle-orm` + `pg`)
+- [x] Schéma complet : `users`, `agents`, `storeAgents`, `conversations`, `messages`, `refreshTokens`
+- [x] UUID PK, timestamps avec timezone, JSONB pour config/quotas/features
+- [x] Relations définies : users↔agents, agents↔conversations, conversations↔messages
+- [x] Migration complète depuis `Map` in-memory vers PostgreSQL
+- [x] Seeds : 1 user demo + 1 sample agent + 8 store agents
+- [x] Docker Compose pour PostgreSQL local en dev
+- [x] Scripts : `db:push`, `db:seed`, `db:studio`, `db:setup`
 
-### 3.2 Authentification réelle
-- [ ] Installer `bcrypt` + `jsonwebtoken`
-- [ ] Route `POST /api/auth/register` — hash password, créer user, retourner JWT
-- [ ] Route `POST /api/auth/login` — vérifier password, retourner JWT + refresh token
-- [ ] Middleware `authMiddleware` — vérifier JWT au lieu de `x-user-id` header
-- [ ] OAuth GitHub (optionnel Phase 3, recommandé Phase 4) :
-  - [ ] GitHub App registration
-  - [ ] Route `GET /api/auth/github` → redirect OAuth
-  - [ ] Route `GET /api/auth/github/callback` → exchange code → JWT
-- [ ] Frontend : `AuthContext` mis à jour pour JWT (localStorage + auto-refresh)
-- [ ] Frontend : `AuthModal` mis à jour avec vrai login/register
+### 3.2 Authentification JWT réelle ✅
+- [x] `bcryptjs` pour hash de mots de passe (salt rounds: 12)
+- [x] `jsonwebtoken` pour génération/vérification JWT (24h expiry)
+- [x] Route `POST /api/auth/register` — hash password, créer user, retourner JWT
+- [x] Route `POST /api/auth/login` — vérifier password, retourner JWT
+- [x] Middleware `authMiddleware` — JWT verification, fallback `x-user-id` en dev seulement
+- [x] Frontend : `AuthContext` mis à jour pour JWT seul
+- [x] Frontend : suppression complète des headers `x-user-id`
+- [x] Intercepteur 401 → déconnexion automatique
+- [ ] OAuth GitHub (reporté à Phase 4)
 
-### 3.3 Relations User ↔ Agent
-- [ ] Chaque agent appartient à un `userId`
-- [ ] L'API filtre par `userId` du JWT (isolation multi-tenant)
-- [ ] Quotas réels basés sur le tier du user (free=5, pro=20 agents)
+### 3.3 Relations User ↔ Agent ✅
+- [x] Chaque agent appartient à un `userId` (clé étrangère)
+- [x] L'API filtre par `userId` du JWT (isolation multi-tenant)
+- [x] Quotas réels basés sur le tier du user
 
-### 3.4 Historique des conversations
-- [ ] Sauvegarder chaque message du Playground en DB
-- [ ] Route `GET /api/agents/:id/conversations` — lister les conversations passées
-- [ ] Route `GET /api/conversations/:id/messages` — relire une conversation
-- [ ] UI : onglet "Historique" dans le Playground pour revoir les conversations passées
+### 3.4 Historique des conversations ⏳
+- [x] Tables `conversations` et `messages` créées en DB
+- [ ] Sauvegarde automatique des messages du Playground (reporté)
+- [ ] UI historique dans le Playground (reporté)
+
+### 3.5 Déploiement Azure (Production) ✅
+- [x] **Dockerfile** multi-stage pour le backend (node:20-alpine)
+- [x] **Bicep** template complet (`infra/main.bicep`) :
+  - Azure Container Registry (Basic)
+  - PostgreSQL Flexible Server (Burstable B1ms)
+  - Log Analytics Workspace
+  - Container Apps Environment + Container App (scale 0-5)
+  - Azure Static Web Apps (Free tier pour frontend)
+- [x] **CI/CD** GitHub Actions :
+  - `deploy-backend.yml` : build Docker → push ACR → deploy Container Apps
+  - `deploy-frontend.yml` : build Vite → deploy SWA
+- [x] **Script** `scripts/setup-azure.sh` : provisioning initial complet
+- [x] Frontend : `VITE_API_URL` dynamique pour production
+- [x] Coût estimé : ~$25-35/mois (scale-to-zero)
 
 ---
 

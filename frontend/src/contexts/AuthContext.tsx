@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, login as apiLogin, register as apiRegister, logout as apiLogout, getCurrentUser } from '../services/api';
 
 interface AuthContextType {
@@ -20,11 +20,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check for existing session
+    // Check for existing session via JWT
     const token = localStorage.getItem('authToken');
-    const userId = localStorage.getItem('userId');
     
-    if (token && userId) {
+    if (token) {
       fetchUser();
     } else {
       setIsLoading(false);
@@ -37,7 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(userData);
     } catch (err) {
       localStorage.removeItem('authToken');
-      localStorage.removeItem('userId');
     } finally {
       setIsLoading(false);
     }

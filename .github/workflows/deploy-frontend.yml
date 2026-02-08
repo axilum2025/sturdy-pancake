@@ -1,0 +1,67 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/deploy-frontend.yml'
+  workflow_dispatch:
+
+env:
+  APP_LOCATION: '/frontend'
+  OUTPUT_LOCATION: 'dist'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Get backend URL
+        id: backend
+        run: |
+          # Use the configured API URL or derive from Azure
+          if [ -n "${{ vars.BACKEND_URL }}" ]; then
+            echo "url=${{ vars.BACKEND_URL }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "url=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_API_URL: ${{ steps.backend.outputs.url }}
+        run: npm run build
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: 'frontend'
+          output_location: 'dist'
+          skip_app_build: true # Already built above with env vars
+
+      - name: Summary
+        run: |
+          echo "### 🚀 Frontend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "The frontend has been deployed to Azure Static Web Apps." >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.backend.outputs.url }}" ]; then
+            echo "Backend API URL: \`${{ steps.backend.outputs.url }}\`" >> $GITHUB_STEP_SUMMARY
+          fi

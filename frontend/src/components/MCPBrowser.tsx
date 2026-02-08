@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Wrench, Database, MessageSquare, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface MCPTool {
   name: string;
@@ -49,9 +50,9 @@ export default function MCPBrowser({
   const fetchData = async () => {
     try {
       const [toolsRes, resourcesRes, promptsRes] = await Promise.all([
-        fetch('/api/mcp/tools'),
-        fetch('/api/mcp/resources'),
-        fetch('/api/mcp/prompts'),
+        fetch(`${API_BASE}/api/mcp/tools`),
+        fetch(`${API_BASE}/api/mcp/resources`),
+        fetch(`${API_BASE}/api/mcp/prompts`),
       ]);
 
       setTools(await toolsRes.json());

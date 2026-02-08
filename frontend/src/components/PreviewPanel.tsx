@@ -1,5 +1,5 @@
 import { useBuilderStore } from '../store/builderStore';
-import { Play, ExternalLink, RefreshCw, Loader2, CheckCircle, XCircle, Globe, Eye, Code2, X } from 'lucide-react';
+import { ExternalLink, RefreshCw, Loader2, CheckCircle, XCircle, Globe, Eye, Code2, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface PreviewPanelProps {
@@ -71,8 +71,6 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
 
     const extension = selectedFile.split('.').pop()?.toLowerCase();
     const isHtml = extension === 'html' || extension === 'htm';
-    const isCss = extension === 'css';
-    const isJs = extension === 'js' || extension === 'jsx' || extension === 'ts' || extension === 'tsx';
 
     if (isHtml && selectedFileContent) {
       return (

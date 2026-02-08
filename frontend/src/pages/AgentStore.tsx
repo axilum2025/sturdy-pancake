@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Grid3X3, Sparkles, TrendingUp, Star, ArrowLeft, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface StoreAgentCard {
   id: string;
@@ -55,8 +56,8 @@ export default function AgentStore() {
   const fetchData = async () => {
     try {
       const [agentsRes, catsRes] = await Promise.all([
-        fetch('/api/store'),
-        fetch('/api/store/categories'),
+        fetch(`${API_BASE}/api/store`),
+        fetch(`${API_BASE}/api/store/categories`),
       ]);
       const agentsData = await agentsRes.json();
       const catsData = await catsRes.json();
@@ -74,7 +75,7 @@ export default function AgentStore() {
       const params = new URLSearchParams();
       if (selectedCategory !== 'all') params.set('category', selectedCategory);
       if (searchQuery) params.set('search', searchQuery);
-      const res = await fetch(`/api/store?${params}`);
+      const res = await fetch(`${API_BASE}/api/store?${params}`);
       const data = await res.json();
       setAgents(data.agents || []);
     } catch (error) {

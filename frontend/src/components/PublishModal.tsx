@@ -3,6 +3,7 @@ import {
   Rocket, X, Globe, Lock, Tag, Sparkles, Plus, Trash2, Check, Loader2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface PublishModalProps {
   agentId: string;
@@ -57,10 +58,8 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
 
     try {
       const token = localStorage.getItem('authToken');
-      const userId = localStorage.getItem('userId');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      if (userId) headers['x-user-id'] = userId;
 
       const body = {
         agentId,
@@ -74,7 +73,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         visibility,
       };
 
-      const res = await fetch('/api/store/publish', {
+      const res = await fetch(`${API_BASE}/api/store/publish`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),

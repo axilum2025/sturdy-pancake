@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, X, Sliders, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap } from 'lucide-react';
+import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useBuilderStore } from '../store/builderStore';
+import { API_BASE } from '../services/api';
 
 interface AgentConfigProps {
   agentId: string;
@@ -55,12 +55,10 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   const loadConfig = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const userId = localStorage.getItem('userId');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      if (userId) headers['x-user-id'] = userId;
 
-      const res = await fetch(`/api/agents/${agentId}`, { headers });
+      const res = await fetch(`${API_BASE}/api/agents/${agentId}`, { headers });
       if (res.ok) {
         const agent = await res.json();
         setConfig(agent.config);
@@ -76,12 +74,10 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     setIsSaving(true);
     try {
       const token = localStorage.getItem('authToken');
-      const userId = localStorage.getItem('userId');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      if (userId) headers['x-user-id'] = userId;
 
-      await fetch(`/api/agents/${agentId}/config`, {
+      await fetch(`${API_BASE}/api/agents/${agentId}/config`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify(config),

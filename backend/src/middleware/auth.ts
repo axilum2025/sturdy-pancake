@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
 import { userModel } from '../models/user';
 import { User } from '../models/user';
 
@@ -7,10 +8,22 @@ export interface AuthenticatedRequest extends Request {
   user: User;
 }
 
+export interface JwtPayload {
+  userId: string;
+  email: string;
+  tier: string;
+}
+
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error('JWT_SECRET environment variable is required');
+  return secret;
+}
+
 /**
  * Authentication middleware
- * Expects userId in header 'x-user-id' for demo purposes
- * In production, this would validate JWT tokens
+ * 1. Checks Authorization: Bearer <JWT> header
+ * 2. Falls back to x-user-id header in development
  */
 export const authMiddleware = async (
   req: Request,
@@ -18,32 +31,44 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // For demo: get userId from header
-    const userId = req.headers['x-user-id'] as string;
-    
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized. Missing x-user-id header.' });
-      return;
+    // Try JWT first
+    const authHeader = req.headers['authorization'];
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
+        const user = await userModel.findById(decoded.userId);
+        if (user) {
+          (req as AuthenticatedRequest).userId = user.id;
+          (req as AuthenticatedRequest).user = user;
+          return next();
+        }
+      } catch (jwtError) {
+        // JWT invalid — fall through to x-user-id or reject
+      }
     }
 
-    const user = await userModel.findById(userId);
-    if (!user) {
-      res.status(401).json({ error: 'User not found' });
-      return;
+    // Fallback: x-user-id header (dev/compat only)
+    if (process.env.NODE_ENV !== 'production') {
+      const userId = req.headers['x-user-id'] as string;
+      if (userId) {
+        const user = await userModel.findById(userId);
+        if (user) {
+          (req as AuthenticatedRequest).userId = userId;
+          (req as AuthenticatedRequest).user = user;
+          return next();
+        }
+      }
     }
 
-    // Attach user to request
-    (req as AuthenticatedRequest).userId = userId;
-    (req as AuthenticatedRequest).user = user;
-
-    next();
+    res.status(401).json({ error: 'Unauthorized. Invalid or missing authentication.' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 };
 
 /**
- * Optional auth - doesn't fail if no user
+ * Optional auth - doesn't fail if no user, just attaches if present
  */
 export const optionalAuth = async (
   req: Request,
@@ -51,21 +76,46 @@ export const optionalAuth = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.headers['x-user-id'] as string;
-    
-    if (userId) {
-      const user = await userModel.findById(userId);
-      if (user) {
-        (req as AuthenticatedRequest).userId = userId;
-        (req as AuthenticatedRequest).user = user;
+    const authHeader = req.headers['authorization'];
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
+        const user = await userModel.findById(decoded.userId);
+        if (user) {
+          (req as AuthenticatedRequest).userId = user.id;
+          (req as AuthenticatedRequest).user = user;
+        }
+      } catch {
+        // ignore
+      }
+    } else if (process.env.NODE_ENV !== 'production') {
+      const userId = req.headers['x-user-id'] as string;
+      if (userId) {
+        const user = await userModel.findById(userId);
+        if (user) {
+          (req as AuthenticatedRequest).userId = userId;
+          (req as AuthenticatedRequest).user = user;
+        }
       }
     }
-    
     next();
-  } catch (error: any) {
+  } catch {
     next();
   }
 };
+
+/**
+ * Generate a JWT access token
+ */
+export function generateToken(user: User): string {
+  const payload: JwtPayload = {
+    userId: user.id,
+    email: user.email,
+    tier: user.tier,
+  };
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '24h' });
+}
 
 /**
  * Quota check middleware for projects

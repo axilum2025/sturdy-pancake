@@ -1,25 +1,37 @@
 import axios from 'axios';
 
+// In production, VITE_API_URL points to the Container Apps backend URL
+// In dev, it's empty and requests go through the Vite proxy
+export const API_BASE = import.meta.env.VITE_API_URL || '';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: `${API_BASE}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Add auth token to requests
+// Add JWT auth token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('authToken');
   if (token) {
     config.headers['Authorization'] = `Bearer ${token}`;
   }
-  // For demo: add user ID header
-  const userId = localStorage.getItem('userId');
-  if (userId) {
-    config.headers['x-user-id'] = userId;
-  }
   return config;
 });
+
+// Handle 401 responses globally (token expired)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken');
+      // Optionally redirect to login
+      window.dispatchEvent(new CustomEvent('auth:expired'));
+    }
+    return Promise.reject(error);
+  }
+);
 
 // ============ Auth ============
 
@@ -54,14 +66,12 @@ export const login = async (email: string, password: string): Promise<{ user: Us
   const response = await api.post('/auth/login', { email, password });
   if (response.data.token) {
     localStorage.setItem('authToken', response.data.token);
-    localStorage.setItem('userId', response.data.user.id);
   }
   return response.data;
 };
 
 export const logout = (): void => {
   localStorage.removeItem('authToken');
-  localStorage.removeItem('userId');
 };
 
 export const getCurrentUser = async (): Promise<User> => {
@@ -370,15 +380,13 @@ export const copilotChatStream = async (
   request: CopilotChatRequest,
 ): Promise<Response> => {
   const token = localStorage.getItem('authToken');
-  const userId = localStorage.getItem('userId');
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  if (userId) headers['x-user-id'] = userId;
 
-  const response = await fetch('/api/copilot/stream', {
+  const response = await fetch(`${API_BASE}/api/copilot/stream`, {
     method: 'POST',
     headers,
     body: JSON.stringify(request),

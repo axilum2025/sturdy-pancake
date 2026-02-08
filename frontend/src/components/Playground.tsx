@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, X, Bot, User, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface PlaygroundProps {
   agentId: string;
@@ -35,12 +36,10 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
   const loadAgentWelcome = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const userId = localStorage.getItem('userId');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      if (userId) headers['x-user-id'] = userId;
 
-      const res = await fetch(`/api/agents/${agentId}`, { headers });
+      const res = await fetch(`${API_BASE}/api/agents/${agentId}`, { headers });
       if (res.ok) {
         const agent = await res.json();
         if (agent.config?.welcomeMessage) {
@@ -76,10 +75,8 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
 
     try {
       const token = localStorage.getItem('authToken');
-      const userId = localStorage.getItem('userId');
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
-      if (userId) headers['x-user-id'] = userId;
 
       // Build conversation history for the API
       const apiMessages = [...messages, userMsg].map((m) => ({
@@ -87,7 +84,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
         content: m.content,
       }));
 
-      const res = await fetch(`/api/agents/${agentId}/chat`, {
+      const res = await fetch(`${API_BASE}/api/agents/${agentId}/chat`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ messages: apiMessages }),
