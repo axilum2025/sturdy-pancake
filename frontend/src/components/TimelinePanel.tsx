@@ -43,7 +43,7 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
   return (
     <div className="h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-t-overlay/10 flex items-center justify-between">
         <h3 className="text-lg font-semibold gradient-text flex items-center gap-2">
           <Clock className="w-5 h-5 glow-icon" />
           {t('timeline.title')}
@@ -51,7 +51,7 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
         {events.length > 0 && (
           <button
             onClick={clearTimeline}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+            className="p-1.5 rounded-lg text-t-text/30 hover:text-t-text/60 hover:bg-t-overlay/5 transition-colors"
             title={t('timeline.clear')}
           >
             <Trash2 className="w-4 h-4" />
@@ -60,7 +60,7 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
         {onClose && (
           <button
             onClick={onClose}
-            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
             title={t('common.close')}
           >
             <X className="w-4 h-4" />
@@ -72,8 +72,8 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
       <div className="p-4">
         {events.length === 0 ? (
           <div className="text-center py-8 animate-fade-in-up">
-            <Clock className="w-12 h-12 mx-auto mb-3 text-white/20" />
-            <p className="text-white/40 text-sm">{t('timeline.noActivity')}</p>
+            <Clock className="w-12 h-12 mx-auto mb-3 text-t-text/20" />
+            <p className="text-t-text/40 text-sm">{t('timeline.noActivity')}</p>
           </div>
         ) : (
           <div className="relative">
@@ -84,18 +84,18 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
               {events.map((event, idx) => (
                 <div key={event.id} className="relative flex gap-3 animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
                   {/* Timeline dot */}
-                  <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full glass-card flex items-center justify-center border border-white/10">
+                  <div className="relative z-10 flex-shrink-0 w-10 h-10 rounded-full glass-card flex items-center justify-center border border-t-overlay/10">
                     {getEventIcon(event.type)}
                   </div>
                   
                   {/* Event content */}
                   <div className="flex-1 min-w-0">
-                    <div className="glass-card p-3 rounded-lg border border-white/5">
+                    <div className="glass-card p-3 rounded-lg border border-t-overlay/5">
                       <div className="flex items-start justify-between gap-2">
-                        <p className="text-white/90 text-sm">{event.message}</p>
+                        <p className="text-t-text/90 text-sm">{event.message}</p>
                         {getStatusDot(event.status)}
                       </div>
-                      <p className="text-white/40 text-xs mt-2">
+                      <p className="text-t-text/40 text-xs mt-2">
                         {event.timestamp.toLocaleTimeString()}
                       </p>
                     </div>

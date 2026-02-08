@@ -136,7 +136,7 @@ export default function AgentStorePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-t-page flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -144,7 +144,7 @@ export default function AgentStorePage() {
 
   if (!agent) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-white/40">
+      <div className="min-h-screen bg-t-page flex items-center justify-center text-t-text/40">
         Agent introuvable
       </div>
     );
@@ -163,19 +163,19 @@ export default function AgentStorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-t-page text-t-text">
       {/* Header */}
-      <header className="sticky top-0 z-30 glass-strong border-b border-white/10">
+      <header className="sticky top-0 z-30 glass-strong border-b border-t-overlay/10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-4">
           <button
             onClick={() => navigate('/store')}
-            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <span className="text-white/40 text-sm">Agent Store</span>
-          <span className="text-white/20">/</span>
-          <span className="text-white/70 text-sm truncate">{agent.name}</span>
+          <span className="text-t-text/40 text-sm">Agent Store</span>
+          <span className="text-t-text/20">/</span>
+          <span className="text-t-text/70 text-sm truncate">{agent.name}</span>
         </div>
       </header>
 
@@ -190,7 +190,7 @@ export default function AgentStorePage() {
             {agent.icon ? (
               <img src={agent.icon} alt={agent.name} className="w-full h-full rounded-[26%] object-cover" />
             ) : (
-              <span className="text-5xl sm:text-6xl font-bold text-white/90 drop-shadow-lg">
+              <span className="text-5xl sm:text-6xl font-bold text-t-text/90 drop-shadow-lg">
                 {agent.name.charAt(0).toUpperCase()}
               </span>
             )}
@@ -206,25 +206,25 @@ export default function AgentStorePage() {
                 <Globe className="w-5 h-5 text-green-400" />
               )}
             </div>
-            <p className="text-white/50 text-sm mb-3">{t('store.by', { name: agent.creatorName })}</p>
-            <p className="text-white/70 text-base mb-4">{agent.shortDescription}</p>
+            <p className="text-t-text/50 text-sm mb-3">{t('store.by', { name: agent.creatorName })}</p>
+            <p className="text-t-text/70 text-base mb-4">{agent.shortDescription}</p>
 
             {/* Stats row */}
             <div className="flex items-center gap-5 justify-center sm:justify-start text-sm">
               <div className="flex items-center gap-1.5">
                 <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-white/80 font-medium">{agent.rating.toFixed(1)}</span>
+                <span className="text-t-text/80 font-medium">{agent.rating.toFixed(1)}</span>
                 {agent.ratingCount > 0 && (
-                  <span className="text-white/30">({agent.ratingCount})</span>
+                  <span className="text-t-text/30">({agent.ratingCount})</span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-white/80">{t('store.uses', { count: agent.usageCount })}</span>
+                <span className="text-t-text/80">{t('store.uses', { count: agent.usageCount })}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <RefreshCw className="w-4 h-4 text-blue-400" />
-                <span className="text-white/80">{t('store.remixes', { count: agent.remixCount })}</span>
+                <span className="text-t-text/80">{t('store.remixes', { count: agent.remixCount })}</span>
               </div>
             </div>
           </div>
@@ -236,13 +236,13 @@ export default function AgentStorePage() {
             <div className="flex-1">
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-t-text/30" />
                   <input
                     type="text"
                     value={tokenInput}
                     onChange={(e) => { setTokenInput(e.target.value); setTokenValid(null); }}
                     placeholder={t('store.enterToken')}
-                    className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white/90 placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30"
+                    className="w-full bg-t-overlay/[0.04] border border-t-overlay/10 rounded-xl pl-10 pr-4 py-3 text-sm text-t-text/90 placeholder-t-text/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30"
                   />
                 </div>
                 <button
@@ -260,7 +260,7 @@ export default function AgentStorePage() {
             <>
               <button
                 onClick={handleUseAgent}
-                className="flex-1 btn-gradient px-6 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2 glow-blue"
+                className="flex-1 btn-gradient px-6 py-3 rounded-xl font-semibold text-t-text flex items-center justify-center gap-2 glow-blue"
               >
                 <MessageSquare className="w-5 h-5" />
                 {t('store.useAgent')}
@@ -268,7 +268,7 @@ export default function AgentStorePage() {
               {agent.visibility === 'public' && (
                 <button
                   onClick={() => {/* TODO: remix */}}
-                  className="px-6 py-3 rounded-xl font-medium border border-white/10 bg-white/[0.04] text-white/70 hover:text-white hover:bg-white/[0.08] transition-colors flex items-center justify-center gap-2"
+                  className="px-6 py-3 rounded-xl font-medium border border-t-overlay/10 bg-t-overlay/[0.04] text-t-text/70 hover:text-t-text hover:bg-t-overlay/[0.08] transition-colors flex items-center justify-center gap-2"
                 >
                   <RefreshCw className="w-4 h-4" />
                   {t('store.remix')}
@@ -280,19 +280,19 @@ export default function AgentStorePage() {
 
         {/* Description */}
         <div className="glass-card rounded-2xl p-6 mb-6 animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-          <h2 className="text-lg font-semibold text-white/90 mb-3">{t('store.description')}</h2>
-          <p className="text-white/60 text-sm leading-relaxed">{agent.description}</p>
+          <h2 className="text-lg font-semibold text-t-text/90 mb-3">{t('store.description')}</h2>
+          <p className="text-t-text/60 text-sm leading-relaxed">{agent.description}</p>
         </div>
 
         {/* Features */}
         {agent.features && agent.features.length > 0 && (
           <div className="glass-card rounded-2xl p-6 mb-6 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-            <h2 className="text-lg font-semibold text-white/90 mb-3">{t('store.features')}</h2>
+            <h2 className="text-lg font-semibold text-t-text/90 mb-3">{t('store.features')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {agent.features.map((f, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                  <span className="text-sm text-white/70">{f}</span>
+                  <span className="text-sm text-t-text/70">{f}</span>
                 </div>
               ))}
             </div>
@@ -302,45 +302,45 @@ export default function AgentStorePage() {
         {/* Technical Details */}
         {!isPrivateLocked && agent.configSnapshot && (
           <div className="glass-card rounded-2xl p-6 mb-6 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-            <h2 className="text-lg font-semibold text-white/90 mb-3">{t('store.technicalDetails')}</h2>
+            <h2 className="text-lg font-semibold text-t-text/90 mb-3">{t('store.technicalDetails')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="bg-white/[0.03] rounded-xl p-3">
+              <div className="bg-t-overlay/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Cpu className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-xs text-white/40">{t('store.modelLabel')}</span>
+                  <span className="text-xs text-t-text/40">{t('store.modelLabel')}</span>
                 </div>
-                <p className="text-sm text-white/80 font-medium">{agent.configSnapshot.model.split('/').pop()}</p>
+                <p className="text-sm text-t-text/80 font-medium">{agent.configSnapshot.model.split('/').pop()}</p>
               </div>
-              <div className="bg-white/[0.03] rounded-xl p-3">
+              <div className="bg-t-overlay/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Thermometer className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-xs text-white/40">{t('store.temperatureLabel')}</span>
+                  <span className="text-xs text-t-text/40">{t('store.temperatureLabel')}</span>
                 </div>
-                <p className="text-sm text-white/80 font-medium">{agent.configSnapshot.temperature}</p>
+                <p className="text-sm text-t-text/80 font-medium">{agent.configSnapshot.temperature}</p>
               </div>
-              <div className="bg-white/[0.03] rounded-xl p-3">
+              <div className="bg-t-overlay/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Tag className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-xs text-white/40">{t('store.categoryLabel')}</span>
+                  <span className="text-xs text-t-text/40">{t('store.categoryLabel')}</span>
                 </div>
-                <p className="text-sm text-white/80 font-medium">{getCategoryLabel(agent.category)}</p>
+                <p className="text-sm text-t-text/80 font-medium">{getCategoryLabel(agent.category)}</p>
               </div>
-              <div className="bg-white/[0.03] rounded-xl p-3">
+              <div className="bg-t-overlay/[0.03] rounded-xl p-3">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Clock className="w-3.5 h-3.5 text-blue-400" />
-                  <span className="text-xs text-white/40">{t('store.publishedLabel')}</span>
+                  <span className="text-xs text-t-text/40">{t('store.publishedLabel')}</span>
                 </div>
-                <p className="text-sm text-white/80 font-medium">{formatDate(agent.publishedAt)}</p>
+                <p className="text-sm text-t-text/80 font-medium">{formatDate(agent.publishedAt)}</p>
               </div>
             </div>
 
             {/* Tools */}
             {agent.configSnapshot.tools.length > 0 && (
               <div className="mt-4">
-                <span className="text-xs text-white/40">{t('store.connectedTools')}</span>
+                <span className="text-xs text-t-text/40">{t('store.connectedTools')}</span>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {agent.configSnapshot.tools.map((t, i) => (
-                    <span key={i} className="text-xs px-2 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-white/60">
+                    <span key={i} className="text-xs px-2 py-1 rounded-lg bg-t-overlay/[0.06] border border-t-overlay/10 text-t-text/60">
                       {t.name}
                     </span>
                   ))}
@@ -357,7 +357,7 @@ export default function AgentStorePage() {
               {agent.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="text-xs px-3 py-1 rounded-full bg-white/[0.04] border border-white/10 text-white/50"
+                  className="text-xs px-3 py-1 rounded-full bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/50"
                 >
                   #{tag}
                 </span>
@@ -367,9 +367,9 @@ export default function AgentStorePage() {
         )}
 
         {/* Agent ID */}
-        <div className="flex items-center gap-2 text-xs text-white/20 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
+        <div className="flex items-center gap-2 text-xs text-t-text/20 animate-fade-in-up" style={{ animationDelay: '350ms' }}>
           <span>ID: {agent.id}</span>
-          <button onClick={handleCopyId} className="hover:text-white/50 transition-colors">
+          <button onClick={handleCopyId} className="hover:text-t-text/50 transition-colors">
             {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
           </button>
           <span className="ml-2">v{agent.version}</span>

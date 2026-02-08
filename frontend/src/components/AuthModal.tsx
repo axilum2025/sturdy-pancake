@@ -61,17 +61,17 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 text-white/40 hover:text-white/80 transition-colors duration-200 p-1 rounded-lg hover:bg-white/5"
+            className="absolute top-4 right-4 z-10 text-t-text/40 hover:text-t-text/80 transition-colors duration-200 p-1 rounded-lg hover:bg-t-overlay/5"
           >
             <X className="w-5 h-5" />
           </button>
 
           {/* Logo / Branding */}
           <div className="relative text-center mb-8">
-            <h2 className="text-2xl font-bold text-white mb-1">
+            <h2 className="text-2xl font-bold text-t-text mb-1">
               {mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
             </h2>
-            <p className="text-sm text-white/40">
+            <p className="text-sm text-t-text/40">
               {mode === 'login' 
                 ? t('auth.signInSubtitle') 
                 : t('auth.createSubtitle')}
@@ -89,14 +89,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           <div className="relative space-y-3 mb-6">
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl btn-outline-glow text-white/70 hover:text-white text-sm font-medium"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl btn-outline-glow text-t-text/70 hover:text-t-text text-sm font-medium"
             >
               <Github className="w-4 h-4" />
               {t('auth.continueGithub')}
             </button>
             <button
               type="button"
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl btn-outline-glow text-white/70 hover:text-white text-sm font-medium"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl btn-outline-glow text-t-text/70 hover:text-t-text text-sm font-medium"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -111,21 +111,21 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Divider */}
           <div className="relative flex items-center gap-4 mb-6">
             <div className="flex-1 divider-glow" />
-            <span className="text-xs text-white/30 uppercase tracking-wider font-medium">{t('auth.or')}</span>
+            <span className="text-xs text-t-text/30 uppercase tracking-wider font-medium">{t('auth.or')}</span>
             <div className="flex-1 divider-glow" />
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="relative space-y-4">
             <div>
-              <label className="block text-sm font-medium text-white/50 mb-2">{t('auth.email')}</label>
+              <label className="block text-sm font-medium text-t-text/50 mb-2">{t('auth.email')}</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/25" />
+                <Mail className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-t-text/25" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full input-futuristic text-white px-10 py-3 rounded-xl text-sm"
+                  className="w-full input-futuristic text-t-text px-10 py-3 rounded-xl text-sm"
                   placeholder="you@example.com"
                   required
                 />
@@ -133,14 +133,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-white/50 mb-2">{t('auth.password')}</label>
+              <label className="block text-sm font-medium text-t-text/50 mb-2">{t('auth.password')}</label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/25" />
+                <Lock className="absolute left-3.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-t-text/25" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full input-futuristic text-white px-10 py-3 rounded-xl text-sm"
+                  className="w-full input-futuristic text-t-text px-10 py-3 rounded-xl text-sm"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -150,7 +150,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
             {mode === 'login' && (
               <div className="flex justify-end">
-                <button type="button" className="text-xs text-white/30 hover:text-blue-400 transition-colors">
+                <button type="button" className="text-xs text-t-text/30 hover:text-blue-400 transition-colors">
                   {t('auth.forgotPassword')}
                 </button>
               </div>
@@ -162,7 +162,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               className="w-full btn-gradient text-white font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-2"
             >
               {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-t-overlay/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
                   {mode === 'login' ? t('auth.signInBtn') : t('auth.createBtn')}
@@ -174,7 +174,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
           {/* Toggle mode */}
           <div className="relative mt-6 text-center">
-            <p className="text-sm text-white/30">
+            <p className="text-sm text-t-text/30">
               {mode === 'login' ? t('auth.noAccount') + ' ' : t('auth.hasAccount') + ' '}
               <button
                 onClick={() => {
@@ -191,7 +191,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Demo credentials */}
           <div className="relative mt-5 pt-5">
             <div className="divider-glow mb-5" />
-            <div className="flex items-center justify-center gap-2 text-white/20 text-xs">
+            <div className="flex items-center justify-center gap-2 text-t-text/20 text-xs">
               <Zap className="w-3 h-3" />
               <span>{t('auth.demo')}</span>
             </div>
@@ -199,7 +199,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
           {/* Powered by */}
           <div className="relative mt-4 text-center">
-            <p className="text-[10px] text-white/15 uppercase tracking-widest font-medium">
+            <p className="text-[10px] text-t-text/15 uppercase tracking-widest font-medium">
               {t('auth.poweredBy')}
             </p>
           </div>

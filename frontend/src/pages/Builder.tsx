@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
 import TimelinePanel from '../components/TimelinePanel';
@@ -47,7 +46,7 @@ export default function Builder() {
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-mesh bg-grid">
-        <div className="text-white text-xl animate-pulse-glow">{t('builder.loading')}</div>
+        <div className="text-t-text text-xl animate-pulse-glow">{t('builder.loading')}</div>
       </div>
     );
   }
@@ -55,14 +54,14 @@ export default function Builder() {
   return (
     <div className="h-screen w-full flex bg-gradient-mesh bg-grid overflow-hidden">
       {/* Sidebar */}
-      <aside className="hidden md:flex w-16 lg:w-20 glass-strong border-r border-white/10 flex-col items-center py-4 gap-2 animate-fade-in-left flex-shrink-0">
+      <aside className="hidden md:flex w-16 lg:w-20 glass-strong border-r border-t-overlay/10 flex-col items-center py-4 gap-2 animate-fade-in-left flex-shrink-0">
         {/* Navigation Buttons */}
         <button
           onClick={() => setShowPreview(!showPreview)}
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
             showPreview
               ? 'btn-gradient text-white glow-blue'
-              : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
+              : 'btn-outline-glow text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'
           }`}
           title="Playground"
         >
@@ -73,7 +72,7 @@ export default function Builder() {
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
             showHistory
               ? 'btn-gradient text-white glow-blue'
-              : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
+              : 'btn-outline-glow text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'
           }`}
           title={t('builder.logs')}
         >
@@ -84,7 +83,7 @@ export default function Builder() {
           className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${
             showFileEditor
               ? 'btn-gradient text-white glow-blue'
-              : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
+              : 'btn-outline-glow text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'
           }`}
           title={t('builder.config')}
         >
@@ -103,21 +102,21 @@ export default function Builder() {
         </button>
         <button
           onClick={() => navigate('/store')}
-          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
           title={t('builder.agentStore')}
         >
           <Store className="w-5 h-5" />
         </button>
         <button
           onClick={() => setShowMCPBrowser(true)}
-          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
           title={t('builder.tools')}
         >
           <Package className="w-5 h-5 glow-icon" />
         </button>
         <button
           onClick={() => setShowMCPSettings(true)}
-          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
           title={t('builder.settings')}
         >
           <Settings className="w-5 h-5" />
@@ -128,48 +127,47 @@ export default function Builder() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="glass-strong border-b-0 md:border-b md:border-white/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
-          <h1 className="text-base md:text-xl font-bold text-white truncate">{t('builder.title')}</h1>
-          <span className="text-white/40 text-sm hidden sm:inline">/</span>
-          <span className="text-white/60 text-sm hidden sm:inline">{projectId || t('builder.newAgent')}</span>
+        <header className="glass-strong border-b-0 md:border-b md:border-t-overlay/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
+          <h1 className="text-base md:text-xl font-bold text-t-text truncate">{t('builder.title')}</h1>
+          <span className="text-t-text/40 text-sm hidden sm:inline">/</span>
+          <span className="text-t-text/60 text-sm hidden sm:inline">{projectId || t('builder.newAgent')}</span>
           <div className="flex-1"></div>
 
           {/* Mobile action buttons (visible only on small screens) */}
           <div className="flex md:hidden items-center gap-1">
             <button
               onClick={() => setShowFileEditor(!showFileEditor)}
-              className={`p-2 rounded-lg transition-colors ${showFileEditor ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              className={`p-2 rounded-lg transition-colors ${showFileEditor ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title={t('builder.config')}
             >
               <Sliders className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className={`p-2 rounded-lg transition-colors ${showHistory ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              className={`p-2 rounded-lg transition-colors ${showHistory ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title={t('builder.logs')}
             >
               <Clock className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowPreview(!showPreview)}
-              className={`p-2 rounded-lg transition-colors ${showPreview ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              className={`p-2 rounded-lg transition-colors ${showPreview ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title="Playground"
             >
               <Eye className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowPublish(true)}
-              className={`p-2 rounded-lg transition-colors ${publishedStoreId ? 'text-green-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              className={`p-2 rounded-lg transition-colors ${publishedStoreId ? 'text-green-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title={t('builder.publishStore')}
             >
               <Rocket className="w-4 h-4" />
             </button>
           </div>
 
-          <LanguageSwitcher />
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-3 py-1.5 rounded-lg btn-outline-glow text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300 text-sm flex items-center gap-2"
+            className="px-3 py-1.5 rounded-lg btn-outline-glow text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300 text-sm flex items-center gap-2"
             title={t('common.back')}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -184,7 +182,7 @@ export default function Builder() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
               onClick={() => setShowMCPSettings(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
               <MCPSettings onClose={() => setShowMCPSettings(false)} />
             </div>
           </>
@@ -197,7 +195,7 @@ export default function Builder() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
               onClick={() => setShowMCPBrowser(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
               <MCPBrowser onClose={() => setShowMCPBrowser(false)} />
             </div>
           </>
@@ -217,7 +215,7 @@ export default function Builder() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
               onClick={() => setShowFileEditor(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
               <AgentConfig agentId={projectId} onClose={() => setShowFileEditor(false)} />
             </div>
           </>
@@ -230,7 +228,7 @@ export default function Builder() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
               onClick={() => setShowHistory(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
               <TimelinePanel onClose={() => setShowHistory(false)} />
             </div>
           </>
@@ -246,7 +244,7 @@ export default function Builder() {
             />
             {/* Modal */}
             <div className="fixed inset-4 md:inset-8 lg:inset-12 z-50 flex items-center justify-center animate-fade-in-up">
-              <div className="w-full h-full glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative">
+              <div className="w-full h-full glass-strong rounded-2xl border border-t-overlay/10 shadow-2xl overflow-hidden flex flex-col relative">
                 <Playground agentId={projectId} onClose={() => setShowPreview(false)} />
               </div>
             </div>

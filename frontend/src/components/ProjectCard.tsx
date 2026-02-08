@@ -13,7 +13,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
     switch (status) {
       case 'deployed': return { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30', label: t('projectCard.deployed'), icon: CheckCircle };
       case 'active': return { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30', label: t('projectCard.active'), icon: AlertCircle };
-      default: return { bg: 'bg-white/5', text: 'text-white/50', border: 'border-white/10', label: t('projectCard.draft'), icon: FileEdit };
+      default: return { bg: 'bg-t-overlay/5', text: 'text-t-text/50', border: 'border-t-overlay/10', label: t('projectCard.draft'), icon: FileEdit };
     }
   };
 
@@ -58,12 +58,12 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
       {/* Header */}
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
-          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${tierStyle.bg} border border-white/5 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
+          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${tierStyle.bg} border border-t-overlay/5 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
             <Bot className={`w-5 h-5 ${tierStyle.text} glow-icon`} />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-white truncate">{project.name}</h3>
-            <p className="text-white/40 text-sm line-clamp-1">{project.description || t('projectCard.noDescription')}</p>
+            <h3 className="text-base font-semibold text-t-text truncate">{project.name}</h3>
+            <p className="text-t-text/40 text-sm line-clamp-1">{project.description || t('projectCard.noDescription')}</p>
           </div>
         </div>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} flex-shrink-0`}>
@@ -74,11 +74,11 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
 
       {/* Model & Tools */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 font-medium">
+        <span className="px-2.5 py-1 rounded-lg bg-t-overlay/5 border border-t-overlay/10 text-xs text-t-text/60 font-medium">
           {modelShortName(project.config?.model || 'openai/gpt-4.1')}
         </span>
         {toolsCount > 0 && (
-          <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 font-medium flex items-center gap-1">
+          <span className="px-2.5 py-1 rounded-lg bg-t-overlay/5 border border-t-overlay/10 text-xs text-t-text/60 font-medium flex items-center gap-1">
             <Wrench className="w-3 h-3" />
             {toolsCount} {t('projectCard.tools', { count: toolsCount })}
           </span>
@@ -96,8 +96,8 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between pt-3 border-t border-white/5">
-        <div className="flex items-center gap-4 text-xs text-white/40">
+      <div className="flex items-center justify-between pt-3 border-t border-t-overlay/5">
+        <div className="flex items-center gap-4 text-xs text-t-text/40">
           <span className="flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" />
             {project.totalConversations} {t('projectCard.conversations')}
@@ -113,7 +113,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:text-white flex items-center gap-1.5 transition-all duration-200"
+            className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs font-medium text-t-text/70 hover:text-t-text flex items-center gap-1.5 transition-all duration-200"
           >
             <Globe className="w-3.5 h-3.5" />
             API

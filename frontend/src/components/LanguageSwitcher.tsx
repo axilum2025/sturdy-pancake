@@ -12,7 +12,7 @@ export default function LanguageSwitcher() {
   return (
     <button
       onClick={toggleLanguage}
-      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/5 transition-all duration-200 text-xs font-medium"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-t-text/40 hover:text-t-text/80 hover:bg-t-overlay/5 transition-all duration-200 text-xs font-medium"
       title={t('lang.switchTo')}
     >
       <Globe className="w-3.5 h-3.5" />

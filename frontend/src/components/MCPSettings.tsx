@@ -102,14 +102,14 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-t-overlay/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Settings className="w-5 h-5 text-blue-400 glow-icon" />
           <span className="font-semibold gradient-text">{t('mcp.configTitle')}</span>
         </div>
         <button
           onClick={onClose}
-          className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -118,7 +118,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
         <div>
-          <p className="text-xs text-white/35 mb-3">
+          <p className="text-xs text-t-text/35 mb-3">
             {t('mcp.configDesc')}
           </p>
           
@@ -133,14 +133,14 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
 
         {/* Add Server Form */}
         {showAddForm && (
-          <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3 animate-fade-in-up">
-            <h4 className="text-sm font-medium text-white/70">{t('mcp.newServer')}</h4>
+          <div className="bg-t-overlay/[0.04] rounded-xl border border-t-overlay/10 p-4 space-y-3 animate-fade-in-up">
+            <h4 className="text-sm font-medium text-t-text/70">{t('mcp.newServer')}</h4>
             <input
               type="text"
               placeholder={t('mcp.namePlaceholder')}
               value={newServer.name}
               onChange={(e) => setNewServer({ ...newServer, name: e.target.value })}
-              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+              className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
               autoFocus
             />
             <input
@@ -148,26 +148,26 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
               placeholder={t('mcp.commandPlaceholder')}
               value={newServer.command}
               onChange={(e) => setNewServer({ ...newServer, command: e.target.value })}
-              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+              className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
             />
             <input
               type="text"
               placeholder={t('mcp.argsPlaceholder')}
               value={newServer.args}
               onChange={(e) => setNewServer({ ...newServer, args: e.target.value })}
-              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+              className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
             />
             <textarea
               placeholder={t('mcp.descPlaceholder')}
               value={newServer.description}
               onChange={(e) => setNewServer({ ...newServer, description: e.target.value })}
-              className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+              className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
               rows={2}
             />
             <div className="flex gap-2">
               <button
                 onClick={() => setShowAddForm(false)}
-                className="flex-1 px-3 py-2 text-sm rounded-lg border border-white/10 text-white/50 hover:bg-white/5"
+                className="flex-1 px-3 py-2 text-sm rounded-lg border border-t-overlay/10 text-t-text/50 hover:bg-t-overlay/5"
               >
                 {t('common.cancel')}
               </button>
@@ -186,12 +186,12 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
         {/* Servers List */}
         {loading ? (
           <div className="text-center py-8 animate-fade-in-up">
-            <div className="animate-pulse text-white/40">{t('common.loading')}</div>
+            <div className="animate-pulse text-t-text/40">{t('common.loading')}</div>
           </div>
         ) : servers.length === 0 ? (
           <div className="text-center py-8 animate-fade-in-up">
-            <Settings className="w-12 h-12 mx-auto mb-3 text-white/20" />
-            <p className="text-white/40 text-sm">{t('mcp.noServers')}</p>
+            <Settings className="w-12 h-12 mx-auto mb-3 text-t-text/20" />
+            <p className="text-t-text/40 text-sm">{t('mcp.noServers')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -200,8 +200,8 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
                 key={server.id}
                 className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
                   server.enabled
-                    ? 'bg-white/[0.04] border-white/10'
-                    : 'bg-white/[0.02] border-white/5 opacity-60'
+                    ? 'bg-t-overlay/[0.04] border-t-overlay/10'
+                    : 'bg-t-overlay/[0.02] border-t-overlay/5 opacity-60'
                 }`}
               >
                 <button
@@ -212,32 +212,32 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
                   {server.enabled ? (
                     <Power className="w-5 h-5 text-green-400" />
                   ) : (
-                    <PowerOff className="w-5 h-5 text-white/30" />
+                    <PowerOff className="w-5 h-5 text-t-text/30" />
                   )}
                 </button>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white/80">{server.name}</span>
+                    <span className="text-sm font-medium text-t-text/80">{server.name}</span>
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${
                         server.enabled
                           ? 'bg-green-500/20 text-green-400'
-                          : 'bg-white/10 text-white/40'
+                          : 'bg-t-overlay/10 text-t-text/40'
                       }`}
                     >
                       {server.enabled ? t('mcp.active') : t('mcp.inactive')}
                     </span>
                   </div>
                   {server.description && (
-                    <p className="text-xs text-white/35 mt-0.5 truncate">{server.description}</p>
+                    <p className="text-xs text-t-text/35 mt-0.5 truncate">{server.description}</p>
                   )}
-                  <p className="text-xs text-white/25 font-mono mt-0.5 truncate">
+                  <p className="text-xs text-t-text/25 font-mono mt-0.5 truncate">
                     {server.command} {server.args.join(' ')}
                   </p>
                 </div>
                 <button
                   onClick={() => deleteServer(server.id)}
-                  className="p-1 rounded hover:bg-white/10 text-white/30 hover:text-red-400 transition-colors flex-shrink-0"
+                  className="p-1 rounded hover:bg-t-overlay/10 text-t-text/30 hover:text-red-400 transition-colors flex-shrink-0"
                   title={t('common.delete')}
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -248,9 +248,9 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
         )}
 
         {/* Footer hint */}
-        <div className="mt-4 p-3 rounded-xl bg-white/[0.02] border border-white/5">
-          <p className="text-xs text-white/30 mb-1.5">📚 <strong className="text-white/40">{t('mcp.popularServers')}</strong></p>
-          <ul className="text-xs text-white/25 space-y-0.5 ml-4 list-disc list-inside">
+        <div className="mt-4 p-3 rounded-xl bg-t-overlay/[0.02] border border-t-overlay/5">
+          <p className="text-xs text-t-text/30 mb-1.5">📚 <strong className="text-t-text/40">{t('mcp.popularServers')}</strong></p>
+          <ul className="text-xs text-t-text/25 space-y-0.5 ml-4 list-disc list-inside">
             <li>@modelcontextprotocol/server-filesystem — Accès fichiers</li>
             <li>@modelcontextprotocol/server-github — Intégration GitHub</li>
             <li>@modelcontextprotocol/server-memory — Stockage en mémoire</li>

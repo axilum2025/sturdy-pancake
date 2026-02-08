@@ -106,20 +106,20 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 animate-fade-in" onClick={onClose} />
 
       {/* Modal */}
-      <div className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-xl sm:max-h-[90vh] z-50 glass-strong rounded-2xl border border-white/10 shadow-2xl flex flex-col overflow-hidden animate-fade-in-up">
+      <div className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:w-full sm:max-w-xl sm:max-h-[90vh] z-50 glass-strong rounded-2xl border border-t-overlay/10 shadow-2xl flex flex-col overflow-hidden animate-fade-in-up">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 border-b border-t-overlay/10 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <Rocket className="w-5 h-5 text-blue-400 glow-icon" />
             <span className="font-semibold gradient-text">{t('publish.title')}</span>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors">
+          <button onClick={onClose} className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Steps indicator */}
-        <div className="px-6 py-3 border-b border-white/5 flex items-center gap-2">
+        <div className="px-6 py-3 border-b border-t-overlay/5 flex items-center gap-2">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div
@@ -128,12 +128,12 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                     ? 'bg-blue-500 text-white'
                     : step > s
                     ? 'bg-green-500/20 text-green-400'
-                    : 'bg-white/10 text-white/30'
+                    : 'bg-t-overlay/10 text-t-text/30'
                 }`}
               >
                 {step > s ? <Check className="w-3.5 h-3.5" /> : s}
               </div>
-              {s < 3 && <div className={`flex-1 h-px ${step > s ? 'bg-green-500/30' : 'bg-white/10'}`} />}
+              {s < 3 && <div className={`flex-1 h-px ${step > s ? 'bg-green-500/30' : 'bg-t-overlay/10'}`} />}
             </div>
           ))}
         </div>
@@ -144,40 +144,40 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
           {step === 1 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.agentName')}</label>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">{t('publish.agentName')}</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
                   placeholder="Mon Agent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.shortDesc')}</label>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">{t('publish.shortDesc')}</label>
                 <input
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
                   placeholder={t('publish.shortDescPlaceholder')}
                   maxLength={100}
                 />
-                <p className="text-xs text-white/25 mt-1">{shortDescription.length}/100</p>
+                <p className="text-xs text-t-text/25 mt-1">{shortDescription.length}/100</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.fullDesc')}</label>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">{t('publish.fullDesc')}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10 resize-none"
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10 resize-none"
                   rows={4}
                   placeholder={t('publish.fullDescPlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.category')}</label>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">{t('publish.category')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {CATEGORIES.map((cat) => (
                     <button
@@ -186,7 +186,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                       className={`px-3 py-2 rounded-xl text-xs font-medium text-left transition-all ${
                         category === cat.id
                           ? 'bg-blue-500/20 border border-blue-500/30 text-blue-300'
-                          : 'bg-white/[0.04] border border-white/10 text-white/50 hover:border-white/20'
+                          : 'bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/50 hover:border-t-overlay/20'
                       }`}
                     >
                       {cat.icon} {t(`categories.${cat.id}`)}
@@ -196,7 +196,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.iconColor')}</label>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">{t('publish.iconColor')}</label>
                 <div className="flex gap-2 flex-wrap">
                   {ICON_COLORS.map((color) => (
                     <button
@@ -217,7 +217,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
           {step === 2 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">
+                <label className="block text-sm font-medium text-t-text/60 mb-2">
                   <Sparkles className="w-4 h-4 inline mr-1" />
                   {t('publish.keyFeatures')}
                 </label>
@@ -227,13 +227,13 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                       <input
                         value={f}
                         onChange={(e) => updateFeature(idx, e.target.value)}
-                        className="flex-1 bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+                        className="flex-1 bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
                         placeholder={t('publish.featurePlaceholder', { num: idx + 1 })}
                       />
                       {features.length > 1 && (
                         <button
                           onClick={() => removeFeature(idx)}
-                          className="p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-white/5 transition-colors"
+                          className="p-2 rounded-lg text-t-text/30 hover:text-red-400 hover:bg-t-overlay/5 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -244,7 +244,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                 {features.length < 8 && (
                   <button
                     onClick={addFeature}
-                    className="mt-2 flex items-center gap-1 text-xs text-white/40 hover:text-white/60 transition-colors"
+                    className="mt-2 flex items-center gap-1 text-xs text-t-text/40 hover:text-t-text/60 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
                     {t('publish.addFeature')}
@@ -253,14 +253,14 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">
+                <label className="block text-sm font-medium text-t-text/60 mb-2">
                   <Tag className="w-4 h-4 inline mr-1" />
                   {t('publish.tags')}
                 </label>
                 <input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
                   placeholder={t('publish.tagsPlaceholder')}
                 />
               </div>
@@ -271,22 +271,22 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
           {step === 3 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-3">{t('publish.visibility')}</label>
+                <label className="block text-sm font-medium text-t-text/60 mb-3">{t('publish.visibility')}</label>
                 <div className="space-y-3">
                   <button
                     onClick={() => setVisibility('public')}
                     className={`w-full p-4 rounded-xl text-left transition-all flex items-start gap-3 ${
                       visibility === 'public'
                         ? 'bg-green-500/10 border border-green-500/30'
-                        : 'bg-white/[0.04] border border-white/10 hover:border-white/20'
+                        : 'bg-t-overlay/[0.04] border border-t-overlay/10 hover:border-t-overlay/20'
                     }`}
                   >
-                    <Globe className={`w-5 h-5 mt-0.5 ${visibility === 'public' ? 'text-green-400' : 'text-white/30'}`} />
+                    <Globe className={`w-5 h-5 mt-0.5 ${visibility === 'public' ? 'text-green-400' : 'text-t-text/30'}`} />
                     <div>
-                      <p className={`text-sm font-medium ${visibility === 'public' ? 'text-green-300' : 'text-white/70'}`}>
+                      <p className={`text-sm font-medium ${visibility === 'public' ? 'text-green-300' : 'text-t-text/70'}`}>
                         Public
                       </p>
-                      <p className="text-xs text-white/40 mt-0.5">
+                      <p className="text-xs text-t-text/40 mt-0.5">
                         {t('publish.publicDesc')}
                       </p>
                     </div>
@@ -297,15 +297,15 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                     className={`w-full p-4 rounded-xl text-left transition-all flex items-start gap-3 ${
                       visibility === 'private'
                         ? 'bg-amber-500/10 border border-amber-500/30'
-                        : 'bg-white/[0.04] border border-white/10 hover:border-white/20'
+                        : 'bg-t-overlay/[0.04] border border-t-overlay/10 hover:border-t-overlay/20'
                     }`}
                   >
-                    <Lock className={`w-5 h-5 mt-0.5 ${visibility === 'private' ? 'text-amber-400' : 'text-white/30'}`} />
+                    <Lock className={`w-5 h-5 mt-0.5 ${visibility === 'private' ? 'text-amber-400' : 'text-t-text/30'}`} />
                     <div>
-                      <p className={`text-sm font-medium ${visibility === 'private' ? 'text-amber-300' : 'text-white/70'}`}>
+                      <p className={`text-sm font-medium ${visibility === 'private' ? 'text-amber-300' : 'text-t-text/70'}`}>
                         {t('common.private')}
                       </p>
-                      <p className="text-xs text-white/40 mt-0.5">
+                      <p className="text-xs text-t-text/40 mt-0.5">
                         {t('publish.privateDesc')}
                       </p>
                     </div>
@@ -314,19 +314,19 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               </div>
 
               {/* Preview */}
-              <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-4">
-                <p className="text-xs text-white/40 mb-3">{t('publish.preview')}</p>
+              <div className="bg-t-overlay/[0.02] rounded-2xl border border-t-overlay/5 p-4">
+                <p className="text-xs text-t-text/40 mb-3">{t('publish.preview')}</p>
                 <div className="flex flex-col items-center gap-2">
                   <div
                     className="w-16 h-16 rounded-[22%] flex items-center justify-center"
                     style={{ backgroundColor: iconColor, boxShadow: `0 4px 20px ${iconColor}30` }}
                   >
-                    <span className="text-2xl font-bold text-white/90">
+                    <span className="text-2xl font-bold text-t-text/90">
                       {name.charAt(0).toUpperCase()}
                     </span>
                   </div>
-                  <span className="text-sm text-white/70 text-center">{name}</span>
-                  <span className="text-xs text-white/30">{shortDescription}</span>
+                  <span className="text-sm text-t-text/70 text-center">{name}</span>
+                  <span className="text-xs text-t-text/30">{shortDescription}</span>
                 </div>
               </div>
 
@@ -340,11 +340,11 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-white/10 flex items-center justify-between flex-shrink-0">
+        <div className="px-6 py-4 border-t border-t-overlay/10 flex items-center justify-between flex-shrink-0">
           {step > 1 ? (
             <button
               onClick={() => setStep(step - 1)}
-              className="px-4 py-2 rounded-xl text-sm text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors"
+              className="px-4 py-2 rounded-xl text-sm text-t-text/50 hover:text-t-text/70 hover:bg-t-overlay/5 transition-colors"
             >
             {t('common.back')}
           </button>

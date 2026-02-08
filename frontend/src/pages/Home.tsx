@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import AuthModal from '../components/AuthModal';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -122,7 +123,7 @@ export default function Home() {
   ];
 
   return (
-    <div ref={scrollRef} className="min-h-screen bg-[#0a0a0f] text-white overflow-x-hidden">
+    <div ref={scrollRef} className="min-h-screen bg-t-page text-t-text overflow-x-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
       <div className="fixed inset-0 bg-grid pointer-events-none opacity-40" />
@@ -138,16 +139,17 @@ export default function Home() {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-white/40 hover:text-white/80 transition-colors">{t('nav.features')}</a>
-              <a href="#stats" className="text-sm text-white/40 hover:text-white/80 transition-colors">{t('nav.performance')}</a>
-              <a href="#testimonials" className="text-sm text-white/40 hover:text-white/80 transition-colors">{t('nav.testimonials')}</a>
+              <a href="#features" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.features')}</a>
+              <a href="#stats" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.performance')}</a>
+              <a href="#testimonials" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.testimonials')}</a>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <ThemeSwitcher />
               <LanguageSwitcher />
               <button
                 onClick={() => setShowAuth(true)}
-                className="px-4 py-2 text-sm font-medium rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-t-overlay/5 border border-t-overlay/10 hover:bg-t-overlay/10 hover:border-t-overlay/20 transition-all duration-200"
               >
                 {t('common.signIn')}
               </button>
@@ -164,7 +166,7 @@ export default function Home() {
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/60 mb-8 animate-fade-in-up">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-t-overlay/5 border border-t-overlay/10 text-xs font-medium text-t-text/60 mb-8 animate-fade-in-up">
             <Zap className="w-3 h-3 text-yellow-400" />
             <span>{t('home.badge')}</span>
             <ChevronRight className="w-3 h-3" />
@@ -178,7 +180,7 @@ export default function Home() {
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg sm:text-xl text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
+          <p className="text-lg sm:text-xl text-t-text/40 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
             {t('home.heroSubtitle')}
           </p>
 
@@ -186,14 +188,14 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-300">
             <button
               onClick={() => setShowAuth(true)}
-              className="btn-gradient px-8 py-3.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 animate-pulse-glow"
+              className="btn-gradient px-8 py-3.5 rounded-xl text-t-text font-semibold text-sm flex items-center gap-2 animate-pulse-glow"
             >
               {t('home.ctaStart')}
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
               href="#features"
-              className="px-8 py-3.5 rounded-xl text-sm font-medium text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all duration-200"
+              className="px-8 py-3.5 rounded-xl text-sm font-medium text-t-text/50 hover:text-t-text/80 border border-t-overlay/10 hover:border-t-overlay/20 hover:bg-t-overlay/5 transition-all duration-200"
             >
               {t('home.ctaDiscover')}
             </a>
@@ -214,7 +216,7 @@ export default function Home() {
                     <div className="w-3 h-3 rounded-full bg-green-500/60" />
                   </div>
                   <div className="flex-1 text-center">
-                    <span className="text-xs text-white/20 font-mono">{t('home.terminal')}</span>
+                    <span className="text-xs text-t-text/20 font-mono">{t('home.terminal')}</span>
                   </div>
                 </div>
                 
@@ -222,9 +224,9 @@ export default function Home() {
                 <div className="p-6 font-mono text-sm text-left space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-green-400">❯</span>
-                    <span className="text-white/60">{t('home.terminalPrompt')}</span>
+                    <span className="text-t-text/60">{t('home.terminalPrompt')}</span>
                   </div>
-                  <div className="text-white/80 pl-5">
+                  <div className="text-t-text/80 pl-5">
                     <span className="text-blue-400">"</span>
                     <span>{t('home.terminalDesc1')} </span>
                     <br />
@@ -233,17 +235,17 @@ export default function Home() {
                   </div>
                   <div className="pt-2 flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">{t('home.terminalStep1')}</span>
+                    <span className="text-t-text/40">{t('home.terminalStep1')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">{t('home.terminalStep2')}</span>
+                    <span className="text-t-text/40">{t('home.terminalStep2')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">{t('home.terminalStep3')}</span>
+                    <span className="text-t-text/40">{t('home.terminalStep3')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
@@ -267,11 +269,11 @@ export default function Home() {
                 className="animate-on-scroll text-center"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/5 mb-3">
-                  <stat.icon className="w-5 h-5 text-white/30" />
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-t-overlay/5 border border-t-overlay/5 mb-3">
+                  <stat.icon className="w-5 h-5 text-t-text/30" />
                 </div>
                 <div className="text-3xl sm:text-4xl font-bold gradient-text mb-1">{stat.value}</div>
-                <div className="text-sm text-white/30">{t(stat.labelKey)}</div>
+                <div className="text-sm text-t-text/30">{t(stat.labelKey)}</div>
               </div>
             ))}
           </div>
@@ -284,14 +286,14 @@ export default function Home() {
           {/* Section header */}
           <div className="text-center mb-16">
             <div className="animate-on-scroll">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/50 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-t-overlay/5 border border-t-overlay/10 text-xs font-medium text-t-text/50 mb-4">
                 <Code2 className="w-3 h-3" />
                 {t('nav.features')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 {t('home.featuresTitle')}
               </h2>
-              <p className="text-white/40 max-w-xl mx-auto">
+              <p className="text-t-text/40 max-w-xl mx-auto">
                 {t('home.featuresSubtitle')}
               </p>
             </div>
@@ -305,11 +307,11 @@ export default function Home() {
                 className="animate-on-scroll glass-card rounded-2xl p-6 group"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
-                <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${feature.color} border border-white/5 mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${feature.color} border border-t-overlay/5 mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <feature.icon className={`w-5 h-5 ${feature.iconColor}`} />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-white/90">{t(feature.titleKey)}</h3>
-                <p className="text-sm text-white/35 leading-relaxed">{t(feature.descKey)}</p>
+                <h3 className="text-lg font-semibold mb-2 text-t-text/90">{t(feature.titleKey)}</h3>
+                <p className="text-sm text-t-text/35 leading-relaxed">{t(feature.descKey)}</p>
               </div>
             ))}
           </div>
@@ -321,14 +323,14 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <div className="animate-on-scroll">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/50 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-t-overlay/5 border border-t-overlay/10 text-xs font-medium text-t-text/50 mb-4">
                 <Layers className="w-3 h-3" />
                 {t('home.howLabel')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 {t('home.howTitle')}
               </h2>
-              <p className="text-white/40 max-w-xl mx-auto">
+              <p className="text-t-text/40 max-w-xl mx-auto">
                 {t('home.howSubtitle')}
               </p>
             </div>
@@ -360,12 +362,12 @@ export default function Home() {
                 className="animate-on-scroll relative text-center"
                 style={{ animationDelay: `${i * 150}ms` }}
               >
-                <div className="text-5xl font-black text-white/[0.03] mb-4">{item.step}</div>
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 border border-white/10 mb-4">
-                  <item.icon className="w-5 h-5 text-white/50" />
+                <div className="text-5xl font-black text-t-text/[0.03] mb-4">{item.step}</div>
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-t-overlay/5 border border-t-overlay/10 mb-4">
+                  <item.icon className="w-5 h-5 text-t-text/50" />
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{t(item.titleKey)}</h3>
-                <p className="text-sm text-white/35 leading-relaxed">{t(item.descKey)}</p>
+                <p className="text-sm text-t-text/35 leading-relaxed">{t(item.descKey)}</p>
               </div>
             ))}
           </div>
@@ -377,14 +379,14 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <div className="animate-on-scroll">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/50 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-t-overlay/5 border border-t-overlay/10 text-xs font-medium text-t-text/50 mb-4">
                 <Star className="w-3 h-3" />
                 {t('nav.testimonials')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                 {t('home.testimonialsTitle')}
               </h2>
-              <p className="text-white/40 max-w-xl mx-auto">
+              <p className="text-t-text/40 max-w-xl mx-auto">
                 {t('home.testimonialsSubtitle')}
               </p>
             </div>
@@ -403,14 +405,14 @@ export default function Home() {
                     <Star key={j} className="w-4 h-4 text-yellow-500/70 fill-yellow-500/70" />
                   ))}
                 </div>
-                <p className="text-sm text-white/50 leading-relaxed mb-6">"{t(testimonial.quoteKey)}"</p>
+                <p className="text-sm text-t-text/50 leading-relaxed mb-6">"{t(testimonial.quoteKey)}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-white/10 flex items-center justify-center text-xs font-bold text-white/60">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-t-overlay/10 flex items-center justify-center text-xs font-bold text-t-text/60">
                     {testimonial.avatar}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-white/70">{t(testimonial.authorKey)}</div>
-                    <div className="text-xs text-white/30">{t(testimonial.roleKey)}</div>
+                    <div className="text-sm font-medium text-t-text/70">{t(testimonial.authorKey)}</div>
+                    <div className="text-xs text-t-text/30">{t(testimonial.roleKey)}</div>
                   </div>
                 </div>
               </div>
@@ -428,12 +430,12 @@ export default function Home() {
               {t('home.ctaTitle1')}{' '}
               <span className="gradient-text">{t('home.ctaTitle2')}</span> ?
             </h2>
-            <p className="text-lg text-white/40 mb-10 max-w-xl mx-auto">
+            <p className="text-lg text-t-text/40 mb-10 max-w-xl mx-auto">
               {t('home.ctaSubtitle')}
             </p>
             <button
               onClick={() => setShowAuth(true)}
-              className="btn-gradient px-10 py-4 rounded-xl text-white font-semibold flex items-center gap-2 mx-auto animate-pulse-glow"
+              className="btn-gradient px-10 py-4 rounded-xl text-t-text font-semibold flex items-center gap-2 mx-auto animate-pulse-glow"
             >
               {t('home.ctaButton')}
               <ArrowRight className="w-5 h-5" />
@@ -451,13 +453,13 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-6">
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">{t('home.footerPrivacy')}</a>
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">{t('home.footerTerms')}</a>
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">{t('home.footerDocs')}</a>
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">GitHub</a>
+              <a href="#" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">{t('home.footerPrivacy')}</a>
+              <a href="#" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">{t('home.footerTerms')}</a>
+              <a href="#" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">{t('home.footerDocs')}</a>
+              <a href="#" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">GitHub</a>
             </div>
 
-            <p className="text-xs text-white/15">
+            <p className="text-xs text-t-text/15">
               {t('home.footerCopyright')}
             </p>
           </div>

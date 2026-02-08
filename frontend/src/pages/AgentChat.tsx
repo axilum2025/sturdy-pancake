@@ -204,20 +204,20 @@ export default function AgentChat() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="h-screen bg-t-page flex items-center justify-center">
         <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-[#0a0a0f] flex flex-col">
+    <div className="h-screen bg-t-page flex flex-col">
       {/* Header */}
-      <header className="glass-strong border-b border-white/10 flex-shrink-0">
+      <header className="glass-strong border-b border-t-overlay/10 flex-shrink-0">
         <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3">
           <button
             onClick={() => navigate(`/store/${agentId}`)}
-            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -229,22 +229,22 @@ export default function AgentChat() {
             {agent?.icon ? (
               <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
             ) : (
-              <span className="text-sm font-bold text-white/90">
+              <span className="text-sm font-bold text-t-text/90">
                 {agent?.name?.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-semibold text-white/90 truncate">{agent?.name}</h1>
-            <p className="text-xs text-white/30 truncate">
+            <h1 className="text-sm font-semibold text-t-text/90 truncate">{agent?.name}</h1>
+            <p className="text-xs text-t-text/30 truncate">
               {agent?.configSnapshot?.model?.split('/').pop()}
             </p>
           </div>
 
           <button
             onClick={handleClear}
-            className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+            className="p-2 rounded-lg text-t-text/30 hover:text-t-text/60 hover:bg-t-overlay/5 transition-colors"
             title={t('store.newConversation')}
           >
             <Trash2 className="w-4 h-4" />
@@ -261,12 +261,12 @@ export default function AgentChat() {
                 className={`w-20 h-20 rounded-[26%] bg-gradient-to-br ${catColor} flex items-center justify-center mx-auto mb-4 shadow-lg`}
                 style={{ boxShadow: `0 8px 40px ${agent?.iconColor || '#3b82f6'}40` }}
               >
-                <span className="text-3xl font-bold text-white/90">
+                <span className="text-3xl font-bold text-t-text/90">
                   {agent?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <h2 className="text-xl font-semibold text-white/80 mb-2">{agent?.name}</h2>
-              <p className="text-white/40 text-sm">{t('store.startConversation')}</p>
+              <h2 className="text-xl font-semibold text-t-text/80 mb-2">{agent?.name}</h2>
+              <p className="text-t-text/40 text-sm">{t('store.startConversation')}</p>
             </div>
           )}
 
@@ -284,7 +284,7 @@ export default function AgentChat() {
                   {agent?.icon ? (
                     <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
                   ) : (
-                    <Bot className="w-4 h-4 text-white/80" />
+                    <Bot className="w-4 h-4 text-t-text/80" />
                   )}
                 </div>
               )}
@@ -293,10 +293,10 @@ export default function AgentChat() {
                 className={`max-w-[80%] sm:max-w-[70%] ${
                   msg.role === 'user'
                     ? 'bg-blue-500/20 border border-blue-500/20 rounded-2xl rounded-tr-md'
-                    : 'bg-white/[0.04] border border-white/5 rounded-2xl rounded-tl-md'
+                    : 'bg-t-overlay/[0.04] border border-t-overlay/5 rounded-2xl rounded-tl-md'
                 } px-4 py-3`}
               >
-                <div className="text-sm text-white/85 leading-relaxed whitespace-pre-wrap break-words">
+                <div className="text-sm text-t-text/85 leading-relaxed whitespace-pre-wrap break-words">
                   {msg.content}
                   {msg.role === 'assistant' && msg.content === '' && isStreaming && (
                     <span className="inline-flex items-center gap-1">
@@ -309,8 +309,8 @@ export default function AgentChat() {
               </div>
 
               {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <User className="w-4 h-4 text-white/60" />
+                <div className="w-8 h-8 rounded-full bg-t-overlay/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <User className="w-4 h-4 text-t-text/60" />
                 </div>
               )}
             </div>
@@ -321,7 +321,7 @@ export default function AgentChat() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 border-t border-white/10 glass-strong">
+      <div className="flex-shrink-0 border-t border-t-overlay/10 glass-strong">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="relative flex items-end gap-2">
             <div className="flex-1 relative">
@@ -332,7 +332,7 @@ export default function AgentChat() {
                 onKeyDown={handleKeyDown}
                 placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
                 rows={1}
-                className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3 pr-12 text-sm text-white/90 placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30 resize-none max-h-[200px]"
+                className="w-full bg-t-overlay/[0.04] border border-t-overlay/10 rounded-2xl px-4 py-3 pr-12 text-sm text-t-text/90 placeholder-t-text/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30 resize-none max-h-[200px]"
                 disabled={isStreaming}
               />
               <button
@@ -348,7 +348,7 @@ export default function AgentChat() {
               </button>
             </div>
           </div>
-          <p className="text-center text-[10px] text-white/20 mt-2">
+          <p className="text-center text-[10px] text-t-text/20 mt-2">
             {t('store.poweredBy', { name: agent?.name })}
           </p>
         </div>

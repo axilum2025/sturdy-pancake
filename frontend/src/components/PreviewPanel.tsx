@@ -53,16 +53,16 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
     if (!selectedFile) {
       return (
         <div className="h-full flex items-center justify-center animate-fade-in-up">
-          <div className="w-full max-w-2xl mx-auto p-8 glass-card rounded-xl border-2 border-dashed border-white/10">
+          <div className="w-full max-w-2xl mx-auto p-8 glass-card rounded-xl border-2 border-dashed border-t-overlay/10">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center animate-pulse-glow">
               <Eye className="w-8 h-8 text-blue-400 glow-icon" />
             </div>
             <h2 className="text-2xl font-bold gradient-text mb-4">Prévisualisation</h2>
-            <p className="text-white/60 mb-6">
+            <p className="text-t-text/60 mb-6">
               Sélectionnez un fichier pour prévisualiser son contenu
             </p>
-            <div className="glass-card bg-black/30 h-64 rounded-lg flex items-center justify-center border border-white/5">
-              <span className="text-white/30">Preview Iframe</span>
+            <div className="glass-card bg-black/30 h-64 rounded-lg flex items-center justify-center border border-t-overlay/5">
+              <span className="text-t-text/30">Preview Iframe</span>
             </div>
           </div>
         </div>
@@ -77,9 +77,9 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
     if (isHtml && selectedFileContent) {
       return (
         <div className="h-full flex flex-col animate-fade-in-up">
-          <div className="flex items-center justify-between px-4 py-3 glass-card border-b border-white/10">
+          <div className="flex items-center justify-between px-4 py-3 glass-card border-b border-t-overlay/10">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-white/80">{selectedFile}</span>
+              <span className="text-sm text-t-text/80">{selectedFile}</span>
               {getDeploymentStatusBadge()}
             </div>
             <div className="flex items-center gap-2">
@@ -88,7 +88,7 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
                   href={deployment.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="btn-outline-glow flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white"
+                  className="btn-outline-glow flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-t-text/70 hover:text-t-text"
                 >
                   <Globe className="w-4 h-4 glow-icon" />
                   <span className="hidden sm:inline">Voir en ligne</span>
@@ -98,7 +98,7 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="btn-outline-glow flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white"
+                className="btn-outline-glow flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-t-text/70 hover:text-t-text"
               >
                 <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Actualiser</span>
@@ -106,7 +106,7 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
                   title="Fermer"
                 >
                   <X className="w-5 h-5" />
@@ -114,7 +114,7 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
               )}
             </div>
           </div>
-          <div className="flex-1 bg-white/5">
+          <div className="flex-1 bg-t-overlay/5">
             <iframe
               srcDoc={selectedFileContent}
               className="w-full h-full border-none"
@@ -129,9 +129,9 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
     // For non-HTML files, show code preview
     return (
       <div className="h-full flex flex-col animate-fade-in-up">
-        <div className="flex items-center justify-between px-4 py-3 glass-card border-b border-white/10">
+        <div className="flex items-center justify-between px-4 py-3 glass-card border-b border-t-overlay/10">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-white/80">{selectedFile}</span>
+            <span className="text-sm text-t-text/80">{selectedFile}</span>
             {getDeploymentStatusBadge()}
           </div>
           <div className="flex items-center gap-2">
@@ -140,21 +140,21 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
                 href={deployment.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-outline-glow flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-white/70 hover:text-white"
+                className="btn-outline-glow flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-t-text/70 hover:text-t-text"
               >
                 <Globe className="w-4 h-4 glow-icon" />
                 <span className="hidden sm:inline">Voir en ligne</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}
-            <div className="flex items-center gap-2 text-sm text-white/50">
+            <div className="flex items-center gap-2 text-sm text-t-text/50">
               <Code2 className="w-4 h-4" />
               <span className="hidden sm:inline">Code Preview</span>
             </div>
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
                 title="Fermer"
               >
                 <X className="w-5 h-5" />
@@ -163,7 +163,7 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
           </div>
         </div>
         <div className="flex-1 bg-black/30 p-4 overflow-auto">
-          <pre className="text-sm text-white/90 font-mono whitespace-pre-wrap">
+          <pre className="text-sm text-t-text/90 font-mono whitespace-pre-wrap">
             {selectedFileContent || '(Fichier vide)'}
           </pre>
         </div>

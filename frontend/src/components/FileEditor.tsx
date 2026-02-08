@@ -199,7 +199,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
           className={`flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-200 rounded-lg group ${
             selectedFilePath === item.path 
               ? 'bg-blue-500/20 border border-blue-500/30' 
-              : 'hover:bg-white/5'
+              : 'hover:bg-t-overlay/5'
           }`}
           style={{ paddingLeft: `${depth * 12 + 8}px` }}
           onClick={() => {
@@ -211,7 +211,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
           }}
         >
           {hasChildren && (
-            <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${!isExpanded ? 'transform -rotate-90' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-t-text/50 transition-transform ${!isExpanded ? 'transform -rotate-90' : ''}`} />
           )}
           {!hasChildren && <span className="w-4" />}
           {item.type === 'directory' ? (
@@ -219,7 +219,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
           ) : (
             getFileIcon(item.name)
           )}
-          <span className="text-sm text-white/80 truncate flex-1">{item.name}</span>
+          <span className="text-sm text-t-text/80 truncate flex-1">{item.name}</span>
           {item.type === 'file' && (
             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
@@ -227,7 +227,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
                   e.stopPropagation();
                   handleDuplicateFile(item.path);
                 }}
-                className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-blue-400"
+                className="p-1 rounded hover:bg-t-overlay/10 text-t-text/50 hover:text-blue-400"
                 title="Dupliquer"
               >
                 <Copy className="w-3.5 h-3.5" />
@@ -237,7 +237,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
                   e.stopPropagation();
                   handleDeleteFile(item.path);
                 }}
-                className="p-1 rounded hover:bg-white/10 text-white/50 hover:text-red-400"
+                className="p-1 rounded hover:bg-t-overlay/10 text-t-text/50 hover:text-red-400"
                 title="Supprimer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -257,7 +257,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-t-overlay/10">
         <div className="flex items-center gap-2">
           <Code className="w-5 h-5 text-blue-400 glow-icon" />
           <span className="font-semibold gradient-text">Fichiers</span>
@@ -268,12 +268,12 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
             className="btn-outline-glow p-2 rounded-lg"
             title="Nouveau fichier"
           >
-            <Plus className="w-4 h-4 text-white/70" />
+            <Plus className="w-4 h-4 text-t-text/70" />
           </button>
           {onClose && (
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
               title="Fermer"
             >
               <X className="w-4 h-4" />
@@ -285,11 +285,11 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
       {/* File Tree */}
       <div className="flex-1 overflow-auto py-2">
         {isLoading ? (
-          <div className="text-white/40 text-sm px-4 animate-pulse">Chargement...</div>
+          <div className="text-t-text/40 text-sm px-4 animate-pulse">Chargement...</div>
         ) : fileTree.length === 0 ? (
           <div className="text-center py-8 animate-fade-in-up">
-            <FileText className="w-12 h-12 mx-auto mb-3 text-white/20" />
-            <p className="text-white/40 text-sm">Aucun fichier</p>
+            <FileText className="w-12 h-12 mx-auto mb-3 text-t-text/20" />
+            <p className="text-t-text/40 text-sm">Aucun fichier</p>
           </div>
         ) : (
           fileTree.map((item) => renderTreeItem(item))
@@ -298,10 +298,10 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
 
       {/* Editor Panel */}
       {selectedFilePath && (
-        <div className="border-t border-white/10 flex flex-col h-1/2 animate-fade-in-up">
+        <div className="border-t border-t-overlay/10 flex flex-col h-1/2 animate-fade-in-up">
           {/* Editor Header */}
-          <div className="flex items-center justify-between px-4 py-2 glass-card border-b border-white/10">
-            <span className="text-sm text-white/80 truncate">{selectedFilePath}</span>
+          <div className="flex items-center justify-between px-4 py-2 glass-card border-b border-t-overlay/10">
+            <span className="text-sm text-t-text/80 truncate">{selectedFilePath}</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleDeleteFile(selectedFilePath)}
@@ -325,7 +325,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
                 }}
                 className="btn-outline-glow p-2 rounded-lg"
               >
-                <X className="w-4 h-4 text-white/70" />
+                <X className="w-4 h-4 text-t-text/70" />
               </button>
             </div>
           </div>
@@ -334,7 +334,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
           <textarea
             value={fileContent}
             onChange={(e) => setFileContent(e.target.value)}
-            className="flex-1 bg-black/30 text-white/90 p-4 font-mono text-sm resize-none focus:outline-none border-none"
+            className="flex-1 bg-black/30 text-t-text/90 p-4 font-mono text-sm resize-none focus:outline-none border-none"
             spellCheck={false}
           />
         </div>
@@ -343,19 +343,19 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
       {/* New File Modal */}
       {showNewFileModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-          <div className="glass-card rounded-xl shadow-2xl w-full max-w-md p-6 border border-white/10 animate-fade-in-scale">
+          <div className="glass-card rounded-xl shadow-2xl w-full max-w-md p-6 border border-t-overlay/10 animate-fade-in-scale">
             <h3 className="text-lg font-bold gradient-text mb-4">Nouveau Fichier</h3>
             <input
               type="text"
               value={newFilePath}
               onChange={(e) => setNewFilePath(e.target.value)}
               placeholder="src/App.tsx"
-              className="w-full input-futuristic text-white px-4 py-3 rounded-lg mb-4"
+              className="w-full input-futuristic text-t-text px-4 py-3 rounded-lg mb-4"
             />
             <div className="flex gap-4">
               <button
                 onClick={() => setShowNewFileModal(false)}
-                className="flex-1 btn-outline-glow text-white font-medium py-2 rounded-lg"
+                className="flex-1 btn-outline-glow text-t-text font-medium py-2 rounded-lg"
               >
                 Annuler
               </button>

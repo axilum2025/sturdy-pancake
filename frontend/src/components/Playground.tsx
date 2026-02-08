@@ -161,7 +161,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-t-overlay/10">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-blue-400 glow-icon" />
           <span className="font-semibold gradient-text">{t('playground.title')}</span>
@@ -171,7 +171,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
         </div>
         <div className="flex items-center gap-1">
           <button
-            className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg text-t-text/40 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
             onClick={clearChat}
             title={t('playground.reset')}
           >
@@ -179,7 +179,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
           </button>
           {onClose && (
             <button
-              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
               onClick={onClose}
             >
               <X className="w-5 h-5" />
@@ -193,10 +193,10 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
         {messages.length === 0 && (
           <div className="text-center mt-8 animate-fade-in-up">
             <Bot className="w-12 h-12 mx-auto mb-3 text-blue-400/40" />
-            <p className="text-white/50 mb-1 text-sm">{t('playground.testAgent')}</p>
+            <p className="text-t-text/50 mb-1 text-sm">{t('playground.testAgent')}</p>
             {welcomeMessage && (
-              <div className="mt-4 mx-auto max-w-md bg-white/[0.04] rounded-xl p-4 border border-white/10">
-                <p className="text-sm text-white/60 italic">"{welcomeMessage}"</p>
+              <div className="mt-4 mx-auto max-w-md bg-t-overlay/[0.04] rounded-xl p-4 border border-t-overlay/10">
+                <p className="text-sm text-t-text/60 italic">"{welcomeMessage}"</p>
               </div>
             )}
           </div>
@@ -215,8 +215,8 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
             <div
               className={`max-w-[80%] rounded-xl px-4 py-3 ${
                 msg.role === 'user'
-                  ? 'bg-blue-500/20 border border-blue-500/30 text-white/90'
-                  : 'bg-white/[0.04] border border-white/10 text-white/80'
+                  ? 'bg-blue-500/20 border border-blue-500/30 text-t-text/90'
+                  : 'bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/80'
               }`}
             >
               <p className="text-sm whitespace-pre-wrap">{msg.content || (msg.isStreaming ? '...' : '')}</p>
@@ -225,8 +225,8 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
               )}
             </div>
             {msg.role === 'user' && (
-              <div className="w-7 h-7 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center flex-shrink-0 mt-1">
-                <User className="w-4 h-4 text-white/60" />
+              <div className="w-7 h-7 rounded-lg bg-t-overlay/10 border border-t-overlay/20 flex items-center justify-center flex-shrink-0 mt-1">
+                <User className="w-4 h-4 text-t-text/60" />
               </div>
             )}
           </div>
@@ -235,7 +235,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-white/10">
+      <div className="p-3 border-t border-t-overlay/10">
         <div className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
@@ -243,7 +243,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('playground.placeholder')}
-            className="flex-1 bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
+            className="flex-1 bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
             rows={2}
             disabled={isStreaming}
           />

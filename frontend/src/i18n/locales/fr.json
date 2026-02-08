@@ -333,5 +333,10 @@
 
   "lang": {
     "switchTo": "English"
+  },
+
+  "theme": {
+    "switchToLight": "Mode clair",
+    "switchToDark": "Mode sombre"
   }
 }

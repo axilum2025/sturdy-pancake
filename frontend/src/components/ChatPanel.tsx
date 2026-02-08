@@ -104,7 +104,7 @@ function extractCodeBlocks(markdown: string): ExtractedFile[] {
 function AgentTaskIcon({ status }: { status: AgentTask['status'] }) {
   switch (status) {
     case 'pending':
-      return <Circle className="w-3.5 h-3.5 text-white/30" />;
+      return <Circle className="w-3.5 h-3.5 text-t-text/30" />;
     case 'running':
       return <RotateCw className="w-3.5 h-3.5 text-blue-400 animate-spin" />;
     case 'done':
@@ -121,31 +121,31 @@ function AgentTaskItem({ task }: { task: AgentTask }) {
     <div className="pl-1 py-0.5">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex items-center gap-2 w-full text-left group hover:bg-white/5 rounded px-1 py-0.5 transition-colors"
+        className="flex items-center gap-2 w-full text-left group hover:bg-t-overlay/5 rounded px-1 py-0.5 transition-colors"
       >
         <AgentTaskIcon status={task.status} />
         <span
           className={`text-xs flex-1 ${
             task.status === 'done'
-              ? 'text-white/50'
+              ? 'text-t-text/50'
               : task.status === 'running'
               ? 'text-blue-300'
               : task.status === 'error'
               ? 'text-red-300'
-              : 'text-white/60'
+              : 'text-t-text/60'
           }`}
         >
           {task.label}
         </span>
         {task.detail &&
           (expanded ? (
-            <ChevronDown className="w-3 h-3 text-white/30" />
+            <ChevronDown className="w-3 h-3 text-t-text/30" />
           ) : (
-            <ChevronRight className="w-3 h-3 text-white/30" />
+            <ChevronRight className="w-3 h-3 text-t-text/30" />
           ))}
       </button>
       {expanded && task.detail && (
-        <div className="mt-1 ml-5 text-[11px] text-white/40 bg-black/20 rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
+        <div className="mt-1 ml-5 text-[11px] text-t-text/40 bg-black/20 rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
           {task.detail}
         </div>
       )}
@@ -162,28 +162,29 @@ function AgentTaskList({
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const done = tasks.filter((t) => t.status === 'done').length;
+  const { t } = useTranslation();
+  const done = tasks.filter((tk) => tk.status === 'done').length;
   const total = tasks.length;
   const allDone = done === total && total > 0;
 
   return (
-    <div className="mt-2 rounded-lg bg-white/[0.02] overflow-hidden">
+    <div className="mt-2 rounded-lg bg-t-overlay/[0.02] overflow-hidden">
       <button
         onClick={onToggle}
-        className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-white/5 transition-colors"
+        className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-t-overlay/5 transition-colors"
       >
         {collapsed ? (
-          <ChevronRight className="w-4 h-4 text-white/40" />
+          <ChevronRight className="w-4 h-4 text-t-text/40" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-white/40" />
+          <ChevronDown className="w-4 h-4 text-t-text/40" />
         )}
-        <span className="text-xs font-medium text-white/70">
+        <span className="text-xs font-medium text-t-text/70">
           {allDone ? t('chat.tasksDone') : t('chat.tasksRunning')}
         </span>
-        <span className="ml-auto text-[10px] text-white/30 tabular-nums">
+        <span className="ml-auto text-[10px] text-t-text/30 tabular-nums">
           {done}/{total}
         </span>
-        <div className="w-12 h-1 rounded-full bg-white/10 overflow-hidden">
+        <div className="w-12 h-1 rounded-full bg-t-overlay/10 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
               allDone ? 'bg-green-400' : 'bg-blue-400'
@@ -194,8 +195,8 @@ function AgentTaskList({
       </button>
       {!collapsed && (
         <div className="px-3 pb-2 space-y-0.5">
-          {tasks.map((t) => (
-            <AgentTaskItem key={t.id} task={t} />
+          {tasks.map((tk) => (
+            <AgentTaskItem key={tk.id} task={tk} />
           ))}
         </div>
       )}
@@ -556,7 +557,7 @@ export default function ChatPanel() {
                 : 'bg-yellow-400 animate-pulse'
             }`}
           />
-          <span className="text-xs text-white/40">
+          <span className="text-xs text-t-text/40">
             {copilotAvailable === true
               ? t('chat.copilotConnected')
               : copilotAvailable === false
@@ -570,11 +571,11 @@ export default function ChatPanel() {
       <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4 min-h-0">
         {messages.length === 0 ? (
           <div className="text-center mt-8 animate-fade-in-up">
-            <p className="text-white/60 mb-1">
+            <p className="text-t-text/60 mb-1">
               {t('chat.welcome')}{' '}
               <strong className="gradient-text">GiLo AI</strong>
             </p>
-            <p className="text-sm text-white/40 mb-6">
+            <p className="text-sm text-t-text/40 mb-6">
               {t('chat.describeAgent')}
             </p>
             <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
@@ -582,7 +583,7 @@ export default function ChatPanel() {
                 <button
                   key={action.label}
                   onClick={() => setMessage(action.prompt)}
-                  className="glass-card bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-3 py-2 text-xs text-white/70 hover:text-white transition-all duration-200 text-left"
+                  className="glass-card bg-t-overlay/5 hover:bg-t-overlay/10 border border-t-overlay/10 hover:border-t-overlay/20 rounded-lg px-3 py-2 text-xs text-t-text/70 hover:text-t-text transition-all duration-200 text-left"
                 >
                   <Zap className="w-3 h-3 inline mr-1 text-yellow-400" />
                   {action.label}
@@ -612,7 +613,7 @@ export default function ChatPanel() {
                   }`}
                 >
                   {msg.role === 'assistant' ? (
-                    <div className="chat-markdown text-white/90 text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-purple-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
+                    <div className="chat-markdown text-t-text/90 text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-pre:bg-black/40 prose-pre:border prose-pre:border-t-overlay/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-purple-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.content || (msg.isStreaming ? '...' : '')}
                       </ReactMarkdown>
@@ -621,7 +622,7 @@ export default function ChatPanel() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-white/90 text-sm">{msg.content}</p>
+                    <p className="text-t-text/90 text-sm">{msg.content}</p>
                   )}
                 </div>
 
@@ -645,13 +646,13 @@ export default function ChatPanel() {
                   msg.content && (
                     <button
                       onClick={() => handleCopy(msg.id, msg.content)}
-                      className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/10"
+                      className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-t-overlay/10 hover:bg-t-overlay/20 border border-t-overlay/10"
                       title={t('common.copy')}
                     >
                       {copiedMessageId === msg.id ? (
                         <Check className="w-3.5 h-3.5 text-green-400" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 text-white/50" />
+                        <Copy className="w-3.5 h-3.5 text-t-text/50" />
                       )}
                     </button>
                   )}
@@ -685,16 +686,16 @@ export default function ChatPanel() {
       </div>
 
       {/* Input – Gemini-style on mobile */}
-      <div className="flex-shrink-0 md:p-4 md:border-t md:border-white/10 p-0 border-t-0">
+      <div className="flex-shrink-0 md:p-4 md:border-t md:border-t-overlay/10 p-0 border-t-0">
         {isTyping && (
           <button
             onClick={handleStop}
-            className="w-full mb-2 py-1.5 rounded-lg text-xs text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all mx-auto md:mx-0 px-3 md:px-0"
+            className="w-full mb-2 py-1.5 rounded-lg text-xs text-t-text/60 hover:text-t-text bg-t-overlay/5 hover:bg-t-overlay/10 border border-t-overlay/10 transition-all mx-auto md:mx-0 px-3 md:px-0"
           >
             ■ {t('chat.stopGeneration')}
           </button>
         )}
-        <div className="relative md:rounded-lg rounded-t-2xl rounded-b-none bg-white/[0.04] md:bg-transparent border-t border-white/[0.04] md:border-t-0 px-3 pt-2 landscape-panel pb-[env(safe-area-inset-bottom,8px)] md:p-0">
+        <div className="relative md:rounded-lg rounded-t-2xl rounded-b-none bg-t-overlay/[0.04] md:bg-transparent border-t border-t-overlay/[0.04] md:border-t-0 px-3 pt-2 landscape-panel pb-[env(safe-area-inset-bottom,8px)] md:p-0">
           <textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -705,12 +706,12 @@ export default function ChatPanel() {
             }
             placeholder={t('chat.placeholder')}
             rows={4}
-            className="w-full text-white px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-white/25 landscape-input"
+            className="w-full text-t-text px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
           />
           <button
             onClick={handleSend}
             disabled={!message.trim() || isTyping}
-            className="absolute right-5 md:right-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-white flex items-center justify-center disabled:opacity-50 hover:bg-white/10 transition-colors"
+            className="absolute right-5 md:right-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text flex items-center justify-center disabled:opacity-50 hover:bg-t-overlay/10 transition-colors"
           >
             {isTyping ? (
               <Loader2 className="w-5 h-5 animate-spin" />

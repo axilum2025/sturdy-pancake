@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../contexts/AuthContext';
 import { listAgents, createAgent, Agent } from '../services/api';
 import AuthModal from '../components/AuthModal';
@@ -71,10 +70,10 @@ export default function Dashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-t-page flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-white/40">{t('common.loading')}</p>
+          <p className="text-t-text/40">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -82,16 +81,16 @@ export default function Dashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+      <div className="min-h-screen bg-t-page flex items-center justify-center">
         <div className="text-center">
           <div className="mb-8 animate-fade-in-up">
             <Zap className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400 mx-auto mb-4 glow-icon" />
             <h1 className="text-2xl sm:text-4xl font-bold gradient-text mb-4">GiLo AI</h1>
-            <p className="text-white/40 text-base sm:text-xl px-4">{t('dashboard.connectPrompt')}</p>
+            <p className="text-t-text/40 text-base sm:text-xl px-4">{t('dashboard.connectPrompt')}</p>
           </div>
           <button
             onClick={() => setShowAuth(true)}
-            className="btn-gradient px-8 py-3 rounded-xl text-white font-semibold animate-fade-in-up delay-100"
+            className="btn-gradient px-8 py-3 rounded-xl text-t-text font-semibold animate-fade-in-up delay-100"
           >
             {t('common.signIn')}
           </button>
@@ -109,13 +108,13 @@ export default function Dashboard() {
   const deployedCount = projects.filter(a => a.status === 'deployed').length;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f]">
+    <div className="min-h-screen bg-t-page">
       {/* Background effects */}
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
       <div className="fixed inset-0 bg-grid pointer-events-none opacity-40" />
 
       {/* Header/Navbar */}
-      <header className="relative z-40 border-b border-white/5 glass">
+      <header className="relative z-40 border-b border-t-overlay/5 glass">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-2.5">
@@ -134,7 +133,7 @@ export default function Dashboard() {
               </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
-                  <p className="text-white/90 font-medium text-sm">{user?.email}</p>
+                  <p className="text-t-text/90 font-medium text-sm">{user?.email}</p>
                   <div className="flex items-center justify-end gap-2">
                     <span className={`text-xs font-medium capitalize ${
                       user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
@@ -150,12 +149,11 @@ export default function Dashboard() {
                   {getInitials(user?.email || 'U')}
                 </div>
               </div>
-              <LanguageSwitcher />
               <button
                 onClick={logout}
-                className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+                className="p-2 rounded-lg bg-t-overlay/5 border border-t-overlay/10 hover:bg-t-overlay/10 hover:border-t-overlay/20 transition-all duration-200"
               >
-                <LogOut className="w-4 h-4 text-white/60" />
+                <LogOut className="w-4 h-4 text-t-text/60" />
               </button>
             </div>
           </div>
@@ -172,12 +170,12 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
                   <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.agents')}</span>
+                <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.agents')}</span>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-white mb-2">
-                {projects.length} <span className="text-white/30 text-xs sm:text-base font-normal">/ {agentsMax}</span>
+              <p className="text-lg sm:text-2xl font-bold text-t-text mb-2">
+                {projects.length} <span className="text-t-text/30 text-xs sm:text-base font-normal">/ {agentsMax}</span>
               </p>
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-t-overlay/5 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(agentsProgress, 100)}%` }}
@@ -191,12 +189,12 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
                   <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.conversations')}</span>
+                <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.conversations')}</span>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-white mb-2">
+              <p className="text-lg sm:text-2xl font-bold text-t-text mb-2">
                 {totalConversations}
               </p>
-              <p className="text-xs text-white/30">{t('dashboard.totalMessages', { count: totalMessages })}</p>
+              <p className="text-xs text-t-text/30">{t('dashboard.totalMessages', { count: totalMessages })}</p>
             </div>
 
             {/* Deployed Stat */}
@@ -205,12 +203,12 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                   <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.deployed')}</span>
+                <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.deployed')}</span>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-white mb-2">
-                {deployedCount} <span className="text-white/30 text-xs sm:text-base font-normal">/ {projects.length}</span>
+              <p className="text-lg sm:text-2xl font-bold text-t-text mb-2">
+                {deployedCount} <span className="text-t-text/30 text-xs sm:text-base font-normal">/ {projects.length}</span>
               </p>
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-t-overlay/5 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-500"
                   style={{ width: `${projects.length > 0 ? (deployedCount / projects.length) * 100 : 0}%` }}
@@ -221,12 +219,12 @@ export default function Dashboard() {
             {/* Tier Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-300">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <div className={`p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-white/10`}>
+                <div className={`p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-t-overlay/10`}>
                   <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'} glow-icon`} />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.tier')}</span>
+                <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.tier')}</span>
               </div>
-              <p className="text-lg sm:text-2xl font-bold capitalize text-white mb-2">
+              <p className="text-lg sm:text-2xl font-bold capitalize text-t-text mb-2">
                 {user?.tier}
               </p>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -248,15 +246,15 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-t-text mb-1">
                 {t('dashboard.yourAgents')} <span className="gradient-text">{t('dashboard.agentsWord')}</span>
               </h2>
-              <p className="text-white/40 text-sm">{t('dashboard.manageAgents')}</p>
+              <p className="text-t-text/40 text-sm">{t('dashboard.manageAgents')}</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
               disabled={projects.length >= agentsMax}
-              className="btn-gradient px-5 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-gradient px-5 py-2.5 rounded-xl text-t-text font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
               {t('dashboard.newAgent')}
@@ -266,20 +264,20 @@ export default function Dashboard() {
           {isLoading ? (
             <div className="text-center py-20">
               <div className="animate-spin w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-white/40">{t('dashboard.loadingAgents')}</p>
+              <p className="text-t-text/40">{t('dashboard.loadingAgents')}</p>
             </div>
           ) : projects.length === 0 ? (
             <div className="glass-card rounded-2xl p-6 sm:p-12 text-center animate-fade-in-up">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
-                <Cloud className="w-10 h-10 text-white/30" />
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-t-overlay/5 flex items-center justify-center mx-auto mb-6">
+                <Cloud className="w-10 h-10 text-t-text/30" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">{t('dashboard.noAgents')}</h3>
-              <p className="text-white/40 mb-6 max-w-md mx-auto">
+              <h3 className="text-xl font-semibold text-t-text mb-2">{t('dashboard.noAgents')}</h3>
+              <p className="text-t-text/40 mb-6 max-w-md mx-auto">
                 {t('dashboard.noAgentsDesc')}
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="btn-gradient px-6 py-3 rounded-xl text-white font-semibold inline-flex items-center gap-2"
+                className="btn-gradient px-6 py-3 rounded-xl text-t-text font-semibold inline-flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 {t('dashboard.createFirst')}
@@ -313,19 +311,19 @@ export default function Dashboard() {
                 <Plus className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">{t('dashboard.createModal.title')}</h2>
-                <p className="text-white/40 text-sm">{t('dashboard.createModal.subtitle')}</p>
+                <h2 className="text-xl font-bold text-t-text">{t('dashboard.createModal.title')}</h2>
+                <p className="text-t-text/40 text-sm">{t('dashboard.createModal.subtitle')}</p>
               </div>
             </div>
             
             <div className="mb-6">
-              <label className="block text-white/70 text-sm font-medium mb-2">{t('dashboard.createModal.nameLabel')}</label>
+              <label className="block text-t-text/70 text-sm font-medium mb-2">{t('dashboard.createModal.nameLabel')}</label>
               <input
                 type="text"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
                 placeholder={t('dashboard.createModal.namePlaceholder')}
-                className="input-futuristic w-full px-4 py-3 rounded-xl text-white"
+                className="input-futuristic w-full px-4 py-3 rounded-xl text-t-text"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
               />
@@ -334,14 +332,14 @@ export default function Dashboard() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="flex-1 px-4 py-3 rounded-xl text-white/70 font-medium border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-200"
+                className="flex-1 px-4 py-3 rounded-xl text-t-text/70 font-medium border border-t-overlay/10 hover:bg-t-overlay/5 hover:border-t-overlay/20 transition-all duration-200"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectName.trim()}
-                className="flex-1 btn-gradient px-4 py-3 rounded-xl text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 btn-gradient px-4 py-3 rounded-xl text-t-text font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('common.create')}
               </button>
