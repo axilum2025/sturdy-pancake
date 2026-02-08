@@ -200,18 +200,52 @@ export default function Builder() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="glass-strong border-b border-white/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
+        <header className="glass-strong border-b-0 md:border-b md:border-white/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
           <h1 className="text-base md:text-xl font-bold text-white truncate">AI Builder Hub</h1>
-          <span className="text-white/40 text-sm">/</span>
-          <span className="text-white/60 text-sm">{projectId || 'Nouveau Projet'}</span>
+          <span className="text-white/40 text-sm hidden sm:inline">/</span>
+          <span className="text-white/60 text-sm hidden sm:inline">{projectId || 'Nouveau Projet'}</span>
           <div className="flex-1"></div>
+
+          {/* Mobile action buttons (visible only on small screens) */}
+          <div className="flex md:hidden items-center gap-1">
+            <button
+              onClick={() => setShowFileEditor(!showFileEditor)}
+              className={`p-2 rounded-lg transition-colors ${showFileEditor ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              title="Fichiers"
+            >
+              <Code2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className={`p-2 rounded-lg transition-colors ${showHistory ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              title="Historique"
+            >
+              <Clock className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className={`p-2 rounded-lg transition-colors ${showPreview ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              title="Prévisualisation"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleDeploy}
+              disabled={isDeploying}
+              className={`p-2 rounded-lg transition-colors ${isDeploying ? 'text-white/30' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+              title={getDeploymentStatusText()}
+            >
+              {getDeploymentStatusIcon()}
+            </button>
+          </div>
+
           <button
             onClick={() => navigate('/dashboard')}
             className="px-3 py-1.5 rounded-lg btn-outline-glow text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300 text-sm flex items-center gap-2"
             title="Retour"
           >
             <ArrowLeft className="w-4 h-4" />
-            Retour
+            <span className="hidden sm:inline">Retour</span>
           </button>
         </header>
 
@@ -222,7 +256,7 @@ export default function Builder() {
         {/* Main Content */}
         <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Chat – always full width */}
-        <div className="flex flex-col flex-1 glass-card animate-fade-in-left min-w-0">
+        <div className="flex flex-col flex-1 md:glass-card animate-fade-in-left min-w-0">
           <ChatPanel />
         </div>
 
@@ -233,7 +267,7 @@ export default function Builder() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
               onClick={() => setShowFileEditor(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
               <FileEditor projectId={projectId} onClose={() => setShowFileEditor(false)} />
             </div>
           </>
@@ -246,7 +280,7 @@ export default function Builder() {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
               onClick={() => setShowHistory(false)}
             />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
               <TimelinePanel onClose={() => setShowHistory(false)} />
             </div>
           </>

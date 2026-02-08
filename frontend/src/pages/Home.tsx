@@ -125,7 +125,7 @@ export default function Home() {
       <div className="fixed inset-0 bg-grid pointer-events-none opacity-40" />
 
       {/* ===== NAVBAR ===== */}
-      <nav className="relative z-40 border-b border-white/5">
+      <nav className="relative z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2.5">
@@ -202,7 +202,7 @@ export default function Home() {
               
               <div className="relative glass-strong rounded-2xl overflow-hidden border-gradient">
                 {/* Window bar */}
-                <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5">
+                <div className="flex items-center gap-2 px-4 py-3">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500/60" />
                     <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
@@ -253,7 +253,7 @@ export default function Home() {
       </section>
 
       {/* ===== STATS SECTION ===== */}
-      <section id="stats" className="relative py-20 border-y border-white/5">
+      <section id="stats" className="relative py-20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
@@ -313,7 +313,7 @@ export default function Home() {
       </section>
 
       {/* ===== HOW IT WORKS ===== */}
-      <section className="relative py-24 sm:py-32 border-t border-white/5">
+      <section className="relative py-24 sm:py-32">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <div className="animate-on-scroll">
@@ -369,7 +369,7 @@ export default function Home() {
       </section>
 
       {/* ===== TESTIMONIALS ===== */}
-      <section id="testimonials" className="relative py-24 sm:py-32 border-t border-white/5">
+      <section id="testimonials" className="relative py-24 sm:py-32">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <div className="animate-on-scroll">
@@ -416,7 +416,7 @@ export default function Home() {
       </section>
 
       {/* ===== CTA SECTION ===== */}
-      <section className="relative py-24 sm:py-32 border-t border-white/5">
+      <section className="relative py-24 sm:py-32">
         <div className="absolute inset-0 bg-gradient-to-t from-blue-500/5 via-transparent to-transparent pointer-events-none" />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="animate-on-scroll">
@@ -439,7 +439,7 @@ export default function Home() {
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="relative border-t border-white/5 py-12">
+      <footer className="relative py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2.5">

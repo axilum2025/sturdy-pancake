@@ -82,9 +82,9 @@ export default function Dashboard() {
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="text-center">
           <div className="mb-8 animate-fade-in-up">
-            <Zap className="w-16 h-16 text-blue-400 mx-auto mb-4 glow-icon" />
-            <h1 className="text-4xl font-bold gradient-text mb-4">GiLo AI</h1>
-            <p className="text-white/40 text-xl">Connectez-vous pour accéder à vos projets</p>
+            <Zap className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400 mx-auto mb-4 glow-icon" />
+            <h1 className="text-2xl sm:text-4xl font-bold gradient-text mb-4">GiLo AI</h1>
+            <p className="text-white/40 text-base sm:text-xl px-4">Connectez-vous pour accéder à vos projets</p>
           </div>
           <button
             onClick={() => setShowAuth(true)}
@@ -118,15 +118,15 @@ export default function Dashboard() {
 
       {/* Header/Navbar */}
       <header className="relative z-40 border-b border-white/5 glass">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-2.5">
-              <span className="text-lg font-bold tracking-tight gradient-text">
+              <span className="text-base sm:text-lg font-bold tracking-tight gradient-text">
                 GiLo AI
               </span>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-white/90 font-medium text-sm">{user?.email}</p>
@@ -142,7 +142,7 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getTierColor(user?.tier || 'free')} flex items-center justify-center text-white font-bold text-sm ${getTierGlow(user?.tier || 'free')}`}>
+                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${getTierColor(user?.tier || 'free')} flex items-center justify-center text-white font-bold text-xs sm:text-sm ${getTierGlow(user?.tier || 'free')}`}>
                   {getInitials(user?.email || 'U')}
                 </div>
               </div>
@@ -158,19 +158,19 @@ export default function Dashboard() {
       </header>
 
       {/* Stats Section */}
-      <div className="relative z-10 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="relative z-10 py-4 sm:py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Projects Stat */}
-            <div className="glass-card rounded-2xl p-5 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                  <FolderOpen className="w-5 h-5 text-blue-400 glow-icon" />
+            <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
-                <span className="text-xs text-white/40">Projets</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Projets</span>
               </div>
-              <p className="text-2xl font-bold text-white mb-2">
-                {projects.length} <span className="text-white/30 text-base font-normal">/ {user?.quotas.projectsMax}</span>
+              <p className="text-lg sm:text-2xl font-bold text-white mb-2">
+                {projects.length} <span className="text-white/30 text-xs sm:text-base font-normal">/ {user?.quotas.projectsMax}</span>
               </p>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div 
@@ -181,15 +181,15 @@ export default function Dashboard() {
             </div>
 
             {/* Storage Stat */}
-            <div className="glass-card rounded-2xl p-5 animate-fade-in-up delay-100">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                  <HardDrive className="w-5 h-5 text-purple-400 glow-icon" />
+            <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-100">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-1.5 sm:p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                  <HardDrive className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 glow-icon" />
                 </div>
-                <span className="text-xs text-white/40">Stockage</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Stockage</span>
               </div>
-              <p className="text-2xl font-bold text-white mb-2">
-                {user ? Math.round(user.usage.storageUsed / 1024 / 1024) : 0} <span className="text-white/30 text-base font-normal">MB</span>
+              <p className="text-lg sm:text-2xl font-bold text-white mb-2">
+                {user ? Math.round(user.usage.storageUsed / 1024 / 1024) : 0} <span className="text-white/30 text-xs sm:text-base font-normal">MB</span>
               </p>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div 
@@ -200,15 +200,15 @@ export default function Dashboard() {
             </div>
 
             {/* Deployments Stat */}
-            <div className="glass-card rounded-2xl p-5 animate-fade-in-up delay-200">
-              <div className="flex items-center justify-between mb-3">
-                <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
-                  <Rocket className="w-5 h-5 text-cyan-400 glow-icon" />
+            <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-200">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="p-1.5 sm:p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 glow-icon" />
                 </div>
-                <span className="text-xs text-white/40">Déploiements</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Déploiements</span>
               </div>
-              <p className="text-2xl font-bold text-white mb-2">
-                {user?.usage.deploymentsThisMonth} <span className="text-white/30 text-base font-normal">/ {user?.quotas.deploymentsPerMonth}</span>
+              <p className="text-lg sm:text-2xl font-bold text-white mb-2">
+                {user?.usage.deploymentsThisMonth} <span className="text-white/30 text-xs sm:text-base font-normal">/ {user?.quotas.deploymentsPerMonth}</span>
               </p>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div 
@@ -219,14 +219,14 @@ export default function Dashboard() {
             </div>
 
             {/* Tier Stat */}
-            <div className="glass-card rounded-2xl p-5 animate-fade-in-up delay-300">
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-white/10`}>
-                  <Crown className={`w-5 h-5 ${user?.tier === 'pro' ? 'text-purple-400' : user?.tier === 'team' ? 'text-yellow-400' : 'text-blue-400'} glow-icon`} />
+            <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-300">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className={`p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-white/10`}>
+                  <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'pro' ? 'text-purple-400' : user?.tier === 'team' ? 'text-yellow-400' : 'text-blue-400'} glow-icon`} />
                 </div>
-                <span className="text-xs text-white/40">Tier</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Tier</span>
               </div>
-              <p className="text-2xl font-bold capitalize text-white mb-2">
+              <p className="text-lg sm:text-2xl font-bold capitalize text-white mb-2">
                 {user?.tier}
               </p>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
@@ -245,11 +245,11 @@ export default function Dashboard() {
       </div>
 
       {/* Projects Section */}
-      <main className="relative z-10 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      <main className="relative z-10 pb-8 sm:pb-12">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-white mb-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
                 Vos <span className="gradient-text">Projets</span>
               </h2>
               <p className="text-white/40 text-sm">Gérez et développez vos applications</p>
@@ -270,7 +270,7 @@ export default function Dashboard() {
               <p className="text-white/40">Chargement des projets...</p>
             </div>
           ) : projects.length === 0 ? (
-            <div className="glass-card rounded-2xl p-12 text-center animate-fade-in-up">
+            <div className="glass-card rounded-2xl p-6 sm:p-12 text-center animate-fade-in-up">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
                 <Cloud className="w-10 h-10 text-white/30" />
               </div>
@@ -287,7 +287,7 @@ export default function Dashboard() {
               </button>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {projects.map((project, index) => (
                 <div key={project.id} style={{ animationDelay: `${index * 100}ms` }}>
                   <ProjectCard
@@ -308,7 +308,7 @@ export default function Dashboard() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setShowCreateModal(false)}
           />
-          <div className="relative glass-strong rounded-2xl w-full max-w-lg p-8 border-gradient animate-fade-in-scale">
+          <div className="relative glass-strong rounded-2xl w-full max-w-lg p-5 sm:p-8 border-gradient animate-fade-in-scale">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <Plus className="w-5 h-5 text-white" />

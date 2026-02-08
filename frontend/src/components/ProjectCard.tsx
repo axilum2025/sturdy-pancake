@@ -83,17 +83,17 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
       className={`glass-card rounded-2xl p-5 cursor-pointer border ${tierStyle.border} animate-fade-in-up group`}
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${tierStyle.bg} border border-white/5 group-hover:scale-110 transition-transform duration-300`}>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${tierStyle.bg} border border-white/5 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
             <Folder className={`w-5 h-5 ${tierStyle.text} glow-icon`} />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold text-white truncate">{project.name}</h3>
-            <p className="text-white/40 text-sm truncate">{project.description}</p>
+            <p className="text-white/40 text-sm line-clamp-1">{project.description}</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border border-white/5`}>
+        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border border-white/5 flex-shrink-0`}>
           {project.tier.toUpperCase()}
         </span>
       </div>

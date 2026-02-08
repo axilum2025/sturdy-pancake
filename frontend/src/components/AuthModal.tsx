@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, Sparkles, Github, ArrowRight, Zap } from 'lucide-react';
+import { X, Mail, Lock, Github, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface AuthModalProps {
@@ -66,9 +66,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
           {/* Logo / Branding */}
           <div className="relative text-center mb-8">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 mb-4">
-              <Sparkles className="w-7 h-7 text-blue-400 glow-icon" />
-            </div>
             <h2 className="text-2xl font-bold text-white mb-1">
               {mode === 'login' ? 'Welcome back' : 'Create your account'}
             </h2>
