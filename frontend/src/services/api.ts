@@ -310,7 +310,7 @@ export const copilotChatStream = async (
   if (token) headers['Authorization'] = `Bearer ${token}`;
   if (userId) headers['x-user-id'] = userId;
 
-  const response = await fetch('/api/copilot/chat/stream', {
+  const response = await fetch('/api/copilot/stream', {
     method: 'POST',
     headers,
     body: JSON.stringify(request),

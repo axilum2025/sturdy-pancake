@@ -54,21 +54,48 @@ export class CopilotService {
   private octokit: Octokit;
   private defaultModel: string;
 
+  private initialized = false;
+
   constructor() {
+    // Defer actual init – env vars may not be loaded yet at import time
+    this.openai = null as any;
+    this.octokit = null as any;
+    this.defaultModel = 'openai/gpt-4.1';
+  }
+
+  /** Lazy-initialize clients so env vars from dotenv are available */
+  private ensureInit() {
+    if (this.initialized) return;
+    this.initialized = true;
+
     const githubToken = process.env.GITHUB_TOKEN;
     if (!githubToken) {
       console.warn('⚠️  GITHUB_TOKEN not set – Copilot features will be unavailable');
     }
 
-    // GitHub Copilot / GitHub Models use an OpenAI-compatible endpoint
     this.openai = new OpenAI({
       baseURL: process.env.COPILOT_API_URL || 'https://models.github.ai/inference',
       apiKey: githubToken || 'dummy',
     });
 
     this.octokit = new Octokit({ auth: githubToken });
-
     this.defaultModel = process.env.COPILOT_MODEL || 'openai/gpt-4.1';
+  }
+
+  // ----------------------------------------------------------
+  // Expose client info for direct route usage
+  // ----------------------------------------------------------
+  getClientInfo(projectContext?: CopilotChatRequest['projectContext']): {
+    client: OpenAI;
+    systemPrompt: string;
+    defaultModel: string;
+  } {
+    this.ensureInit();
+    return {
+      client: this.openai,
+      systemPrompt: this.buildSystemPrompt(projectContext),
+      defaultModel: this.defaultModel,
+    };
   }
 
   // ----------------------------------------------------------
@@ -101,6 +128,8 @@ Sois concis et direct dans tes réponses.`;
   // Non-streaming chat completion
   // ----------------------------------------------------------
   async chat(request: CopilotChatRequest): Promise<CopilotChatResponse> {
+    this.ensureInit();
+
     const messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: this.buildSystemPrompt(request.projectContext) },
       ...request.messages.map((m) => ({
@@ -134,11 +163,14 @@ Sois concis et direct dans tes réponses.`;
   }
 
   // ----------------------------------------------------------
-  // Streaming chat completion (returns an async generator)
+  // Streaming chat completion (callback-based for Express compatibility)
   // ----------------------------------------------------------
-  async *chatStream(
+  async chatStream(
     request: CopilotChatRequest,
-  ): AsyncGenerator<CopilotStreamChunk> {
+    onChunk: (chunk: CopilotStreamChunk) => void,
+  ): Promise<void> {
+    this.ensureInit();
+
     const messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: this.buildSystemPrompt(request.projectContext) },
       ...request.messages.map((m) => ({
@@ -146,6 +178,8 @@ Sois concis et direct dans tes réponses.`;
         content: m.content,
       })),
     ];
+
+    console.log('[chatStream] Starting with model:', this.defaultModel, 'messages:', messages.length);
 
     try {
       const stream = await this.openai.chat.completions.create({
@@ -156,20 +190,27 @@ Sois concis et direct dans tes réponses.`;
         stream: true,
       });
 
+      console.log('[chatStream] OpenAI stream created, type:', typeof stream, 'Symbol.asyncIterator:', Symbol.asyncIterator in Object(stream));
+
       for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta;
-        const finishReason = chunk.choices[0]?.finish_reason;
+        const delta = chunk.choices?.[0]?.delta;
+        const finishReason = chunk.choices?.[0]?.finish_reason;
 
         if (delta?.content) {
-          yield { type: 'content', content: delta.content };
+          console.log('[chatStream] content chunk:', delta.content.substring(0, 50));
+          onChunk({ type: 'content' as const, content: delta.content });
         }
 
         if (finishReason) {
-          yield { type: 'done', finishReason };
+          console.log('[chatStream] finish:', finishReason);
+          onChunk({ type: 'done' as const, finishReason });
         }
       }
+
+      console.log('[chatStream] Stream complete');
     } catch (error: any) {
-      yield { type: 'error', error: error.message || 'Unknown Copilot error' };
+      console.error('[chatStream] ERROR:', error.message, error.stack?.substring(0, 300));
+      onChunk({ type: 'error' as const, error: error.message || 'Unknown Copilot error' });
     }
   }
 
@@ -229,6 +270,7 @@ Sois concis et direct dans tes réponses.`;
   // GitHub repository helpers (via Octokit)
   // ----------------------------------------------------------
   async getRepoInfo(owner: string, repo: string) {
+    this.ensureInit();
     const { data } = await this.octokit.repos.get({ owner, repo });
     return {
       name: data.name,
@@ -242,6 +284,7 @@ Sois concis et direct dans tes réponses.`;
   }
 
   async getRepoTree(owner: string, repo: string, branch?: string) {
+    this.ensureInit();
     const ref = branch || 'main';
     const { data } = await this.octokit.git.getTree({
       owner,
@@ -255,6 +298,7 @@ Sois concis et direct dans tes réponses.`;
   }
 
   async getFileContent(owner: string, repo: string, path: string) {
+    this.ensureInit();
     const { data } = await this.octokit.repos.getContent({ owner, repo, path });
     if ('content' in data) {
       return Buffer.from(data.content, 'base64').toString('utf-8');
@@ -271,6 +315,7 @@ Sois concis et direct dans tes réponses.`;
     error?: string;
   }> {
     try {
+      this.ensureInit();
       const response = await this.chat({
         messages: [{ role: 'user', content: 'ping' }],
         maxTokens: 10,

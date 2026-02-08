@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { copilotService, CopilotMessage } from '../services/copilotService';
+import OpenAI from 'openai';
 
 export const copilotRouter = Router();
 
@@ -33,35 +34,56 @@ copilotRouter.post('/chat', async (req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------
-// POST /api/copilot/chat/stream  –  SSE streaming chat
+// POST /api/copilot/stream  –  SSE streaming chat
 // ----------------------------------------------------------
-copilotRouter.post('/chat/stream', async (req: Request, res: Response) => {
+copilotRouter.post('/stream', async (req: Request, res: Response) => {
   try {
     const { messages, model, temperature, maxTokens, projectContext } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages array is required' });
+      res.status(400).json({ error: 'messages array is required' });
+      return;
     }
 
-    // Set SSE headers
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');
-    res.flushHeaders();
+    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext);
 
-    const generator = copilotService.chatStream({
-      messages: messages as CopilotMessage[],
-      model,
-      temperature,
-      maxTokens,
-      projectContext,
+    const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
+      { role: 'system', content: systemPrompt },
+      ...(messages as CopilotMessage[]).map((m) => ({
+        role: m.role as 'system' | 'user' | 'assistant',
+        content: m.content,
+      })),
+    ];
+
+    const stream = await client.chat.completions.create({
+      model: model || defaultModel,
+      messages: openaiMessages,
+      temperature: temperature ?? 0.4,
+      max_tokens: maxTokens ?? 4096,
+      stream: true,
     });
 
-    for await (const chunk of generator) {
-      if (req.destroyed) break;
-      res.write(`data: ${JSON.stringify(chunk)}\n\n`);
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices?.[0]?.delta?.content;
+      const finishReason = chunk.choices?.[0]?.finish_reason;
+
+      if (content) {
+        res.write(`data: ${JSON.stringify({ type: 'content', content })}\n\n`);
+      }
+
+      if (finishReason) {
+        res.write(`data: ${JSON.stringify({ type: 'done', finishReason })}\n\n`);
+      }
     }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
 
     res.write('data: [DONE]\n\n');
     res.end();

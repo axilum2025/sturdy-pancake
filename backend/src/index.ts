@@ -1,6 +1,9 @@
+import dotenv from 'dotenv';
+// Load .env BEFORE any service imports so env vars are available at construction time
+dotenv.config();
+
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
 import { mcpRouter } from './routes/mcp';
@@ -9,8 +12,6 @@ import { authRouter } from './routes/auth';
 import { projectsRouter } from './routes/projects';
 import { deploymentRouter } from './routes/deploy';
 import { copilotRouter } from './routes/copilot';
-
-dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3001;
