@@ -122,7 +122,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
         <div className="flex items-center gap-4 text-xs text-white/40">
           <span className="flex items-center gap-1.5">
             <Code className="w-3.5 h-3.5" />
-            {project.filesCount} fichiers
+            {project.filesCount} outils
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />

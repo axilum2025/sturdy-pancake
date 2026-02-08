@@ -71,8 +71,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             </h2>
             <p className="text-sm text-white/40">
               {mode === 'login' 
-                ? 'Sign in to continue building with AI' 
-                : 'Start building amazing apps with AI'}
+                ? 'Sign in to create and manage your AI agents' 
+                : 'Start creating powerful AI agents'}
             </p>
           </div>
 

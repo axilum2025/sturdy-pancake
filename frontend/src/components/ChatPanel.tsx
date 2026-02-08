@@ -520,24 +520,24 @@ export default function ChatPanel() {
 
   const quickActions = [
     {
-      label: 'Landing page',
+      label: 'Agent Support',
       prompt:
-        'Crée une landing page moderne avec hero, features et pricing. Nomme chaque fichier explicitement.',
+        'Crée un agent de support client qui répond aux questions fréquentes, consulte une FAQ et escalade vers un humain si besoin.',
     },
     {
-      label: 'Dashboard',
+      label: 'Agent Analyse',
       prompt:
-        'Crée un dashboard admin avec sidebar, stats cards et graphiques. Nomme chaque fichier explicitement.',
+        'Crée un agent d\'analyse de données qui peut lire des CSV, générer des rapports et répondre à des questions sur les données.',
     },
     {
-      label: 'Auth form',
+      label: 'Agent Dev',
       prompt:
-        'Crée un formulaire de connexion/inscription avec validation. Nomme chaque fichier explicitement.',
+        'Crée un agent assistant développeur qui aide à écrire du code, débugger et expliquer des concepts techniques.',
     },
     {
-      label: 'API CRUD',
+      label: 'Agent RAG',
       prompt:
-        'Crée une API REST CRUD complète avec Express et TypeScript. Nomme chaque fichier explicitement.',
+        'Crée un agent RAG qui peut indexer des documents, chercher dans une base de connaissances et répondre avec des sources.',
     },
   ];
 
@@ -577,7 +577,7 @@ export default function ChatPanel() {
               <strong className="gradient-text">GiLo AI</strong>
             </p>
             <p className="text-sm text-white/40 mb-6">
-              Propulsé par GitHub Copilot
+              Décrivez votre agent — Propulsé par GitHub Copilot
             </p>
             <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
               {quickActions.map((action) => (

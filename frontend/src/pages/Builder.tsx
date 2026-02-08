@@ -138,7 +138,7 @@ export default function Builder() {
               ? 'btn-gradient text-white glow-blue'
               : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
           }`}
-          title="Prévisualisation"
+          title="Playground"
         >
           <Eye className="w-5 h-5" />
         </button>
@@ -149,7 +149,7 @@ export default function Builder() {
               ? 'btn-gradient text-white glow-blue'
               : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
           }`}
-          title="Historique"
+          title="Logs"
         >
           <Clock className="w-5 h-5" />
         </button>
@@ -160,7 +160,7 @@ export default function Builder() {
               ? 'btn-gradient text-white glow-blue'
               : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
           }`}
-          title="Fichiers"
+          title="Configuration"
         >
           <Code2 className="w-5 h-5" />
         </button>
@@ -183,7 +183,7 @@ export default function Builder() {
         <button
           onClick={() => setShowMCPBrowser(true)}
           className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
-          title="Outils MCP"
+          title="Outils"
         >
           <Package className="w-5 h-5 glow-icon" />
         </button>
@@ -201,9 +201,9 @@ export default function Builder() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="glass-strong border-b-0 md:border-b md:border-white/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
-          <h1 className="text-base md:text-xl font-bold text-white truncate">AI Builder Hub</h1>
+          <h1 className="text-base md:text-xl font-bold text-white truncate">Agent Studio</h1>
           <span className="text-white/40 text-sm hidden sm:inline">/</span>
-          <span className="text-white/60 text-sm hidden sm:inline">{projectId || 'Nouveau Projet'}</span>
+          <span className="text-white/60 text-sm hidden sm:inline">{projectId || 'Nouvel Agent'}</span>
           <div className="flex-1"></div>
 
           {/* Mobile action buttons (visible only on small screens) */}
@@ -211,21 +211,21 @@ export default function Builder() {
             <button
               onClick={() => setShowFileEditor(!showFileEditor)}
               className={`p-2 rounded-lg transition-colors ${showFileEditor ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Fichiers"
+              title="Configuration"
             >
               <Code2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
               className={`p-2 rounded-lg transition-colors ${showHistory ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Historique"
+              title="Logs"
             >
               <Clock className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowPreview(!showPreview)}
               className={`p-2 rounded-lg transition-colors ${showPreview ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Prévisualisation"
+              title="Playground"
             >
               <Eye className="w-4 h-4" />
             </button>

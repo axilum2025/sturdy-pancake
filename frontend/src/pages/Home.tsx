@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Zap, Shield, Globe, Code2, Cpu, Layers, 
   ArrowRight, Star, ChevronRight, Bot, Rocket, 
-  Terminal, GitBranch, Cloud
+  Terminal, Cloud
 } from 'lucide-react';
 import AuthModal from '../components/AuthModal';
 import { useAuth } from '../contexts/AuthContext';
@@ -48,70 +48,70 @@ export default function Home() {
   const features = [
     {
       icon: Bot,
-      title: 'Agent IA Intelligent',
-      description: 'Un agent autonome qui planifie, code et itère sur vos applications en temps réel.',
+      title: 'Agent Studio',
+      description: 'Créez des agents IA conversationnels en décrivant leur comportement en langage naturel.',
       color: 'from-blue-500/20 to-blue-600/20',
       iconColor: 'text-blue-400',
     },
     {
-      icon: Terminal,
-      title: 'Aperçu en Direct',
-      description: 'Visualisez chaque modification instantanément avec le hot-reload intégré.',
+      icon: Layers,
+      title: 'Catalogue de Modèles',
+      description: 'Choisissez parmi GPT-4, Claude, Mistral et d\'autres LLMs pour propulser vos agents.',
       color: 'from-purple-500/20 to-purple-600/20',
       iconColor: 'text-purple-400',
     },
     {
-      icon: Cloud,
-      title: 'Déploiement Cloud',
-      description: 'Déployez en un clic sur Azure avec CI/CD et infrastructure automatisée.',
+      icon: Terminal,
+      title: 'Outils & Intégrations',
+      description: 'Connectez vos agents à des APIs, bases de données et services externes via MCP.',
       color: 'from-cyan-500/20 to-cyan-600/20',
       iconColor: 'text-cyan-400',
     },
     {
-      icon: GitBranch,
-      title: 'Versioning Intelligent',
-      description: 'Timeline complète de chaque étape avec possibilité de revenir en arrière.',
+      icon: Globe,
+      title: 'Playground Interactif',
+      description: 'Testez et itérez sur vos agents en temps réel avant de les déployer.',
       color: 'from-pink-500/20 to-pink-600/20',
       iconColor: 'text-pink-400',
     },
     {
-      icon: Layers,
-      title: 'Multi-fichiers',
-      description: 'Gestion complète de projets multi-fichiers avec éditeur de code intégré.',
+      icon: Cloud,
+      title: 'Déploiement en 1 clic',
+      description: 'Déployez vos agents en tant qu\'API, widget chat ou bot avec monitoring intégré.',
       color: 'from-amber-500/20 to-amber-600/20',
       iconColor: 'text-amber-400',
     },
     {
       icon: Shield,
-      title: 'Sécurisé & Privé',
-      description: 'Vos projets sont isolés et sécurisés avec authentification JWT.',
+      title: 'Sécurisé & Fiable',
+      description: 'Authentification, rate limiting et logs complets pour chaque agent déployé.',
       color: 'from-emerald-500/20 to-emerald-600/20',
       iconColor: 'text-emerald-400',
     },
   ];
 
   const stats = [
-    { value: '10K+', label: 'Apps créées', icon: Rocket },
+    { value: '10K+', label: 'Agents créés', icon: Rocket },
     { value: '99.9%', label: 'Uptime', icon: Zap },
     { value: '50ms', label: 'Temps de réponse', icon: Cpu },
-    { value: '24/7', label: 'Support IA', icon: Bot },
+    { value: '24/7', label: 'Agents actifs', icon: Bot },
   ];
 
   const testimonials = [
     {
-      quote: "L'outil le plus impressionnant que j'ai utilisé cette année. J'ai construit mon SaaS en 2 heures.",
+      quote: "J'ai créé un agent de support client en 30 minutes. Il répond mieux que notre ancien chatbot.",
       author: 'Marie L.',
       role: 'Fondatrice, TechStart',
       avatar: 'ML',
     },
     {
-      quote: "Le déploiement automatique sur Azure est un game-changer. Plus besoin de DevOps.",
+      quote: "On a déployé 5 agents internes en une semaine. L'intégration MCP avec nos APIs est magique.",
       author: 'Thomas R.',
       role: 'CTO, DataFlow',
       avatar: 'TR',
     },
     {
-      quote: "L'agent IA comprend exactement ce que je veux. C'est comme avoir un dev senior à côté de moi.",
+      quote: "Le playground permet de tester et itérer en temps réel. Mes agents s'améliorent à chaque session.",
       author: 'Sophie K.',
       role: 'Product Manager',
       avatar: 'SK',
@@ -160,21 +160,21 @@ export default function Home() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/60 mb-8 animate-fade-in-up">
             <Zap className="w-3 h-3 text-yellow-400" />
-            <span>Propulsé par l'IA de nouvelle génération</span>
+            <span>La plateforme de création d'agents IA</span>
             <ChevronRight className="w-3 h-3" />
           </div>
 
           {/* Main heading */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 animate-fade-in-up delay-100">
-            Construisez des apps{' '}
+            Créez vos{' '}
             <br className="hidden sm:block" />
-            <span className="gradient-text">avec l'IA</span>
+            <span className="gradient-text">agents IA</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg sm:text-xl text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
-            Décrivez votre idée en langage naturel. Notre agent IA conçoit, code et déploie 
-            votre application complète en quelques minutes.
+            Décrivez le comportement de votre agent en langage naturel. GiLo AI le configure, 
+            le connecte à vos outils et le déploie en quelques minutes.
           </p>
 
           {/* CTA Buttons */}
@@ -217,33 +217,33 @@ export default function Home() {
                 <div className="p-6 font-mono text-sm text-left space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-green-400">❯</span>
-                    <span className="text-white/60">Décris ton application...</span>
+                    <span className="text-white/60">Décris ton agent...</span>
                   </div>
                   <div className="text-white/80 pl-5">
                     <span className="text-blue-400">"</span>
-                    <span>Un dashboard analytics avec graphiques en temps réel, </span>
+                    <span>Un agent de support client qui répond aux questions, </span>
                     <br />
-                    <span className="pl-1">authentification et export PDF</span>
+                    <span className="pl-1">consulte la base de connaissances et escalade si besoin</span>
                     <span className="text-blue-400">"</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">Planification...</span>
+                    <span className="text-white/40">Configuration de l'agent...</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">Génération de 12 fichiers...</span>
+                    <span className="text-white/40">Connexion aux outils (3 MCP)...</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">Déploiement sur Azure...</span>
+                    <span className="text-white/40">Déploiement de l'agent...</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
                     <span className="text-cyan-400">→</span>
-                    <span className="text-cyan-400/80">https://my-dashboard.azurewebsites.net</span>
+                    <span className="text-cyan-400/80">https://api.gilo.ai/agents/support-client</span>
                   </div>
                 </div>
               </div>
@@ -284,11 +284,11 @@ export default function Home() {
                 Features
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Tout ce dont vous avez besoin
+                Tout pour créer vos agents
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
-                Une plateforme complète pour transformer vos idées en applications fonctionnelles, 
-                du prototype au déploiement.
+                Une plateforme complète pour concevoir, tester et déployer des agents IA 
+                connectés à vos outils et données.
               </p>
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function Home() {
                 3 étapes simples
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
-                De l'idée au déploiement en quelques minutes.
+                De l'idée à un agent IA déployé en quelques minutes.
               </p>
             </div>
           </div>
@@ -335,19 +335,19 @@ export default function Home() {
               {
                 step: '01',
                 title: 'Décrivez',
-                description: 'Expliquez votre application en langage naturel. Soyez aussi détaillé que vous le souhaitez.',
+                description: 'Décrivez le rôle, le ton et les capacités de votre agent en langage naturel.',
                 icon: Globe,
               },
               {
                 step: '02',
-                title: 'Générez',
-                description: "L'agent IA planifie l'architecture, génère le code et crée tous les fichiers nécessaires.",
+                title: 'Configurez',
+                description: 'Connectez des outils (APIs, bases de données, MCP) et ajustez les instructions système.',
                 icon: Cpu,
               },
               {
                 step: '03',
                 title: 'Déployez',
-                description: 'Prévisualisez en temps réel puis déployez en un clic sur le cloud Azure.',
+                description: 'Testez dans le playground puis déployez en API, widget ou bot en un clic.',
                 icon: Rocket,
               },
             ].map((item, i) => (
@@ -378,7 +378,7 @@ export default function Home() {
                 Témoignages
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Ils construisent avec nous
+                Ils créent des agents avec nous
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
                 Découvrez ce que nos utilisateurs pensent de GiLo AI.
@@ -421,11 +421,11 @@ export default function Home() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="animate-on-scroll">
             <h2 className="text-3xl sm:text-5xl font-bold mb-6">
-              Prêt à construire{' '}
-              <span className="gradient-text">l'avenir</span> ?
+              Prêt à créer{' '}
+              <span className="gradient-text">votre agent</span> ?
             </h2>
             <p className="text-lg text-white/40 mb-10 max-w-xl mx-auto">
-              Rejoignez des milliers de développeurs qui utilisent l'IA pour construire plus vite.
+              Rejoignez des milliers de créateurs qui utilisent GiLo AI pour déployer des agents intelligents.
             </p>
             <button
               onClick={() => setShowAuth(true)}

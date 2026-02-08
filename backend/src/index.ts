@@ -45,7 +45,7 @@ app.get('/health', (req: Request, res: Response) => {
 // API documentation endpoint
 app.get('/api', (req: Request, res: Response) => {
   res.json({
-    name: 'GiLo AI API',
+    name: 'GiLo AI — Agent Builder API',
     version: '2.0.0',
     endpoints: {
       auth: '/api/auth',

@@ -84,7 +84,7 @@ export default function Dashboard() {
           <div className="mb-8 animate-fade-in-up">
             <Zap className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400 mx-auto mb-4 glow-icon" />
             <h1 className="text-2xl sm:text-4xl font-bold gradient-text mb-4">GiLo AI</h1>
-            <p className="text-white/40 text-base sm:text-xl px-4">Connectez-vous pour accéder à vos projets</p>
+            <p className="text-white/40 text-base sm:text-xl px-4">Connectez-vous pour accéder à vos agents</p>
           </div>
           <button
             onClick={() => setShowAuth(true)}
@@ -167,7 +167,7 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
                   <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Projets</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Agents</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
                 {projects.length} <span className="text-white/30 text-xs sm:text-base font-normal">/ {user?.quotas.projectsMax}</span>
@@ -250,9 +250,9 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                Vos <span className="gradient-text">Projets</span>
+                Vos <span className="gradient-text">Agents</span>
               </h2>
-              <p className="text-white/40 text-sm">Gérez et développez vos applications</p>
+              <p className="text-white/40 text-sm">Gérez et déployez vos agents IA</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -260,30 +260,30 @@ export default function Dashboard() {
               className="btn-gradient px-5 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
-              Nouveau Projet
+              Nouvel Agent
             </button>
           </div>
 
           {isLoading ? (
             <div className="text-center py-20">
               <div className="animate-spin w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-white/40">Chargement des projets...</p>
+              <p className="text-white/40">Chargement des agents...</p>
             </div>
           ) : projects.length === 0 ? (
             <div className="glass-card rounded-2xl p-6 sm:p-12 text-center animate-fade-in-up">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
                 <Cloud className="w-10 h-10 text-white/30" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Aucun projet</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Aucun agent</h3>
               <p className="text-white/40 mb-6 max-w-md mx-auto">
-                Commencez par créer votre premier projet avec l'aide de notre IA
+                Commencez par créer votre premier agent IA avec GiLo
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="btn-gradient px-6 py-3 rounded-xl text-white font-semibold inline-flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Créer mon premier projet
+                Créer mon premier agent
               </button>
             </div>
           ) : (
@@ -314,18 +314,18 @@ export default function Dashboard() {
                 <Plus className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Nouveau Projet</h2>
-                <p className="text-white/40 text-sm">Créez une nouvelle application</p>
+                <h2 className="text-xl font-bold text-white">Nouvel Agent</h2>
+                <p className="text-white/40 text-sm">Créez un nouvel agent IA</p>
               </div>
             </div>
             
             <div className="mb-6">
-              <label className="block text-white/70 text-sm font-medium mb-2">Nom du projet</label>
+              <label className="block text-white/70 text-sm font-medium mb-2">Nom de l'agent</label>
               <input
                 type="text"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="Mon application incroyable"
+                placeholder="Agent de support client"
                 className="input-futuristic w-full px-4 py-3 rounded-xl text-white"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
