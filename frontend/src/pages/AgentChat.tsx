@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Send, Trash2, Bot, User, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -36,6 +37,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function AgentChat() {
   const { agentId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const accessToken = searchParams.get('token') || '';
 
@@ -243,7 +245,7 @@ export default function AgentChat() {
           <button
             onClick={handleClear}
             className="p-2 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
-            title="Nouvelle conversation"
+            title={t('store.newConversation')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -264,7 +266,7 @@ export default function AgentChat() {
                 </span>
               </div>
               <h2 className="text-xl font-semibold text-white/80 mb-2">{agent?.name}</h2>
-              <p className="text-white/40 text-sm">Commencez une conversation...</p>
+              <p className="text-white/40 text-sm">{t('store.startConversation')}</p>
             </div>
           )}
 
@@ -328,7 +330,7 @@ export default function AgentChat() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={`Message ${agent?.name || 'l\'agent'}...`}
+                placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
                 rows={1}
                 className="w-full bg-white/[0.04] border border-white/10 rounded-2xl px-4 py-3 pr-12 text-sm text-white/90 placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30 resize-none max-h-[200px]"
                 disabled={isStreaming}
@@ -347,7 +349,7 @@ export default function AgentChat() {
             </div>
           </div>
           <p className="text-center text-[10px] text-white/20 mt-2">
-            {agent?.name} propulsé par GiLo AI · Les réponses peuvent contenir des erreurs
+            {t('store.poweredBy', { name: agent?.name })}
           </p>
         </div>
       </div>

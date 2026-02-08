@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useTranslation } from 'react-i18next';
 import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile } from '../services/api';
 import { useBuilderStore } from '../store/builderStore';
 
@@ -177,7 +178,7 @@ function AgentTaskList({
           <ChevronDown className="w-4 h-4 text-white/40" />
         )}
         <span className="text-xs font-medium text-white/70">
-          {allDone ? 'Tâches terminées' : 'Agent en cours…'}
+          {allDone ? t('chat.tasksDone') : t('chat.tasksRunning')}
         </span>
         <span className="ml-auto text-[10px] text-white/30 tabular-nums">
           {done}/{total}
@@ -207,6 +208,7 @@ function AgentTaskList({
 // ============================================================
 
 export default function ChatPanel() {
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -391,7 +393,7 @@ export default function ChatPanel() {
       timestamp: new Date(),
       isStreaming: true,
       tasks: [
-        { id: analyseTaskId, label: 'Analyse de la demande', status: 'running' },
+        { id: analyseTaskId, label: t('chat.analysing'), status: 'running' },
       ],
     };
 
@@ -411,7 +413,7 @@ export default function ChatPanel() {
     addTimelineEvent({
       id: `tl-${analyseTaskId}`,
       type: 'planning',
-      message: 'Analyse de la demande',
+      message: t('chat.analysing'),
       timestamp: new Date(),
       status: 'running',
     });
@@ -427,7 +429,7 @@ export default function ChatPanel() {
       const genTaskId = mkTaskId();
       updateTasks(assistantMsgId, (tasks) => [
         { ...tasks[0], status: 'done' },
-        { id: genTaskId, label: 'Génération de la réponse', status: 'running' },
+        { id: genTaskId, label: t('chat.generating'), status: 'running' },
       ]);
 
       // Timeline: analyse done, generation started
@@ -435,7 +437,7 @@ export default function ChatPanel() {
       addTimelineEvent({
         id: `tl-${genTaskId}`,
         type: 'generation',
-        message: 'Génération de la réponse',
+        message: t('chat.generating'),
         timestamp: new Date(),
         status: 'running',
       });
@@ -478,7 +480,7 @@ export default function ChatPanel() {
           m.id === assistantMsgId
             ? {
                 ...m,
-                content: `❌ Erreur de connexion au Copilot: ${error.message}`,
+                content: `❌ ${t('chat.connectionError')}: ${error.message}`,
                 isStreaming: false,
               }
             : m,
@@ -520,24 +522,20 @@ export default function ChatPanel() {
 
   const quickActions = [
     {
-      label: 'Agent Support',
-      prompt:
-        'Crée un agent de support client qui répond aux questions fréquentes, consulte une FAQ et escalade vers un humain si besoin.',
+      label: t('chat.quickSupport'),
+      prompt: t('chat.quickSupportPrompt'),
     },
     {
-      label: 'Agent Analyse',
-      prompt:
-        'Crée un agent d\'analyse de données qui peut lire des CSV, générer des rapports et répondre à des questions sur les données.',
+      label: t('chat.quickAnalyse'),
+      prompt: t('chat.quickAnalysePrompt'),
     },
     {
-      label: 'Agent Dev',
-      prompt:
-        'Crée un agent assistant développeur qui aide à écrire du code, débugger et expliquer des concepts techniques.',
+      label: t('chat.quickDev'),
+      prompt: t('chat.quickDevPrompt'),
     },
     {
-      label: 'Agent RAG',
-      prompt:
-        'Crée un agent RAG qui peut indexer des documents, chercher dans une base de connaissances et répondre avec des sources.',
+      label: t('chat.quickRag'),
+      prompt: t('chat.quickRagPrompt'),
     },
   ];
 
@@ -560,10 +558,10 @@ export default function ChatPanel() {
           />
           <span className="text-xs text-white/40">
             {copilotAvailable === true
-              ? 'Copilot connecté'
+              ? t('chat.copilotConnected')
               : copilotAvailable === false
-              ? 'Copilot hors ligne'
-              : 'Vérification...'}
+              ? t('chat.copilotOffline')
+              : t('chat.copilotChecking')}
           </span>
         </div>
       </div>
@@ -573,11 +571,11 @@ export default function ChatPanel() {
         {messages.length === 0 ? (
           <div className="text-center mt-8 animate-fade-in-up">
             <p className="text-white/60 mb-1">
-              Bienvenue dans{' '}
+              {t('chat.welcome')}{' '}
               <strong className="gradient-text">GiLo AI</strong>
             </p>
             <p className="text-sm text-white/40 mb-6">
-              Décrivez votre agent — Propulsé par GitHub Copilot
+              {t('chat.describeAgent')}
             </p>
             <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
               {quickActions.map((action) => (
@@ -648,7 +646,7 @@ export default function ChatPanel() {
                     <button
                       onClick={() => handleCopy(msg.id, msg.content)}
                       className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/10"
-                      title="Copier"
+                      title={t('common.copy')}
                     >
                       {copiedMessageId === msg.id ? (
                         <Check className="w-3.5 h-3.5 text-green-400" />
@@ -693,7 +691,7 @@ export default function ChatPanel() {
             onClick={handleStop}
             className="w-full mb-2 py-1.5 rounded-lg text-xs text-white/60 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 transition-all mx-auto md:mx-0 px-3 md:px-0"
           >
-            ■ Arrêter la génération
+            ■ {t('chat.stopGeneration')}
           </button>
         )}
         <div className="relative md:rounded-lg rounded-t-2xl rounded-b-none bg-white/[0.04] md:bg-transparent border-t border-white/[0.04] md:border-t-0 px-3 pt-2 landscape-panel pb-[env(safe-area-inset-bottom,8px)] md:p-0">
@@ -705,7 +703,7 @@ export default function ChatPanel() {
               !e.shiftKey &&
               (e.preventDefault(), handleSend())
             }
-            placeholder="Décrivez ce que vous voulez construire..."
+            placeholder={t('chat.placeholder')}
             rows={4}
             className="w-full text-white px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-white/25 landscape-input"
           />

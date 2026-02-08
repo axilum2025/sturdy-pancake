@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Grid3X3, Sparkles, TrendingUp, Star, ArrowLeft, Store } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 interface StoreAgentCard {
   id: string;
@@ -36,6 +38,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function AgentStore() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [agents, setAgents] = useState<StoreAgentCard[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -105,10 +108,11 @@ export default function AgentStore() {
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher un agent..."
+              placeholder={t('store.searchPlaceholder')}
               className="w-full bg-white/[0.04] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white/90 placeholder-white/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30"
             />
           </div>
+          <LanguageSwitcher />
         </div>
       </header>
 
@@ -124,7 +128,7 @@ export default function AgentStore() {
             }`}
           >
             <Grid3X3 className="w-3.5 h-3.5" />
-            Tous
+            {t('common.all')}
           </button>
           {categories.map((cat) => (
             <button
@@ -145,7 +149,7 @@ export default function AgentStore() {
         {loading ? (
           <div className="text-center py-20">
             <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-white/40">Chargement du Store...</p>
+            <p className="text-white/40">{t('store.loading')}</p>
           </div>
         ) : (
           <>
@@ -169,7 +173,7 @@ export default function AgentStore() {
               <section className="mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <Star className="w-5 h-5 text-yellow-400 glow-icon" />
-                  <h2 className="text-lg font-semibold text-white/90">Les mieux notés</h2>
+                  <h2 className="text-lg font-semibold text-white/90">{t('store.topRated')}</h2>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                   {topRated.map((agent) => (
@@ -185,10 +189,10 @@ export default function AgentStore() {
                 <Sparkles className="w-5 h-5 text-blue-400 glow-icon" />
                 <h2 className="text-lg font-semibold text-white/90">
                   {searchQuery
-                    ? `Résultats pour "${searchQuery}"`
+                    ? `${t('store.resultsFor')} "${searchQuery}"`
                     : selectedCategory !== 'all'
-                    ? categories.find((c) => c.id === selectedCategory)?.label || 'Agents'
-                    : 'Tous les agents'}
+                    ? categories.find((c) => c.id === selectedCategory)?.label || t('store.agents')
+                    : t('store.allAgents')}
                 </h2>
                 <span className="text-sm text-white/30">({agents.length})</span>
               </div>
@@ -196,8 +200,8 @@ export default function AgentStore() {
               {agents.length === 0 ? (
                 <div className="text-center py-16">
                   <Store className="w-16 h-16 mx-auto mb-4 text-white/15" />
-                  <p className="text-white/40 text-lg">Aucun agent trouvé</p>
-                  <p className="text-white/25 text-sm mt-1">Essayez une autre recherche ou catégorie</p>
+                  <p className="text-white/40 text-lg">{t('store.noAgents')}</p>
+                  <p className="text-white/25 text-sm mt-1">{t('store.tryAnother')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">

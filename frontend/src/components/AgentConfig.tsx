@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Settings, Save, X, Sliders, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useBuilderStore } from '../store/builderStore';
 
 interface AgentConfigProps {
@@ -25,12 +26,13 @@ interface AgentConfigData {
 }
 
 const AVAILABLE_MODELS = [
-  { id: 'openai/gpt-4.1', label: 'GPT-4.1', desc: 'Le plus puissant — raisonnement avancé' },
-  { id: 'openai/gpt-4.1-mini', label: 'GPT-4.1 Mini', desc: 'Rapide et économique' },
-  { id: 'openai/gpt-4.1-nano', label: 'GPT-4.1 Nano', desc: 'Ultra rapide, idéal pour le chat simple' },
+  { id: 'openai/gpt-4.1', labelKey: 'models.gpt41', descKey: 'models.gpt41Desc' },
+  { id: 'openai/gpt-4.1-mini', labelKey: 'models.gpt41Mini', descKey: 'models.gpt41MiniDesc' },
+  { id: 'openai/gpt-4.1-nano', labelKey: 'models.gpt41Nano', descKey: 'models.gpt41NanoDesc' },
 ];
 
 export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<AgentConfigData>({
     model: 'openai/gpt-4.1',
     temperature: 0.7,
@@ -118,15 +120,15 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   };
 
   const tabs = [
-    { id: 'prompt' as const, label: 'Instructions', icon: MessageSquare },
-    { id: 'model' as const, label: 'Modèle', icon: Cpu },
-    { id: 'tools' as const, label: 'Outils', icon: Wrench },
+    { id: 'prompt' as const, label: t('agentConfig.instructions'), icon: MessageSquare },
+    { id: 'model' as const, label: t('agentConfig.model'), icon: Cpu },
+    { id: 'tools' as const, label: t('agentConfig.tools'), icon: Wrench },
   ];
 
   if (isLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-pulse text-white/40">Chargement...</div>
+        <div className="animate-pulse text-white/40">{t('common.loading')}</div>
       </div>
     );
   }
@@ -137,7 +139,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Settings className="w-5 h-5 text-blue-400 glow-icon" />
-          <span className="font-semibold gradient-text">Configuration</span>
+          <span className="font-semibold gradient-text">{t('agentConfig.title')}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -146,7 +148,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             className="btn-gradient px-3 py-1.5 rounded-lg text-sm flex items-center gap-1.5"
           >
             <Save className="w-3.5 h-3.5" />
-            {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
+            {isSaving ? t('common.saving') : t('common.save')}
           </button>
           {onClose && (
             <button
@@ -184,30 +186,30 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             {/* System Prompt */}
             <div>
               <label className="block text-sm font-medium text-white/60 mb-2">
-                Instructions système
+                {t('agentConfig.systemPrompt')}
               </label>
               <p className="text-xs text-white/35 mb-2">
-                Décrivez le rôle, le ton et les règles de votre agent.
+                {t('agentConfig.systemPromptDesc')}
               </p>
               <textarea
                 value={config.systemPrompt}
                 onChange={(e) => setConfig({ ...config, systemPrompt: e.target.value })}
                 className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm font-mono resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
                 rows={8}
-                placeholder="Tu es un assistant qui..."
+                placeholder={t('agentConfig.systemPromptPlaceholder')}
               />
             </div>
 
             {/* Welcome Message */}
             <div>
               <label className="block text-sm font-medium text-white/60 mb-2">
-                Message d'accueil
+                {t('agentConfig.welcomeMessage')}
               </label>
               <input
                 value={config.welcomeMessage}
                 onChange={(e) => setConfig({ ...config, welcomeMessage: e.target.value })}
                 className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
-                placeholder="Bonjour ! Comment puis-je vous aider ?"
+                placeholder={t('agentConfig.welcomePlaceholder')}
               />
             </div>
           </>
@@ -218,7 +220,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             {/* Model Selection */}
             <div>
               <label className="block text-sm font-medium text-white/60 mb-3">
-                Modèle IA
+                {t('agentConfig.aiModel')}
               </label>
               <div className="space-y-2">
                 {AVAILABLE_MODELS.map((m) => (
@@ -234,11 +236,11 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Cpu className={`w-4 h-4 ${config.model === m.id ? 'text-blue-400' : 'text-white/40'}`} />
-                        <span className={`text-sm font-medium ${config.model === m.id ? 'text-blue-300' : 'text-white/70'}`}>{m.label}</span>
+                        <span className={`text-sm font-medium ${config.model === m.id ? 'text-blue-300' : 'text-white/70'}`}>{t(m.labelKey)}</span>
                       </div>
                       {config.model === m.id && <div className="w-2 h-2 rounded-full bg-blue-400" />}
                     </div>
-                    <p className="text-xs text-white/35 mt-1 pl-6">{m.desc}</p>
+                    <p className="text-xs text-white/35 mt-1 pl-6">{t(m.descKey)}</p>
                   </button>
                 ))}
               </div>
@@ -254,7 +256,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                 <span className="text-sm font-mono text-blue-400">{config.temperature.toFixed(1)}</span>
               </div>
               <p className="text-xs text-white/35 mb-2">
-                Basse = plus déterministe, Haute = plus créatif
+                {t('agentConfig.temperatureDesc')}
               </p>
               <input
                 type="range"
@@ -266,8 +268,8 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                 className="w-full accent-blue-500"
               />
               <div className="flex justify-between text-[10px] text-white/25 mt-1">
-                <span>Précis</span>
-                <span>Créatif</span>
+                <span>{t('agentConfig.precise')}</span>
+                <span>{t('agentConfig.creative')}</span>
               </div>
             </div>
 
@@ -276,7 +278,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
               <div className="flex items-center justify-between mb-2">
                 <label className="flex items-center gap-1.5 text-sm font-medium text-white/60">
                   <Zap className="w-3.5 h-3.5" />
-                  Tokens max (réponse)
+                  {t('agentConfig.maxTokens')}
                 </label>
                 <span className="text-sm font-mono text-blue-400">{config.maxTokens}</span>
               </div>
@@ -301,13 +303,13 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
           <>
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="text-sm font-medium text-white/60">Outils connectés</label>
+                <label className="text-sm font-medium text-white/60">{t('agentConfig.connectedTools')}</label>
                 <button
                   onClick={() => setShowAddTool(true)}
                   className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"
                 >
                   <Plus className="w-3 h-3" />
-                  Ajouter
+                  {t('common.add')}
                 </button>
               </div>
               <p className="text-xs text-white/35 mb-3">
@@ -317,8 +319,8 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
               {config.tools.length === 0 ? (
                 <div className="text-center py-8 bg-white/[0.02] rounded-xl border border-dashed border-white/10">
                   <Wrench className="w-10 h-10 mx-auto mb-2 text-white/15" />
-                  <p className="text-sm text-white/30">Aucun outil connecté</p>
-                  <p className="text-xs text-white/20 mt-1">Ajoutez des APIs, MCP servers ou fonctions</p>
+                  <p className="text-sm text-white/30">{t('agentConfig.noTools')}</p>
+                  <p className="text-xs text-white/20 mt-1">{t('agentConfig.noToolsDesc')}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -362,26 +364,26 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             {/* Add Tool Modal */}
             {showAddTool && (
               <div className="bg-white/[0.04] rounded-xl border border-white/10 p-4 space-y-3 animate-fade-in-up">
-                <h4 className="text-sm font-medium text-white/70">Nouvel outil</h4>
+                <h4 className="text-sm font-medium text-white/70">{t('agentConfig.newTool')}</h4>
                 <input
                   value={newToolName}
                   onChange={(e) => setNewToolName(e.target.value)}
                   className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
-                  placeholder="Nom de l'outil"
+                  placeholder={t('agentConfig.toolName')}
                   autoFocus
                 />
                 <input
                   value={newToolDesc}
                   onChange={(e) => setNewToolDesc(e.target.value)}
                   className="w-full bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
-                  placeholder="Description (optionnel)"
+                  placeholder={t('agentConfig.toolDesc')}
                 />
                 <div className="flex gap-2">
                   <button onClick={() => setShowAddTool(false)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-white/10 text-white/50 hover:bg-white/5">
-                    Annuler
+                    {t('common.cancel')}
                   </button>
                   <button onClick={addTool} disabled={!newToolName.trim()} className="flex-1 btn-gradient px-3 py-2 text-sm rounded-lg disabled:opacity-50">
-                    Ajouter
+                    {t('common.add')}
                   </button>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, X, Bot, User, Trash2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PlaygroundProps {
   agentId: string;
@@ -15,6 +16,7 @@ interface PlaygroundMessage {
 }
 
 export default function Playground({ agentId, onClose }: PlaygroundProps) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<PlaygroundMessage[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -133,7 +135,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMsg.id
-            ? { ...m, content: "Erreur : impossible de contacter l'agent.", isStreaming: false }
+            ? { ...m, content: t('playground.error'), isStreaming: false }
             : m
         )
       );
@@ -162,16 +164,16 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <Bot className="w-5 h-5 text-blue-400 glow-icon" />
-          <span className="font-semibold gradient-text">Playground</span>
+          <span className="font-semibold gradient-text">{t('playground.title')}</span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
-            LIVE
+            {t('playground.live')}
           </span>
         </div>
         <div className="flex items-center gap-1">
           <button
             className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
             onClick={clearChat}
-            title="Réinitialiser"
+            title={t('playground.reset')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -191,7 +193,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
         {messages.length === 0 && (
           <div className="text-center mt-8 animate-fade-in-up">
             <Bot className="w-12 h-12 mx-auto mb-3 text-blue-400/40" />
-            <p className="text-white/50 mb-1 text-sm">Testez votre agent en direct</p>
+            <p className="text-white/50 mb-1 text-sm">{t('playground.testAgent')}</p>
             {welcomeMessage && (
               <div className="mt-4 mx-auto max-w-md bg-white/[0.04] rounded-xl p-4 border border-white/10">
                 <p className="text-sm text-white/60 italic">"{welcomeMessage}"</p>
@@ -240,7 +242,7 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Testez votre agent..."
+            placeholder={t('playground.placeholder')}
             className="flex-1 bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
             rows={2}
             disabled={isStreaming}

@@ -1,8 +1,10 @@
 import { Clock, CheckCircle, Circle, Loader2, FileText, Code, Sparkles, AlertCircle, Zap, Trash2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useBuilderStore, TimelineEvent } from '../store/builderStore';
 
 export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
   const { timelineEvents: events, clearTimeline } = useBuilderStore();
+  const { t } = useTranslation();
 
   const getEventIcon = (type: TimelineEvent['type']) => {
     switch (type) {
@@ -44,13 +46,13 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
       <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <h3 className="text-lg font-semibold gradient-text flex items-center gap-2">
           <Clock className="w-5 h-5 glow-icon" />
-          Historique
+          {t('timeline.title')}
         </h3>
         {events.length > 0 && (
           <button
             onClick={clearTimeline}
             className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
-            title="Effacer l'historique"
+            title={t('timeline.clear')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -59,7 +61,7 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
           <button
             onClick={onClose}
             className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
-            title="Fermer"
+            title={t('common.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -71,7 +73,7 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
         {events.length === 0 ? (
           <div className="text-center py-8 animate-fade-in-up">
             <Clock className="w-12 h-12 mx-auto mb-3 text-white/20" />
-            <p className="text-white/40 text-sm">Aucune activité pour le moment</p>
+            <p className="text-white/40 text-sm">{t('timeline.noActivity')}</p>
           </div>
         ) : (
           <div className="relative">

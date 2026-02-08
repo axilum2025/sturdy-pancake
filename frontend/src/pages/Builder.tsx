@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
 import TimelinePanel from '../components/TimelinePanel';
@@ -14,6 +16,7 @@ import { useBuilderStore } from '../store/builderStore';
 export default function Builder() {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentSession, createSession } = useSessionStore();
   const { setProjectId } = useBuilderStore();
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +47,7 @@ export default function Builder() {
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-gradient-mesh bg-grid">
-        <div className="text-white text-xl animate-pulse-glow">Initialisation...</div>
+        <div className="text-white text-xl animate-pulse-glow">{t('builder.loading')}</div>
       </div>
     );
   }
@@ -72,7 +75,7 @@ export default function Builder() {
               ? 'btn-gradient text-white glow-blue'
               : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
           }`}
-          title="Logs"
+          title={t('builder.logs')}
         >
           <Clock className="w-5 h-5" />
         </button>
@@ -83,7 +86,7 @@ export default function Builder() {
               ? 'btn-gradient text-white glow-blue'
               : 'btn-outline-glow text-white/70 hover:text-white hover:bg-white/5'
           }`}
-          title="Configuration"
+          title={t('builder.config')}
         >
           <Sliders className="w-5 h-5" />
         </button>
@@ -94,28 +97,28 @@ export default function Builder() {
               ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
               : 'btn-gradient text-white glow-blue'
           }`}
-          title={publishedStoreId ? 'Publié sur le Store' : 'Publier sur le Store'}
+          title={publishedStoreId ? t('builder.publishedStore') : t('builder.publishStore')}
         >
           <Rocket className="w-5 h-5" />
         </button>
         <button
           onClick={() => navigate('/store')}
           className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
-          title="Agent Store"
+          title={t('builder.agentStore')}
         >
           <Store className="w-5 h-5" />
         </button>
         <button
           onClick={() => setShowMCPBrowser(true)}
           className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
-          title="Outils"
+          title={t('builder.tools')}
         >
           <Package className="w-5 h-5 glow-icon" />
         </button>
         <button
           onClick={() => setShowMCPSettings(true)}
           className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300"
-          title="Paramètres"
+          title={t('builder.settings')}
         >
           <Settings className="w-5 h-5" />
         </button>
@@ -126,9 +129,9 @@ export default function Builder() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="glass-strong border-b-0 md:border-b md:border-white/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
-          <h1 className="text-base md:text-xl font-bold text-white truncate">Agent Studio</h1>
+          <h1 className="text-base md:text-xl font-bold text-white truncate">{t('builder.title')}</h1>
           <span className="text-white/40 text-sm hidden sm:inline">/</span>
-          <span className="text-white/60 text-sm hidden sm:inline">{projectId || 'Nouvel Agent'}</span>
+          <span className="text-white/60 text-sm hidden sm:inline">{projectId || t('builder.newAgent')}</span>
           <div className="flex-1"></div>
 
           {/* Mobile action buttons (visible only on small screens) */}
@@ -136,14 +139,14 @@ export default function Builder() {
             <button
               onClick={() => setShowFileEditor(!showFileEditor)}
               className={`p-2 rounded-lg transition-colors ${showFileEditor ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Configuration"
+              title={t('builder.config')}
             >
               <Sliders className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
               className={`p-2 rounded-lg transition-colors ${showHistory ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Logs"
+              title={t('builder.logs')}
             >
               <Clock className="w-4 h-4" />
             </button>
@@ -157,19 +160,20 @@ export default function Builder() {
             <button
               onClick={() => setShowPublish(true)}
               className={`p-2 rounded-lg transition-colors ${publishedStoreId ? 'text-green-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
-              title="Publier sur le Store"
+              title={t('builder.publishStore')}
             >
               <Rocket className="w-4 h-4" />
             </button>
           </div>
 
+          <LanguageSwitcher />
           <button
             onClick={() => navigate('/dashboard')}
             className="px-3 py-1.5 rounded-lg btn-outline-glow text-white/70 hover:text-white hover:bg-white/5 transition-all duration-300 text-sm flex items-center gap-2"
-            title="Retour"
+            title={t('common.back')}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Retour</span>
+            <span className="hidden sm:inline">{t('common.back')}</span>
           </button>
         </header>
 

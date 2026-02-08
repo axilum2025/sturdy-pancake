@@ -5,6 +5,8 @@ import {
   ArrowRight, Star, ChevronRight, Bot, Rocket, 
   Terminal, Cloud
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import AuthModal from '../components/AuthModal';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -38,6 +40,7 @@ export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const scrollRef = useScrollAnimation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -48,72 +51,72 @@ export default function Home() {
   const features = [
     {
       icon: Bot,
-      title: 'Agent Studio',
-      description: 'Créez des agents IA conversationnels en décrivant leur comportement en langage naturel.',
+      titleKey: 'home.featureStudio',
+      descKey: 'home.featureStudioDesc',
       color: 'from-blue-500/20 to-blue-600/20',
       iconColor: 'text-blue-400',
     },
     {
       icon: Layers,
-      title: 'Catalogue de Modèles',
-      description: 'Choisissez parmi GPT-4, Claude, Mistral et d\'autres LLMs pour propulser vos agents.',
+      titleKey: 'home.featureModels',
+      descKey: 'home.featureModelsDesc',
       color: 'from-indigo-500/20 to-indigo-600/20',
       iconColor: 'text-indigo-400',
     },
     {
       icon: Terminal,
-      title: 'Outils & Intégrations',
-      description: 'Connectez vos agents à des APIs, bases de données et services externes via MCP.',
+      titleKey: 'home.featureTools',
+      descKey: 'home.featureToolsDesc',
       color: 'from-violet-500/20 to-violet-600/20',
       iconColor: 'text-violet-400',
     },
     {
       icon: Globe,
-      title: 'Playground Interactif',
-      description: 'Testez et itérez sur vos agents en temps réel avant de les déployer.',
+      titleKey: 'home.featurePlayground',
+      descKey: 'home.featurePlaygroundDesc',
       color: 'from-blue-500/20 to-blue-600/20',
       iconColor: 'text-blue-400',
     },
     {
       icon: Cloud,
-      title: 'Déploiement en 1 clic',
-      description: 'Déployez vos agents en tant qu\'API, widget chat ou bot avec monitoring intégré.',
+      titleKey: 'home.featureDeploy',
+      descKey: 'home.featureDeployDesc',
       color: 'from-indigo-500/20 to-indigo-600/20',
       iconColor: 'text-indigo-400',
     },
     {
       icon: Shield,
-      title: 'Sécurisé & Fiable',
-      description: 'Authentification, rate limiting et logs complets pour chaque agent déployé.',
+      titleKey: 'home.featureSecurity',
+      descKey: 'home.featureSecurityDesc',
       color: 'from-emerald-500/20 to-emerald-600/20',
       iconColor: 'text-emerald-400',
     },
   ];
 
   const stats = [
-    { value: '10K+', label: 'Agents créés', icon: Rocket },
-    { value: '99.9%', label: 'Uptime', icon: Zap },
-    { value: '50ms', label: 'Temps de réponse', icon: Cpu },
-    { value: '24/7', label: 'Agents actifs', icon: Bot },
+    { value: '10K+', labelKey: 'home.statsAgents', icon: Rocket },
+    { value: '99.9%', labelKey: 'home.statsUptime', icon: Zap },
+    { value: '50ms', labelKey: 'home.statsResponse', icon: Cpu },
+    { value: '24/7', labelKey: 'home.statsActive', icon: Bot },
   ];
 
   const testimonials = [
     {
-      quote: "J'ai créé un agent de support client en 30 minutes. Il répond mieux que notre ancien chatbot.",
-      author: 'Marie L.',
-      role: 'Fondatrice, TechStart',
+      quoteKey: 'home.testimonial1',
+      authorKey: 'home.testimonial1Author',
+      roleKey: 'home.testimonial1Role',
       avatar: 'ML',
     },
     {
-      quote: "On a déployé 5 agents internes en une semaine. L'intégration MCP avec nos APIs est magique.",
-      author: 'Thomas R.',
-      role: 'CTO, DataFlow',
+      quoteKey: 'home.testimonial2',
+      authorKey: 'home.testimonial2Author',
+      roleKey: 'home.testimonial2Role',
       avatar: 'TR',
     },
     {
-      quote: "Le playground permet de tester et itérer en temps réel. Mes agents s'améliorent à chaque session.",
-      author: 'Sophie K.',
-      role: 'Product Manager',
+      quoteKey: 'home.testimonial3',
+      authorKey: 'home.testimonial3Author',
+      roleKey: 'home.testimonial3Role',
       avatar: 'SK',
     },
   ];
@@ -135,17 +138,20 @@ export default function Home() {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-white/40 hover:text-white/80 transition-colors">Features</a>
-              <a href="#stats" className="text-sm text-white/40 hover:text-white/80 transition-colors">Performance</a>
-              <a href="#testimonials" className="text-sm text-white/40 hover:text-white/80 transition-colors">Témoignages</a>
+              <a href="#features" className="text-sm text-white/40 hover:text-white/80 transition-colors">{t('nav.features')}</a>
+              <a href="#stats" className="text-sm text-white/40 hover:text-white/80 transition-colors">{t('nav.performance')}</a>
+              <a href="#testimonials" className="text-sm text-white/40 hover:text-white/80 transition-colors">{t('nav.testimonials')}</a>
             </div>
 
-            <button
-              onClick={() => setShowAuth(true)}
-              className="px-4 py-2 text-sm font-medium rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
-            >
-              Sign In
-            </button>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <button
+                onClick={() => setShowAuth(true)}
+                className="px-4 py-2 text-sm font-medium rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
+              >
+                {t('common.signIn')}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -160,21 +166,20 @@ export default function Home() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/60 mb-8 animate-fade-in-up">
             <Zap className="w-3 h-3 text-yellow-400" />
-            <span>La plateforme de création d'agents IA</span>
+            <span>{t('home.badge')}</span>
             <ChevronRight className="w-3 h-3" />
           </div>
 
           {/* Main heading */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.1] mb-6 animate-fade-in-up delay-100">
-            Créez vos{' '}
+            {t('home.heroTitle1')}{' '}
             <br className="hidden sm:block" />
-            <span className="gradient-text">agents IA</span>
+            <span className="gradient-text">{t('home.heroTitle2')}</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg sm:text-xl text-white/40 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in-up delay-200">
-            Décrivez le comportement de votre agent en langage naturel. GiLo AI le configure, 
-            le connecte à vos outils et le déploie en quelques minutes.
+            {t('home.heroSubtitle')}
           </p>
 
           {/* CTA Buttons */}
@@ -183,14 +188,14 @@ export default function Home() {
               onClick={() => setShowAuth(true)}
               className="btn-gradient px-8 py-3.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 animate-pulse-glow"
             >
-              Commencer gratuitement
+              {t('home.ctaStart')}
               <ArrowRight className="w-4 h-4" />
             </button>
             <a
               href="#features"
               className="px-8 py-3.5 rounded-xl text-sm font-medium text-white/50 hover:text-white/80 border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all duration-200"
             >
-              Découvrir les features
+              {t('home.ctaDiscover')}
             </a>
           </div>
 
@@ -209,7 +214,7 @@ export default function Home() {
                     <div className="w-3 h-3 rounded-full bg-green-500/60" />
                   </div>
                   <div className="flex-1 text-center">
-                    <span className="text-xs text-white/20 font-mono">GiLo AI — Terminal</span>
+                    <span className="text-xs text-white/20 font-mono">{t('home.terminal')}</span>
                   </div>
                 </div>
                 
@@ -217,28 +222,28 @@ export default function Home() {
                 <div className="p-6 font-mono text-sm text-left space-y-2">
                   <div className="flex items-center gap-2">
                     <span className="text-green-400">❯</span>
-                    <span className="text-white/60">Décris ton agent...</span>
+                    <span className="text-white/60">{t('home.terminalPrompt')}</span>
                   </div>
                   <div className="text-white/80 pl-5">
                     <span className="text-blue-400">"</span>
-                    <span>Un agent de support client qui répond aux questions, </span>
+                    <span>{t('home.terminalDesc1')} </span>
                     <br />
-                    <span className="pl-1">consulte la base de connaissances et escalade si besoin</span>
+                    <span className="pl-1">{t('home.terminalDesc2')}</span>
                     <span className="text-blue-400">"</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">Configuration de l'agent...</span>
+                    <span className="text-white/40">{t('home.terminalStep1')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">Connexion aux outils (3 MCP)...</span>
+                    <span className="text-white/40">{t('home.terminalStep2')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-purple-400">⚡</span>
-                    <span className="text-white/40">Déploiement de l'agent...</span>
+                    <span className="text-white/40">{t('home.terminalStep3')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
@@ -258,7 +263,7 @@ export default function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div 
-                key={stat.label} 
+                key={stat.labelKey} 
                 className="animate-on-scroll text-center"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
@@ -266,7 +271,7 @@ export default function Home() {
                   <stat.icon className="w-5 h-5 text-white/30" />
                 </div>
                 <div className="text-3xl sm:text-4xl font-bold gradient-text mb-1">{stat.value}</div>
-                <div className="text-sm text-white/30">{stat.label}</div>
+                <div className="text-sm text-white/30">{t(stat.labelKey)}</div>
               </div>
             ))}
           </div>
@@ -281,14 +286,13 @@ export default function Home() {
             <div className="animate-on-scroll">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/50 mb-4">
                 <Code2 className="w-3 h-3" />
-                Features
+                {t('nav.features')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Tout pour créer vos agents
+                {t('home.featuresTitle')}
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
-                Une plateforme complète pour concevoir, tester et déployer des agents IA 
-                connectés à vos outils et données.
+                {t('home.featuresSubtitle')}
               </p>
             </div>
           </div>
@@ -297,15 +301,15 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {features.map((feature, i) => (
               <div
-                key={feature.title}
+                key={feature.titleKey}
                 className="animate-on-scroll glass-card rounded-2xl p-6 group"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
                 <div className={`inline-flex items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-br ${feature.color} border border-white/5 mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <feature.icon className={`w-5 h-5 ${feature.iconColor}`} />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-white/90">{feature.title}</h3>
-                <p className="text-sm text-white/35 leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-semibold mb-2 text-white/90">{t(feature.titleKey)}</h3>
+                <p className="text-sm text-white/35 leading-relaxed">{t(feature.descKey)}</p>
               </div>
             ))}
           </div>
@@ -319,13 +323,13 @@ export default function Home() {
             <div className="animate-on-scroll">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/50 mb-4">
                 <Layers className="w-3 h-3" />
-                Comment ça marche
+                {t('home.howLabel')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                3 étapes simples
+                {t('home.howTitle')}
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
-                De l'idée à un agent IA déployé en quelques minutes.
+                {t('home.howSubtitle')}
               </p>
             </div>
           </div>
@@ -334,20 +338,20 @@ export default function Home() {
             {[
               {
                 step: '01',
-                title: 'Décrivez',
-                description: 'Décrivez le rôle, le ton et les capacités de votre agent en langage naturel.',
+                titleKey: 'home.howStep1Title',
+                descKey: 'home.howStep1Desc',
                 icon: Globe,
               },
               {
                 step: '02',
-                title: 'Configurez',
-                description: 'Connectez des outils (APIs, bases de données, MCP) et ajustez les instructions système.',
+                titleKey: 'home.howStep2Title',
+                descKey: 'home.howStep2Desc',
                 icon: Cpu,
               },
               {
                 step: '03',
-                title: 'Déployez',
-                description: 'Testez dans le playground puis déployez en API, widget ou bot en un clic.',
+                titleKey: 'home.howStep3Title',
+                descKey: 'home.howStep3Desc',
                 icon: Rocket,
               },
             ].map((item, i) => (
@@ -360,8 +364,8 @@ export default function Home() {
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-white/5 border border-white/10 mb-4">
                   <item.icon className="w-5 h-5 text-white/50" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                <p className="text-sm text-white/35 leading-relaxed">{item.description}</p>
+                <h3 className="text-xl font-semibold mb-2">{t(item.titleKey)}</h3>
+                <p className="text-sm text-white/35 leading-relaxed">{t(item.descKey)}</p>
               </div>
             ))}
           </div>
@@ -375,21 +379,21 @@ export default function Home() {
             <div className="animate-on-scroll">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-white/50 mb-4">
                 <Star className="w-3 h-3" />
-                Témoignages
+                {t('nav.testimonials')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Ils créent des agents avec nous
+                {t('home.testimonialsTitle')}
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
-                Découvrez ce que nos utilisateurs pensent de GiLo AI.
+                {t('home.testimonialsSubtitle')}
               </p>
             </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
+            {testimonials.map((testimonial, i) => (
               <div
-                key={t.author}
+                key={testimonial.authorKey}
                 className="animate-on-scroll glass-card rounded-2xl p-6"
                 style={{ animationDelay: `${i * 100}ms` }}
               >
@@ -399,14 +403,14 @@ export default function Home() {
                     <Star key={j} className="w-4 h-4 text-yellow-500/70 fill-yellow-500/70" />
                   ))}
                 </div>
-                <p className="text-sm text-white/50 leading-relaxed mb-6">"{t.quote}"</p>
+                <p className="text-sm text-white/50 leading-relaxed mb-6">"{t(testimonial.quoteKey)}"</p>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-white/10 flex items-center justify-center text-xs font-bold text-white/60">
-                    {t.avatar}
+                    {testimonial.avatar}
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-white/70">{t.author}</div>
-                    <div className="text-xs text-white/30">{t.role}</div>
+                    <div className="text-sm font-medium text-white/70">{t(testimonial.authorKey)}</div>
+                    <div className="text-xs text-white/30">{t(testimonial.roleKey)}</div>
                   </div>
                 </div>
               </div>
@@ -421,17 +425,17 @@ export default function Home() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="animate-on-scroll">
             <h2 className="text-3xl sm:text-5xl font-bold mb-6">
-              Prêt à créer{' '}
-              <span className="gradient-text">votre agent</span> ?
+              {t('home.ctaTitle1')}{' '}
+              <span className="gradient-text">{t('home.ctaTitle2')}</span> ?
             </h2>
             <p className="text-lg text-white/40 mb-10 max-w-xl mx-auto">
-              Rejoignez des milliers de créateurs qui utilisent GiLo AI pour déployer des agents intelligents.
+              {t('home.ctaSubtitle')}
             </p>
             <button
               onClick={() => setShowAuth(true)}
               className="btn-gradient px-10 py-4 rounded-xl text-white font-semibold flex items-center gap-2 mx-auto animate-pulse-glow"
             >
-              Commencer maintenant
+              {t('home.ctaButton')}
               <ArrowRight className="w-5 h-5" />
             </button>
           </div>
@@ -447,14 +451,14 @@ export default function Home() {
             </div>
             
             <div className="flex items-center gap-6">
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">Confidentialité</a>
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">Conditions</a>
-              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">Documentation</a>
+              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">{t('home.footerPrivacy')}</a>
+              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">{t('home.footerTerms')}</a>
+              <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">{t('home.footerDocs')}</a>
               <a href="#" className="text-xs text-white/25 hover:text-white/50 transition-colors">GitHub</a>
             </div>
 
             <p className="text-xs text-white/15">
-              © 2026 GiLo AI. Tous droits réservés.
+              {t('home.footerCopyright')}
             </p>
           </div>
         </div>

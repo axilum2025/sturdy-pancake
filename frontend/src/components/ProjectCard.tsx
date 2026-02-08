@@ -1,4 +1,5 @@
 import { Bot, Clock, Wrench, MessageSquare, Globe, ExternalLink, CheckCircle, AlertCircle, FileEdit } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Agent } from '../services/api';
 
 interface ProjectCardProps {
@@ -7,11 +8,12 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
+  const { t } = useTranslation();
   const getStatusStyle = (status: string) => {
     switch (status) {
-      case 'deployed': return { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30', label: 'Déployé', icon: CheckCircle };
-      case 'active': return { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30', label: 'Actif', icon: AlertCircle };
-      default: return { bg: 'bg-white/5', text: 'text-white/50', border: 'border-white/10', label: 'Brouillon', icon: FileEdit };
+      case 'deployed': return { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30', label: t('projectCard.deployed'), icon: CheckCircle };
+      case 'active': return { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30', label: t('projectCard.active'), icon: AlertCircle };
+      default: return { bg: 'bg-white/5', text: 'text-white/50', border: 'border-white/10', label: t('projectCard.draft'), icon: FileEdit };
     }
   };
 
@@ -39,10 +41,10 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return "Hier";
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
-    if (diffDays < 30) return `Il y a ${Math.floor(diffDays / 7)} sem.`;
+    if (diffDays === 0) return t('projectCard.today');
+    if (diffDays === 1) return t('projectCard.yesterday');
+    if (diffDays < 7) return t('projectCard.daysAgo', { count: diffDays });
+    if (diffDays < 30) return t('projectCard.weeksAgo', { count: Math.floor(diffDays / 7) });
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
@@ -61,7 +63,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold text-white truncate">{project.name}</h3>
-            <p className="text-white/40 text-sm line-clamp-1">{project.description || 'Aucune description'}</p>
+            <p className="text-white/40 text-sm line-clamp-1">{project.description || t('projectCard.noDescription')}</p>
           </div>
         </div>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} flex-shrink-0`}>
@@ -78,7 +80,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
         {toolsCount > 0 && (
           <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 font-medium flex items-center gap-1">
             <Wrench className="w-3 h-3" />
-            {toolsCount} outil{toolsCount > 1 ? 's' : ''}
+            {toolsCount} {t('projectCard.tools', { count: toolsCount })}
           </span>
         )}
       </div>
@@ -98,7 +100,7 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
         <div className="flex items-center gap-4 text-xs text-white/40">
           <span className="flex items-center gap-1.5">
             <MessageSquare className="w-3.5 h-3.5" />
-            {project.totalConversations} conv.
+            {project.totalConversations} {t('projectCard.conversations')}
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />

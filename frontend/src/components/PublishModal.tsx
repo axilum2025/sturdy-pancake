@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Rocket, X, Globe, Lock, Tag, Sparkles, Plus, Trash2, Check, Loader2
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface PublishModalProps {
   agentId: string;
@@ -28,6 +29,7 @@ const ICON_COLORS = [
 ];
 
 export default function PublishModal({ agentId, agentName, onClose, onPublished }: PublishModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState(1); // 1: Info, 2: Features, 3: Access
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || 'Erreur lors de la publication');
+        throw new Error(data.error || t('publish.publishError'));
       }
 
       const listing = await res.json();
@@ -109,7 +111,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
             <Rocket className="w-5 h-5 text-blue-400 glow-icon" />
-            <span className="font-semibold gradient-text">Publier sur le Store</span>
+            <span className="font-semibold gradient-text">{t('publish.title')}</span>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors">
             <X className="w-4 h-4" />
@@ -142,7 +144,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
           {step === 1 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Nom de l'agent</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.agentName')}</label>
                 <input
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -152,30 +154,30 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Description courte</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.shortDesc')}</label>
                 <input
                   value={shortDescription}
                   onChange={(e) => setShortDescription(e.target.value)}
                   className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
-                  placeholder="Une phrase pour décrire l'agent"
+                  placeholder={t('publish.shortDescPlaceholder')}
                   maxLength={100}
                 />
                 <p className="text-xs text-white/25 mt-1">{shortDescription.length}/100</p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Description complète</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.fullDesc')}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10 resize-none"
                   rows={4}
-                  placeholder="Décrivez en détail ce que fait votre agent, pour qui il est utile..."
+                  placeholder={t('publish.fullDescPlaceholder')}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Catégorie</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.category')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {CATEGORIES.map((cat) => (
                     <button
@@ -187,14 +189,14 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                           : 'bg-white/[0.04] border border-white/10 text-white/50 hover:border-white/20'
                       }`}
                     >
-                      {cat.icon} {cat.label}
+                      {cat.icon} {t(`categories.${cat.id}`)}
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-2">Couleur de l'icône</label>
+                <label className="block text-sm font-medium text-white/60 mb-2">{t('publish.iconColor')}</label>
                 <div className="flex gap-2 flex-wrap">
                   {ICON_COLORS.map((color) => (
                     <button
@@ -217,7 +219,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               <div>
                 <label className="block text-sm font-medium text-white/60 mb-2">
                   <Sparkles className="w-4 h-4 inline mr-1" />
-                  Fonctionnalités clés
+                  {t('publish.keyFeatures')}
                 </label>
                 <div className="space-y-2">
                   {features.map((f, idx) => (
@@ -226,7 +228,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                         value={f}
                         onChange={(e) => updateFeature(idx, e.target.value)}
                         className="flex-1 bg-white/[0.04] text-white/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
-                        placeholder={`Feature ${idx + 1}`}
+                        placeholder={t('publish.featurePlaceholder', { num: idx + 1 })}
                       />
                       {features.length > 1 && (
                         <button
@@ -245,7 +247,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                     className="mt-2 flex items-center gap-1 text-xs text-white/40 hover:text-white/60 transition-colors"
                   >
                     <Plus className="w-3 h-3" />
-                    Ajouter une fonctionnalité
+                    {t('publish.addFeature')}
                   </button>
                 )}
               </div>
@@ -253,13 +255,13 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               <div>
                 <label className="block text-sm font-medium text-white/60 mb-2">
                   <Tag className="w-4 h-4 inline mr-1" />
-                  Tags (séparés par des virgules)
+                  {t('publish.tags')}
                 </label>
                 <input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
                   className="w-full bg-white/[0.04] text-white/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-white/10"
-                  placeholder="support, ai, chatbot"
+                  placeholder={t('publish.tagsPlaceholder')}
                 />
               </div>
             </>
@@ -269,7 +271,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
           {step === 3 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-3">Visibilité</label>
+                <label className="block text-sm font-medium text-white/60 mb-3">{t('publish.visibility')}</label>
                 <div className="space-y-3">
                   <button
                     onClick={() => setVisibility('public')}
@@ -285,7 +287,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                         Public
                       </p>
                       <p className="text-xs text-white/40 mt-0.5">
-                        Visible par tous dans le Store. Les utilisateurs peuvent utiliser et remixer votre agent.
+                        {t('publish.publicDesc')}
                       </p>
                     </div>
                   </button>
@@ -301,10 +303,10 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                     <Lock className={`w-5 h-5 mt-0.5 ${visibility === 'private' ? 'text-amber-400' : 'text-white/30'}`} />
                     <div>
                       <p className={`text-sm font-medium ${visibility === 'private' ? 'text-amber-300' : 'text-white/70'}`}>
-                        Privé
+                        {t('common.private')}
                       </p>
                       <p className="text-xs text-white/40 mt-0.5">
-                        Accessible uniquement via un token. Vous contrôlez qui peut utiliser votre agent.
+                        {t('publish.privateDesc')}
                       </p>
                     </div>
                   </button>
@@ -313,7 +315,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
 
               {/* Preview */}
               <div className="bg-white/[0.02] rounded-2xl border border-white/5 p-4">
-                <p className="text-xs text-white/40 mb-3">Aperçu dans le Store :</p>
+                <p className="text-xs text-white/40 mb-3">{t('publish.preview')}</p>
                 <div className="flex flex-col items-center gap-2">
                   <div
                     className="w-16 h-16 rounded-[22%] flex items-center justify-center"
@@ -344,8 +346,8 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               onClick={() => setStep(step - 1)}
               className="px-4 py-2 rounded-xl text-sm text-white/50 hover:text-white/70 hover:bg-white/5 transition-colors"
             >
-              Retour
-            </button>
+            {t('common.back')}
+          </button>
           ) : (
             <div />
           )}
@@ -356,7 +358,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               disabled={!canAdvance()}
               className="btn-gradient px-6 py-2 rounded-xl text-sm font-medium disabled:opacity-30"
             >
-              Suivant
+              {t('common.next')}
             </button>
           ) : (
             <button
@@ -367,12 +369,12 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               {isPublishing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Publication...
+                  {t('publish.publishing')}
                 </>
               ) : (
                 <>
                   <Rocket className="w-4 h-4" />
-                  Publier
+                  {t('publish.publishBtn')}
                 </>
               )}
             </button>

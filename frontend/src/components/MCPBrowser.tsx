@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Wrench, Database, MessageSquare, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface MCPTool {
   name: string;
@@ -34,6 +35,7 @@ export default function MCPBrowser({
   onSelectResource, 
   onSelectPrompt 
 }: MCPBrowserProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'tools' | 'resources' | 'prompts'>('tools');
   const [tools, setTools] = useState<MCPTool[]>([]);
   const [resources, setResources] = useState<MCPResource[]>([]);
@@ -68,7 +70,7 @@ export default function MCPBrowser({
       <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Wrench className="w-5 h-5 text-blue-400 glow-icon" />
-          <span className="font-semibold gradient-text">Outils & Ressources MCP</span>
+          <span className="font-semibold gradient-text">{t('mcp.browserTitle')}</span>
         </div>
         <button
           onClick={onClose}
@@ -89,7 +91,7 @@ export default function MCPBrowser({
           }`}
         >
           <Wrench className="w-3.5 h-3.5" />
-          Outils ({tools.length})
+          {t('mcp.tabTools')} ({tools.length})
         </button>
         <button
           onClick={() => setActiveTab('resources')}
@@ -100,7 +102,7 @@ export default function MCPBrowser({
           }`}
         >
           <Database className="w-3.5 h-3.5" />
-          Ressources ({resources.length})
+          {t('mcp.tabResources')} ({resources.length})
         </button>
         <button
           onClick={() => setActiveTab('prompts')}
@@ -111,7 +113,7 @@ export default function MCPBrowser({
           }`}
         >
           <MessageSquare className="w-3.5 h-3.5" />
-          Prompts ({prompts.length})
+          {t('mcp.tabPrompts')} ({prompts.length})
         </button>
       </div>
 
@@ -119,7 +121,7 @@ export default function MCPBrowser({
       <div className="flex-1 overflow-y-auto p-4 space-y-5">
         {loading ? (
           <div className="text-center py-8 animate-fade-in-up">
-            <div className="animate-pulse text-white/40">Chargement...</div>
+            <div className="animate-pulse text-white/40">{t('common.loading')}</div>
           </div>
         ) : (
           <>
@@ -128,8 +130,8 @@ export default function MCPBrowser({
                 {tools.length === 0 ? (
                   <div className="text-center py-8 animate-fade-in-up">
                     <Wrench className="w-12 h-12 mx-auto mb-3 text-white/20" />
-                    <p className="text-white/40 text-sm">Aucun outil disponible</p>
-                    <p className="text-xs text-white/25 mt-1">Activez des serveurs MCP dans les paramètres</p>
+                    <p className="text-white/40 text-sm">{t('mcp.noTools')}</p>
+                    <p className="text-xs text-white/25 mt-1">{t('mcp.enableServersHint')}</p>
                   </div>
                 ) : (
                   tools.map((tool, idx) => (
@@ -162,8 +164,8 @@ export default function MCPBrowser({
                 {resources.length === 0 ? (
                   <div className="text-center py-8 animate-fade-in-up">
                     <Database className="w-12 h-12 mx-auto mb-3 text-white/20" />
-                    <p className="text-white/40 text-sm">Aucune ressource disponible</p>
-                    <p className="text-xs text-white/25 mt-1">Activez des serveurs MCP dans les paramètres</p>
+                    <p className="text-white/40 text-sm">{t('mcp.noResources')}</p>
+                    <p className="text-xs text-white/25 mt-1">{t('mcp.enableServersHint')}</p>
                   </div>
                 ) : (
                   resources.map((resource, idx) => (
@@ -199,8 +201,8 @@ export default function MCPBrowser({
                 {prompts.length === 0 ? (
                   <div className="text-center py-8 animate-fade-in-up">
                     <MessageSquare className="w-12 h-12 mx-auto mb-3 text-white/20" />
-                    <p className="text-white/40 text-sm">Aucun prompt disponible</p>
-                    <p className="text-xs text-white/25 mt-1">Activez des serveurs MCP dans les paramètres</p>
+                    <p className="text-white/40 text-sm">{t('mcp.noPrompts')}</p>
+                    <p className="text-xs text-white/25 mt-1">{t('mcp.enableServersHint')}</p>
                   </div>
                 ) : (
                   prompts.map((prompt, idx) => (

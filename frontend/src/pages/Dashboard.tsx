@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { useAuth } from '../contexts/AuthContext';
 import { listAgents, createAgent, Agent } from '../services/api';
 import AuthModal from '../components/AuthModal';
@@ -9,6 +11,7 @@ import ProjectCard from '../components/ProjectCard';
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [projects, setProjects] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
@@ -36,7 +39,7 @@ export default function Dashboard() {
     if (!newProjectName.trim()) return;
     
     try {
-      const agent = await createAgent(newProjectName, 'Créé avec GiLo AI');
+      const agent = await createAgent(newProjectName, t('common.loading'));
       setProjects([agent, ...projects]);
       setShowCreateModal(false);
       setNewProjectName('');
@@ -71,7 +74,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-white/40">Chargement...</p>
+          <p className="text-white/40">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -84,13 +87,13 @@ export default function Dashboard() {
           <div className="mb-8 animate-fade-in-up">
             <Zap className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400 mx-auto mb-4 glow-icon" />
             <h1 className="text-2xl sm:text-4xl font-bold gradient-text mb-4">GiLo AI</h1>
-            <p className="text-white/40 text-base sm:text-xl px-4">Connectez-vous pour accéder à vos agents</p>
+            <p className="text-white/40 text-base sm:text-xl px-4">{t('dashboard.connectPrompt')}</p>
           </div>
           <button
             onClick={() => setShowAuth(true)}
             className="btn-gradient px-8 py-3 rounded-xl text-white font-semibold animate-fade-in-up delay-100"
           >
-            Se connecter
+            {t('common.signIn')}
           </button>
           <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
         </div>
@@ -127,7 +130,7 @@ export default function Dashboard() {
                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 hover:bg-blue-500/15 transition-all duration-200 group"
               >
                 <Store className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium text-blue-300 hidden sm:inline">Agent Store</span>
+                <span className="text-sm font-medium text-blue-300 hidden sm:inline">{t('dashboard.agentStore')}</span>
               </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
@@ -147,6 +150,7 @@ export default function Dashboard() {
                   {getInitials(user?.email || 'U')}
                 </div>
               </div>
+              <LanguageSwitcher />
               <button
                 onClick={logout}
                 className="p-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-200"
@@ -168,7 +172,7 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
                   <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Agents</span>
+                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.agents')}</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
                 {projects.length} <span className="text-white/30 text-xs sm:text-base font-normal">/ {agentsMax}</span>
@@ -187,12 +191,12 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
                   <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Conversations</span>
+                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.conversations')}</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
                 {totalConversations}
               </p>
-              <p className="text-xs text-white/30">{totalMessages} messages au total</p>
+              <p className="text-xs text-white/30">{t('dashboard.totalMessages', { count: totalMessages })}</p>
             </div>
 
             {/* Deployed Stat */}
@@ -201,7 +205,7 @@ export default function Dashboard() {
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                   <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Déployés</span>
+                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.deployed')}</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
                 {deployedCount} <span className="text-white/30 text-xs sm:text-base font-normal">/ {projects.length}</span>
@@ -220,7 +224,7 @@ export default function Dashboard() {
                 <div className={`p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-white/10`}>
                   <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'} glow-icon`} />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Tier</span>
+                <span className="text-[10px] sm:text-xs text-white/40">{t('dashboard.tier')}</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold capitalize text-white mb-2">
                 {user?.tier}
@@ -245,9 +249,9 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
-                Vos <span className="gradient-text">Agents</span>
+                {t('dashboard.yourAgents')} <span className="gradient-text">{t('dashboard.agentsWord')}</span>
               </h2>
-              <p className="text-white/40 text-sm">Gérez et déployez vos agents IA</p>
+              <p className="text-white/40 text-sm">{t('dashboard.manageAgents')}</p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
@@ -255,30 +259,30 @@ export default function Dashboard() {
               className="btn-gradient px-5 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
-              Nouvel Agent
+              {t('dashboard.newAgent')}
             </button>
           </div>
 
           {isLoading ? (
             <div className="text-center py-20">
               <div className="animate-spin w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-white/40">Chargement des agents...</p>
+              <p className="text-white/40">{t('dashboard.loadingAgents')}</p>
             </div>
           ) : projects.length === 0 ? (
             <div className="glass-card rounded-2xl p-6 sm:p-12 text-center animate-fade-in-up">
               <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-white/5 flex items-center justify-center mx-auto mb-6">
                 <Cloud className="w-10 h-10 text-white/30" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Aucun agent</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">{t('dashboard.noAgents')}</h3>
               <p className="text-white/40 mb-6 max-w-md mx-auto">
-                Commencez par créer votre premier agent IA avec GiLo
+                {t('dashboard.noAgentsDesc')}
               </p>
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="btn-gradient px-6 py-3 rounded-xl text-white font-semibold inline-flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Créer mon premier agent
+                {t('dashboard.createFirst')}
               </button>
             </div>
           ) : (
@@ -309,18 +313,18 @@ export default function Dashboard() {
                 <Plus className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Nouvel Agent</h2>
-                <p className="text-white/40 text-sm">Créez un nouvel agent IA</p>
+                <h2 className="text-xl font-bold text-white">{t('dashboard.createModal.title')}</h2>
+                <p className="text-white/40 text-sm">{t('dashboard.createModal.subtitle')}</p>
               </div>
             </div>
             
             <div className="mb-6">
-              <label className="block text-white/70 text-sm font-medium mb-2">Nom de l'agent</label>
+              <label className="block text-white/70 text-sm font-medium mb-2">{t('dashboard.createModal.nameLabel')}</label>
               <input
                 type="text"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="Agent de support client"
+                placeholder={t('dashboard.createModal.namePlaceholder')}
                 className="input-futuristic w-full px-4 py-3 rounded-xl text-white"
                 autoFocus
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateProject()}
@@ -332,14 +336,14 @@ export default function Dashboard() {
                 onClick={() => setShowCreateModal(false)}
                 className="flex-1 px-4 py-3 rounded-xl text-white/70 font-medium border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-200"
               >
-                Annuler
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreateProject}
                 disabled={!newProjectName.trim()}
                 className="flex-1 btn-gradient px-4 py-3 rounded-xl text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Créer
+                {t('common.create')}
               </button>
             </div>
           </div>
