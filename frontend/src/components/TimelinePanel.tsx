@@ -1,35 +1,21 @@
-import { Clock, CheckCircle, Circle, Loader2, FileText, Code, Terminal, Sparkles } from 'lucide-react';
+import { Clock, CheckCircle, Circle, Loader2, FileText, Code, Sparkles, AlertCircle, Zap, Trash2, X } from 'lucide-react';
+import { useBuilderStore, TimelineEvent } from '../store/builderStore';
 
-interface TimelineEvent {
-  id: string;
-  type: 'planning' | 'file-create' | 'file-edit' | 'command' | 'complete';
-  message: string;
-  timestamp: Date;
-  status: 'pending' | 'running' | 'completed';
-}
+export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
+  const { timelineEvents: events, clearTimeline } = useBuilderStore();
 
-export default function TimelinePanel() {
-  // Mock data - will be connected to real events later
-  const events: TimelineEvent[] = [
-    {
-      id: '1',
-      type: 'planning',
-      message: 'Analyse de la demande...',
-      timestamp: new Date(),
-      status: 'completed'
-    }
-  ];
-
-  const getEventIcon = (type: string) => {
+  const getEventIcon = (type: TimelineEvent['type']) => {
     switch (type) {
       case 'planning':
         return <Sparkles className="w-4 h-4 text-purple-400 glow-icon" />;
+      case 'generation':
+        return <Zap className="w-4 h-4 text-yellow-400 glow-icon" />;
       case 'file-create':
         return <FileText className="w-4 h-4 text-blue-400 glow-icon" />;
       case 'file-edit':
         return <Code className="w-4 h-4 text-cyan-400 glow-icon" />;
-      case 'command':
-        return <Terminal className="w-4 h-4 text-green-400 glow-icon" />;
+      case 'error':
+        return <AlertCircle className="w-4 h-4 text-red-400" />;
       case 'complete':
         return <CheckCircle className="w-4 h-4 text-green-400 glow-icon" />;
       default:
@@ -37,12 +23,14 @@ export default function TimelinePanel() {
     }
   };
 
-  const getStatusDot = (status: string) => {
+  const getStatusDot = (status: TimelineEvent['status']) => {
     switch (status) {
       case 'completed':
         return <div className="w-2 h-2 rounded-full bg-green-400 glow-blue"></div>;
       case 'running':
         return <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />;
+      case 'error':
+        return <div className="w-2 h-2 rounded-full bg-red-400"></div>;
       case 'pending':
         return <div className="w-2 h-2 rounded-full bg-gray-500"></div>;
       default:
@@ -53,11 +41,29 @@ export default function TimelinePanel() {
   return (
     <div className="h-full overflow-y-auto">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/10">
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
         <h3 className="text-lg font-semibold gradient-text flex items-center gap-2">
           <Clock className="w-5 h-5 glow-icon" />
           Historique
         </h3>
+        {events.length > 0 && (
+          <button
+            onClick={clearTimeline}
+            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/5 transition-colors"
+            title="Effacer l'historique"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+            title="Fermer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
       
       {/* Timeline */}

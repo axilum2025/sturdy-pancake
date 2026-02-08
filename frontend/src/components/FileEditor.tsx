@@ -5,6 +5,7 @@ import { useBuilderStore } from '../store/builderStore';
 
 interface FileEditorProps {
   projectId: string;
+  onClose?: () => void;
 }
 
 interface FileTreeItem {
@@ -14,8 +15,9 @@ interface FileTreeItem {
   children?: FileTreeItem[];
 }
 
-export default function FileEditor({ projectId }: FileEditorProps) {
+export default function FileEditor({ projectId, onClose }: FileEditorProps) {
   const { setSelectedFile } = useBuilderStore();
+  const fileRefreshCounter = useBuilderStore((s) => s.fileRefreshCounter);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [fileTree, setFileTree] = useState<FileTreeItem[]>([]);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
@@ -28,7 +30,7 @@ export default function FileEditor({ projectId }: FileEditorProps) {
 
   useEffect(() => {
     loadFiles();
-  }, [projectId]);
+  }, [projectId, fileRefreshCounter]);
 
   const loadFiles = async () => {
     try {
@@ -260,13 +262,24 @@ export default function FileEditor({ projectId }: FileEditorProps) {
           <Code className="w-5 h-5 text-blue-400 glow-icon" />
           <span className="font-semibold gradient-text">Fichiers</span>
         </div>
-        <button
-          onClick={() => setShowNewFileModal(true)}
-          className="btn-outline-glow p-2 rounded-lg"
-          title="Nouveau fichier"
-        >
-          <Plus className="w-4 h-4 text-white/70" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setShowNewFileModal(true)}
+            className="btn-outline-glow p-2 rounded-lg"
+            title="Nouveau fichier"
+          >
+            <Plus className="w-4 h-4 text-white/70" />
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors"
+              title="Fermer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* File Tree */}

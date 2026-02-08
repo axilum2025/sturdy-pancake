@@ -19,7 +19,7 @@ export default function Builder() {
   const [isLoading, setIsLoading] = useState(true);
   const [showMCPSettings, setShowMCPSettings] = useState(false);
   const [showMCPBrowser, setShowMCPBrowser] = useState(false);
-  const [showFileEditor, setShowFileEditor] = useState(true);
+  const [showFileEditor, setShowFileEditor] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -127,9 +127,9 @@ export default function Builder() {
   }
 
   return (
-    <div className="h-screen w-full flex pb-12 md:pb-8 bg-gradient-mesh bg-grid">
+    <div className="h-screen w-full flex bg-gradient-mesh bg-grid overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-20 glass-strong border-r border-white/10 flex flex-col items-center py-4 gap-2 animate-fade-in-left">
+      <aside className="hidden md:flex w-16 lg:w-20 glass-strong border-r border-white/10 flex-col items-center py-4 gap-2 animate-fade-in-left flex-shrink-0">
         {/* Navigation Buttons */}
         <button
           onClick={() => setShowPreview(!showPreview)}
@@ -198,10 +198,10 @@ export default function Builder() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="glass-strong border-b border-white/10 px-6 py-3 flex items-center gap-4 animate-fade-in-down">
-          <h1 className="text-xl font-bold text-white">AI Builder Hub</h1>
+        <header className="glass-strong border-b border-white/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
+          <h1 className="text-base md:text-xl font-bold text-white truncate">AI Builder Hub</h1>
           <span className="text-white/40 text-sm">/</span>
           <span className="text-white/60 text-sm">{projectId || 'Nouveau Projet'}</span>
           <div className="flex-1"></div>
@@ -220,24 +220,36 @@ export default function Builder() {
         {showMCPBrowser && <MCPBrowser onClose={() => setShowMCPBrowser(false)} />}
 
         {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-        {/* Left: Chat */}
-        <div className="min-w-80 max-w-[30rem] flex-1 flex flex-col border-r border-white/10 glass-card animate-fade-in-left">
+        <div className="flex-1 flex overflow-hidden min-h-0">
+        {/* Chat – always full width */}
+        <div className="flex flex-col flex-1 glass-card animate-fade-in-left min-w-0">
           <ChatPanel />
         </div>
 
-        {/* Right: File Editor or History Panel */}
+        {/* File Editor Slidebar */}
         {showFileEditor && projectId && (
-          <div className="min-w-64 max-w-[24rem] flex-1 border-r border-white/10 glass-card animate-fade-in-up delay-100">
-            <FileEditor projectId={projectId} />
-          </div>
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
+              onClick={() => setShowFileEditor(false)}
+            />
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+              <FileEditor projectId={projectId} onClose={() => setShowFileEditor(false)} />
+            </div>
+          </>
         )}
 
-        {/* History Panel */}
+        {/* History Slidebar */}
         {showHistory && (
-          <div className="min-w-80 max-w-[30rem] flex-1 glass-card animate-fade-in-up delay-100">
-            <TimelinePanel />
-          </div>
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
+              onClick={() => setShowHistory(false)}
+            />
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
+              <TimelinePanel onClose={() => setShowHistory(false)} />
+            </div>
+          </>
         )}
 
         {/* Preview Modal */}
@@ -251,16 +263,6 @@ export default function Builder() {
             {/* Modal */}
             <div className="fixed inset-4 md:inset-8 lg:inset-12 z-50 flex items-center justify-center animate-fade-in-up">
               <div className="w-full h-full glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative">
-                {/* Close button */}
-                <button
-                  onClick={() => setShowPreview(false)}
-                  className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-200 z-10"
-                  aria-label="Close preview"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
                 <PreviewPanel onClose={() => setShowPreview(false)} />
               </div>
             </div>

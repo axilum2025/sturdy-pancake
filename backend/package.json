@@ -1,7 +1,7 @@
 {
   "name": "lovable-backend",
   "version": "2.0.0",
-  "description": "Backend for AI App Builder v2",
+  "description": "Backend for GiLo AI",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",

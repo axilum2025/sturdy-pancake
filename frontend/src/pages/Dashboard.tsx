@@ -36,7 +36,7 @@ export default function Dashboard() {
     if (!newProjectName.trim()) return;
     
     try {
-      const project = await createProject(newProjectName, 'Created with AI App Builder');
+      const project = await createProject(newProjectName, 'Created with GiLo AI');
       setProjects([project, ...projects]);
       setShowCreateModal(false);
       setNewProjectName('');
@@ -83,7 +83,7 @@ export default function Dashboard() {
         <div className="text-center">
           <div className="mb-8 animate-fade-in-up">
             <Zap className="w-16 h-16 text-blue-400 mx-auto mb-4 glow-icon" />
-            <h1 className="text-4xl font-bold text-white mb-4">AI App Builder</h1>
+            <h1 className="text-4xl font-bold gradient-text mb-4">GiLo AI</h1>
             <p className="text-white/40 text-xl">Connectez-vous pour accéder à vos projets</p>
           </div>
           <button
@@ -121,11 +121,8 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight">
-                AI App Builder
+              <span className="text-lg font-bold tracking-tight gradient-text">
+                GiLo AI
               </span>
             </div>
             

@@ -1,9 +1,32 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Bot, User, Loader2, Sparkles, Copy, Check, Zap } from 'lucide-react';
+import {
+  Loader2,
+  Copy,
+  Check,
+  Zap,
+  ChevronDown,
+  ChevronRight,
+  CheckCircle2,
+  Circle,
+  RotateCw,
+  AlertCircle,
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { copilotChatStream, getCopilotStatus, CopilotMessage } from '../services/api';
+import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile } from '../services/api';
 import { useBuilderStore } from '../store/builderStore';
+
+// ============================================================
+// Types
+// ============================================================
+
+interface AgentTask {
+  id: string;
+  label: string;
+  status: 'pending' | 'running' | 'done' | 'error';
+  detail?: string;
+  filePath?: string;
+}
 
 interface ChatMessage {
   id: string;
@@ -11,7 +34,177 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+  tasks?: AgentTask[];
 }
+
+// ============================================================
+// Helpers: extract code blocks from markdown
+// ============================================================
+
+interface ExtractedFile {
+  filename: string;
+  language: string;
+  code: string;
+}
+
+const FILENAME_RE =
+  /(?:^|\n)(?:(?:#+\s*)?(?:\*\*)?(?:Fichier|File|Créer|Create|→|📄|`)?[:\s]*)?`?([a-zA-Z0-9_\-/.]+\.[a-zA-Z]{1,8})`?\s*(?:\*\*)?$/;
+
+function extractCodeBlocks(markdown: string): ExtractedFile[] {
+  const blocks: ExtractedFile[] = [];
+  const codeBlockRe = /```(\w+)?\n([\s\S]*?)```/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = codeBlockRe.exec(markdown)) !== null) {
+    const lang = match[1] || 'txt';
+    const code = match[2].trimEnd();
+
+    const before = markdown.slice(Math.max(0, match.index - 200), match.index);
+    const lines = before.split('\n').reverse();
+
+    let filename = '';
+    for (const line of lines) {
+      const m = line.match(FILENAME_RE);
+      if (m) {
+        filename = m[1];
+        break;
+      }
+    }
+
+    if (!filename) {
+      const firstLine = code.split('\n')[0] ?? '';
+      const commentFile = firstLine.match(
+        /(?:\/\/|#|{\/\*|<!--)\s*([a-zA-Z0-9_\-/.]+\.\w{1,8})/,
+      );
+      if (commentFile) filename = commentFile[1];
+    }
+
+    if (!filename) {
+      const ext: Record<string, string> = {
+        tsx: 'tsx', jsx: 'jsx', ts: 'ts', js: 'js',
+        css: 'css', html: 'html', json: 'json', py: 'py',
+      };
+      const idx = blocks.length + 1;
+      filename = `src/generated-${idx}.${ext[lang] || lang}`;
+    }
+
+    if (!filename.includes('/')) filename = `src/${filename}`;
+
+    blocks.push({ filename, language: lang, code });
+  }
+
+  return blocks;
+}
+
+// ============================================================
+// Sub-components: Agent task UI
+// ============================================================
+
+function AgentTaskIcon({ status }: { status: AgentTask['status'] }) {
+  switch (status) {
+    case 'pending':
+      return <Circle className="w-3.5 h-3.5 text-white/30" />;
+    case 'running':
+      return <RotateCw className="w-3.5 h-3.5 text-blue-400 animate-spin" />;
+    case 'done':
+      return <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />;
+    case 'error':
+      return <AlertCircle className="w-3.5 h-3.5 text-red-400" />;
+  }
+}
+
+function AgentTaskItem({ task }: { task: AgentTask }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="pl-1 py-0.5">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2 w-full text-left group hover:bg-white/5 rounded px-1 py-0.5 transition-colors"
+      >
+        <AgentTaskIcon status={task.status} />
+        <span
+          className={`text-xs flex-1 ${
+            task.status === 'done'
+              ? 'text-white/50'
+              : task.status === 'running'
+              ? 'text-blue-300'
+              : task.status === 'error'
+              ? 'text-red-300'
+              : 'text-white/60'
+          }`}
+        >
+          {task.label}
+        </span>
+        {task.detail &&
+          (expanded ? (
+            <ChevronDown className="w-3 h-3 text-white/30" />
+          ) : (
+            <ChevronRight className="w-3 h-3 text-white/30" />
+          ))}
+      </button>
+      {expanded && task.detail && (
+        <div className="mt-1 ml-5 text-[11px] text-white/40 bg-black/20 rounded px-2 py-1 font-mono whitespace-pre-wrap break-all">
+          {task.detail}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AgentTaskList({
+  tasks,
+  collapsed,
+  onToggle,
+}: {
+  tasks: AgentTask[];
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
+  const done = tasks.filter((t) => t.status === 'done').length;
+  const total = tasks.length;
+  const allDone = done === total && total > 0;
+
+  return (
+    <div className="mt-2 rounded-lg bg-white/[0.02] overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-white/5 transition-colors"
+      >
+        {collapsed ? (
+          <ChevronRight className="w-4 h-4 text-white/40" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-white/40" />
+        )}
+        <span className="text-xs font-medium text-white/70">
+          {allDone ? 'Tâches terminées' : 'Agent en cours…'}
+        </span>
+        <span className="ml-auto text-[10px] text-white/30 tabular-nums">
+          {done}/{total}
+        </span>
+        <div className="w-12 h-1 rounded-full bg-white/10 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              allDone ? 'bg-green-400' : 'bg-blue-400'
+            }`}
+            style={{ width: `${total ? (done / total) * 100 : 0}%` }}
+          />
+        </div>
+      </button>
+      {!collapsed && (
+        <div className="px-3 pb-2 space-y-0.5">
+          {tasks.map((t) => (
+            <AgentTaskItem key={t.id} task={t} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Main component
+// ============================================================
 
 export default function ChatPanel() {
   const [message, setMessage] = useState('');
@@ -19,27 +212,100 @@ export default function ChatPanel() {
   const [isTyping, setIsTyping] = useState(false);
   const [copilotAvailable, setCopilotAvailable] = useState<boolean | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { projectId } = useBuilderStore();
+  const { projectId, triggerFileRefresh, addTimelineEvent, updateTimelineEvent } = useBuilderStore();
 
-  // Check Copilot availability on mount
   useEffect(() => {
     getCopilotStatus()
       .then((status) => setCopilotAvailable(status.available))
       .catch(() => setCopilotAvailable(false));
   }, []);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const generateId = () => `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const generateId = () =>
+    `msg-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const mkTaskId = () =>
+    `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
-  // ----------------------------------------------------------
-  // Parse SSE stream from the Copilot backend
-  // ----------------------------------------------------------
+  // ---- helpers ----
+
+  const updateTasks = useCallback(
+    (msgId: string, updater: (tasks: AgentTask[]) => AgentTask[]) => {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msgId ? { ...m, tasks: updater(m.tasks || []) } : m,
+        ),
+      );
+    },
+    [],
+  );
+
+  const saveExtractedFiles = useCallback(
+    async (content: string, msgId: string) => {
+      if (!projectId) return;
+      const files = extractCodeBlocks(content);
+      if (files.length === 0) return;
+
+      const fileTasks: AgentTask[] = files.map((f) => ({
+        id: mkTaskId(),
+        label: `Créer ${f.filename}`,
+        status: 'pending' as const,
+        filePath: f.filename,
+        detail: `${f.language} · ${f.code.split('\n').length} lignes`,
+      }));
+
+      updateTasks(msgId, (prev) => [...prev, ...fileTasks]);
+
+      for (let i = 0; i < files.length; i++) {
+        const f = files[i];
+        const tid = fileTasks[i].id;
+
+        updateTasks(msgId, (tasks) =>
+          tasks.map((t) => (t.id === tid ? { ...t, status: 'running' } : t)),
+        );
+
+        // Timeline: file creation started
+        addTimelineEvent({
+          id: `tl-${tid}`,
+          type: 'file-create',
+          message: `Créer ${f.filename}`,
+          timestamp: new Date(),
+          status: 'running',
+          detail: `${f.language} · ${f.code.split('\n').length} lignes`,
+        });
+
+        try {
+          await saveFile(projectId, f.filename, f.code);
+          updateTasks(msgId, (tasks) =>
+            tasks.map((t) => (t.id === tid ? { ...t, status: 'done' } : t)),
+          );
+          // Timeline: file created
+          updateTimelineEvent(`tl-${tid}`, { status: 'completed' });
+        } catch (err: any) {
+          updateTasks(msgId, (tasks) =>
+            tasks.map((t) =>
+              t.id === tid
+                ? { ...t, status: 'error', detail: err.message }
+                : t,
+            ),
+          );
+          // Timeline: file error
+          updateTimelineEvent(`tl-${tid}`, { status: 'error', detail: err.message });
+        }
+      }
+
+      triggerFileRefresh();
+    },
+    [projectId, updateTasks, triggerFileRefresh, addTimelineEvent, updateTimelineEvent],
+  );
+
+  // ---- SSE reader ----
+
   const readCopilotStream = useCallback(
     async (response: Response, assistantMsgId: string) => {
       const reader = response.body?.getReader();
@@ -78,18 +344,22 @@ export default function ChatPanel() {
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId
-                      ? { ...m, content: m.content + `\n\n⚠️ Erreur: ${chunk.error}`, isStreaming: false }
+                      ? {
+                          ...m,
+                          content:
+                            m.content + `\n\n⚠️ Erreur: ${chunk.error}`,
+                          isStreaming: false,
+                        }
                       : m,
                   ),
                 );
               }
             } catch {
-              // ignore malformed JSON lines
+              // ignore malformed JSON
             }
           }
         }
       } finally {
-        // Mark streaming as complete
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMsgId ? { ...m, isStreaming: false } : m,
@@ -100,9 +370,8 @@ export default function ChatPanel() {
     [],
   );
 
-  // ----------------------------------------------------------
-  // Send a message
-  // ----------------------------------------------------------
+  // ---- Send ----
+
   const handleSend = async () => {
     if (!message.trim()) return;
 
@@ -113,45 +382,100 @@ export default function ChatPanel() {
       timestamp: new Date(),
     };
 
+    const assistantMsgId = generateId();
+    const analyseTaskId = mkTaskId();
     const assistantMsg: ChatMessage = {
-      id: generateId(),
+      id: assistantMsgId,
       role: 'assistant',
       content: '',
       timestamp: new Date(),
       isStreaming: true,
+      tasks: [
+        { id: analyseTaskId, label: 'Analyse de la demande', status: 'running' },
+      ],
     };
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     setMessage('');
     setIsTyping(true);
 
-    // Build conversation history for the API
+    // Timeline: user message
+    addTimelineEvent({
+      id: `tl-${userMsg.id}`,
+      type: 'planning',
+      message: message.length > 80 ? message.slice(0, 80) + '…' : message,
+      timestamp: new Date(),
+      status: 'completed',
+    });
+    // Timeline: analyse
+    addTimelineEvent({
+      id: `tl-${analyseTaskId}`,
+      type: 'planning',
+      message: 'Analyse de la demande',
+      timestamp: new Date(),
+      status: 'running',
+    });
+
     const conversationHistory: CopilotMessage[] = messages
       .filter((m) => !m.isStreaming)
       .map((m) => ({ role: m.role, content: m.content }));
-
     conversationHistory.push({ role: 'user', content: message });
 
     try {
       abortControllerRef.current = new AbortController();
 
+      const genTaskId = mkTaskId();
+      updateTasks(assistantMsgId, (tasks) => [
+        { ...tasks[0], status: 'done' },
+        { id: genTaskId, label: 'Génération de la réponse', status: 'running' },
+      ]);
+
+      // Timeline: analyse done, generation started
+      updateTimelineEvent(`tl-${analyseTaskId}`, { status: 'completed' });
+      addTimelineEvent({
+        id: `tl-${genTaskId}`,
+        type: 'generation',
+        message: 'Génération de la réponse',
+        timestamp: new Date(),
+        status: 'running',
+      });
+
       const response = await copilotChatStream({
         messages: conversationHistory,
         stream: true,
         projectContext: projectId
-          ? {
-              projectId,
-              techStack: ['React', 'Tailwind', 'Vite'],
-            }
+          ? { projectId, techStack: ['React', 'Tailwind', 'Vite'] }
           : undefined,
       });
 
-      await readCopilotStream(response, assistantMsg.id);
+      await readCopilotStream(response, assistantMsgId);
+
+      updateTasks(assistantMsgId, (tasks) =>
+        tasks.map((t) =>
+          t.status === 'running' ? { ...t, status: 'done' } : t,
+        ),
+      );
+
+      // Timeline: generation done
+      updateTimelineEvent(`tl-${genTaskId}`, { status: 'completed' });
+
+      // Get final content & extract files
+      const finalContent = await new Promise<string>((resolve) => {
+        setMessages((prev) => {
+          const m = prev.find((x) => x.id === assistantMsgId);
+          resolve(m?.content || '');
+          return prev;
+        });
+      });
+
+      if (finalContent) {
+        await saveExtractedFiles(finalContent, assistantMsgId);
+      }
     } catch (error: any) {
       console.error('Copilot error:', error);
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === assistantMsg.id
+          m.id === assistantMsgId
             ? {
                 ...m,
                 content: `❌ Erreur de connexion au Copilot: ${error.message}`,
@@ -160,15 +484,26 @@ export default function ChatPanel() {
             : m,
         ),
       );
+      updateTasks(assistantMsgId, (tasks) =>
+        tasks.map((t) =>
+          t.status === 'running' ? { ...t, status: 'error' } : t,
+        ),
+      );
+
+      // Timeline: error
+      addTimelineEvent({
+        id: `tl-err-${Date.now()}`,
+        type: 'error',
+        message: `Erreur: ${error.message}`,
+        timestamp: new Date(),
+        status: 'error',
+      });
     } finally {
       setIsTyping(false);
       abortControllerRef.current = null;
     }
   };
 
-  // ----------------------------------------------------------
-  // Stop streaming
-  // ----------------------------------------------------------
   const handleStop = () => {
     abortControllerRef.current?.abort();
     setIsTyping(false);
@@ -177,31 +512,40 @@ export default function ChatPanel() {
     );
   };
 
-  // ----------------------------------------------------------
-  // Copy message content
-  // ----------------------------------------------------------
   const handleCopy = (msgId: string, content: string) => {
     navigator.clipboard.writeText(content);
     setCopiedMessageId(msgId);
     setTimeout(() => setCopiedMessageId(null), 2000);
   };
 
-  // ----------------------------------------------------------
-  // Quick action buttons
-  // ----------------------------------------------------------
   const quickActions = [
-    { label: 'Landing page', prompt: 'Crée une landing page moderne avec hero, features et pricing' },
-    { label: 'Dashboard', prompt: 'Crée un dashboard admin avec sidebar, stats cards et graphiques' },
-    { label: 'Auth form', prompt: 'Crée un formulaire de connexion/inscription avec validation' },
-    { label: 'API CRUD', prompt: 'Crée une API REST CRUD complète avec Express et TypeScript' },
+    {
+      label: 'Landing page',
+      prompt:
+        'Crée une landing page moderne avec hero, features et pricing. Nomme chaque fichier explicitement.',
+    },
+    {
+      label: 'Dashboard',
+      prompt:
+        'Crée un dashboard admin avec sidebar, stats cards et graphiques. Nomme chaque fichier explicitement.',
+    },
+    {
+      label: 'Auth form',
+      prompt:
+        'Crée un formulaire de connexion/inscription avec validation. Nomme chaque fichier explicitement.',
+    },
+    {
+      label: 'API CRUD',
+      prompt:
+        'Crée une API REST CRUD complète avec Express et TypeScript. Nomme chaque fichier explicitement.',
+    },
   ];
 
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-400 glow-icon" />
           <h2 className="text-lg font-semibold gradient-text">GiLo AI</h2>
         </div>
         <div className="flex items-center gap-2">
@@ -225,23 +569,21 @@ export default function ChatPanel() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4 min-h-0">
         {messages.length === 0 ? (
           <div className="text-center mt-8 animate-fade-in-up">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center animate-pulse-glow">
-              <Bot className="w-8 h-8 text-blue-400 glow-icon" />
-            </div>
-            <p className="text-white/60 mb-1">Bienvenue dans <strong className="gradient-text">GiLo AI</strong></p>
-            <p className="text-sm text-white/40 mb-6">Propulsé par GitHub Copilot</p>
-
-            {/* Quick actions */}
+            <p className="text-white/60 mb-1">
+              Bienvenue dans{' '}
+              <strong className="gradient-text">GiLo AI</strong>
+            </p>
+            <p className="text-sm text-white/40 mb-6">
+              Propulsé par GitHub Copilot
+            </p>
             <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
               {quickActions.map((action) => (
                 <button
                   key={action.label}
-                  onClick={() => {
-                    setMessage(action.prompt);
-                  }}
+                  onClick={() => setMessage(action.prompt)}
                   className="glass-card bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-lg px-3 py-2 text-xs text-white/70 hover:text-white transition-all duration-200 text-left"
                 >
                   <Zap className="w-3 h-3 inline mr-1 text-yellow-400" />
@@ -254,35 +596,25 @@ export default function ChatPanel() {
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 animate-fade-in-up ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+              className={`flex animate-fade-in-up ${
+                msg.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
             >
+              {/* Bubble */}
               <div
-                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                  msg.role === 'user'
-                    ? 'bg-blue-500/20 border border-blue-500/30'
-                    : 'bg-purple-500/20 border border-purple-500/30'
-                }`}
-              >
-                {msg.role === 'user' ? (
-                  <User className="w-4 h-4 text-blue-400" />
-                ) : (
-                  <Bot className="w-4 h-4 text-purple-400 glow-icon" />
-                )}
-              </div>
-              <div
-                className={`flex-1 max-w-[85%] group ${
-                  msg.role === 'user' ? '' : 'relative'
+                className={`min-w-0 group ${
+                  msg.role === 'user' ? 'max-w-[85%]' : 'w-full relative'
                 }`}
               >
                 <div
-                  className={`p-3 rounded-lg ${
+                  className={`rounded-lg overflow-hidden ${
                     msg.role === 'user'
-                      ? 'glass-card bg-blue-500/10 border-blue-500/20 glow-blue'
-                      : 'glass-card bg-purple-500/10 border-purple-500/20 glow-purple'
+                      ? 'p-3 glass-card bg-blue-500/10 border-blue-500/20'
+                      : 'py-1'
                   }`}
                 >
                   {msg.role === 'assistant' ? (
-                    <div className="text-white/90 text-sm prose prose-invert prose-sm max-w-none prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-lg prose-code:text-purple-300 prose-a:text-blue-400">
+                    <div className="chat-markdown text-white/90 text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-pre:bg-black/40 prose-pre:border prose-pre:border-white/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-purple-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.content || (msg.isStreaming ? '...' : '')}
                       </ReactMarkdown>
@@ -294,36 +626,58 @@ export default function ChatPanel() {
                     <p className="text-white/90 text-sm">{msg.content}</p>
                   )}
                 </div>
-                {/* Copy button for assistant messages */}
-                {msg.role === 'assistant' && !msg.isStreaming && msg.content && (
-                  <button
-                    onClick={() => handleCopy(msg.id, msg.content)}
-                    className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/10"
-                    title="Copier"
-                  >
-                    {copiedMessageId === msg.id ? (
-                      <Check className="w-3.5 h-3.5 text-green-400" />
-                    ) : (
-                      <Copy className="w-3.5 h-3.5 text-white/50" />
-                    )}
-                  </button>
+
+                {/* Agent tasks */}
+                {msg.tasks && msg.tasks.length > 0 && (
+                  <AgentTaskList
+                    tasks={msg.tasks}
+                    collapsed={!!collapsedTasks[msg.id]}
+                    onToggle={() =>
+                      setCollapsedTasks((prev) => ({
+                        ...prev,
+                        [msg.id]: !prev[msg.id],
+                      }))
+                    }
+                  />
                 )}
+
+                {/* Copy button */}
+                {msg.role === 'assistant' &&
+                  !msg.isStreaming &&
+                  msg.content && (
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.content)}
+                      className="absolute -right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-md bg-white/10 hover:bg-white/20 border border-white/10"
+                      title="Copier"
+                    >
+                      {copiedMessageId === msg.id ? (
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-white/50" />
+                      )}
+                    </button>
+                  )}
               </div>
             </div>
           ))
         )}
 
-        {/* Typing indicator */}
         {isTyping && messages[messages.length - 1]?.content === '' && (
-          <div className="flex gap-3 animate-fade-in-up">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20 border border-purple-500/30">
-              <Bot className="w-4 h-4 text-purple-400 glow-icon" />
-            </div>
+          <div className="flex animate-fade-in-up justify-start">
             <div className="glass-card bg-purple-500/10 border-purple-500/20 px-4 py-3 rounded-lg">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div
+                  className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '0ms' }}
+                />
+                <div
+                  className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '150ms' }}
+                />
+                <div
+                  className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  style={{ animationDelay: '300ms' }}
+                />
               </div>
             </div>
           </div>
@@ -333,8 +687,7 @@ export default function ChatPanel() {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-white/10">
-        {/* Stop button when streaming */}
+      <div className="p-2 md:p-4 border-t border-white/10 flex-shrink-0">
         {isTyping && (
           <button
             onClick={handleStop}
@@ -353,8 +706,8 @@ export default function ChatPanel() {
               (e.preventDefault(), handleSend())
             }
             placeholder="Décrivez ce que vous voulez construire..."
-            rows={4}
-            className="w-full input-futuristic text-white px-4 py-3 pr-12 rounded-lg resize-none h-24"
+            rows={2}
+            className="w-full input-futuristic text-white px-4 py-3 pr-12 rounded-lg resize-none"
           />
           <button
             onClick={handleSend}

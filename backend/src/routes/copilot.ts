@@ -84,9 +84,6 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
 
     res.write('data: [DONE]\n\n');
     res.end();
-
-    res.write('data: [DONE]\n\n');
-    res.end();
   } catch (error: any) {
     console.error('Copilot stream error:', error);
     if (!res.headersSent) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Sparkles, Zap, Shield, Globe, Code2, Cpu, Layers, 
+  Zap, Shield, Globe, Code2, Cpu, Layers, 
   ArrowRight, Star, ChevronRight, Bot, Rocket, 
   Terminal, GitBranch, Cloud
 } from 'lucide-react';
@@ -129,11 +129,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold tracking-tight">
-                AI App Builder
+              <span className="text-lg font-bold tracking-tight gradient-text">
+                GiLo AI
               </span>
             </div>
 
@@ -212,7 +209,7 @@ export default function Home() {
                     <div className="w-3 h-3 rounded-full bg-green-500/60" />
                   </div>
                   <div className="flex-1 text-center">
-                    <span className="text-xs text-white/20 font-mono">AI App Builder — Terminal</span>
+                    <span className="text-xs text-white/20 font-mono">GiLo AI — Terminal</span>
                   </div>
                 </div>
                 
@@ -384,7 +381,7 @@ export default function Home() {
                 Ils construisent avec nous
               </h2>
               <p className="text-white/40 max-w-xl mx-auto">
-                Découvrez ce que nos utilisateurs pensent de AI App Builder.
+                Découvrez ce que nos utilisateurs pensent de GiLo AI.
               </p>
             </div>
           </div>
@@ -446,10 +443,7 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <Sparkles className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-white/60">AI App Builder</span>
+              <span className="text-sm font-semibold gradient-text">GiLo AI</span>
             </div>
             
             <div className="flex items-center gap-6">
@@ -460,7 +454,7 @@ export default function Home() {
             </div>
 
             <p className="text-xs text-white/15">
-              © 2026 AI App Builder. Tous droits réservés.
+              © 2026 GiLo AI. Tous droits réservés.
             </p>
           </div>
         </div>
