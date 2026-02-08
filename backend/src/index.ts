@@ -12,6 +12,7 @@ import { authRouter } from './routes/auth';
 import { projectsRouter } from './routes/projects';
 import { deploymentRouter } from './routes/deploy';
 import { copilotRouter } from './routes/copilot';
+import { agentsRouter } from './routes/agents';
 
 const app: Express = express();
 const port = process.env.PORT || 3001;
@@ -32,6 +33,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/projects', projectsRouter);
 app.use('/api/deploy', deploymentRouter);
 app.use('/api/copilot', copilotRouter);
+app.use('/api/agents', agentsRouter);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {
@@ -52,6 +54,7 @@ app.get('/api', (req: Request, res: Response) => {
       projects: '/api/projects',
       deploy: '/api/deploy',
       copilot: '/api/copilot',
+      agents: '/api/agents',
       sessions: '/api/sessions',
       agent: '/api/agent',
       mcp: '/api/mcp',

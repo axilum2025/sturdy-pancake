@@ -102,22 +102,26 @@ export class CopilotService {
   // Build the GiLo AI system prompt
   // ----------------------------------------------------------
   private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext']): string {
-    let system = `Tu es GiLo AI, un assistant de développement intelligent intégré dans AI Builder Hub.
-Tu aides les utilisateurs à construire des applications web modernes.
-Tu génères du code propre, accessible et responsive.
-Tu utilises React, Tailwind CSS et Vite par défaut.
+    let system = `Tu es GiLo AI, un assistant expert en création d'agents IA, intégré dans la plateforme GiLo AI Agent Builder.
+Tu aides les utilisateurs à concevoir, configurer et déployer des agents IA conversationnels.
+Quand un utilisateur décrit un agent, tu génères :
+1. Un system prompt optimisé pour l'agent
+2. La liste des outils/intégrations recommandés (MCP servers)
+3. Les paramètres de configuration (modèle, température, max tokens)
+4. Des exemples de conversations pour tester l'agent
 Réponds toujours en français sauf si l'utilisateur écrit dans une autre langue.
-Quand tu génères du code, entoure-le de blocs \`\`\` avec le langage approprié.
-Sois concis et direct dans tes réponses.`;
+Quand tu génères du code ou des configurations, entoure-les de blocs \`\`\` avec le langage approprié.
+Sois concis et direct dans tes réponses.
+Utilise le format JSON pour les configurations d'agent.`;
 
     if (projectContext) {
-      system += `\n\nContexte du projet actuel:`;
+      system += `\n\nContexte de l'agent en cours de création:`;
       system += `\n- ID: ${projectContext.projectId}`;
       if (projectContext.techStack?.length) {
-        system += `\n- Stack technique: ${projectContext.techStack.join(', ')}`;
+        system += `\n- Outils connectés: ${projectContext.techStack.join(', ')}`;
       }
       if (projectContext.files?.length) {
-        system += `\n- Fichiers existants: ${projectContext.files.join(', ')}`;
+        system += `\n- Fichiers de configuration: ${projectContext.files.join(', ')}`;
       }
     }
 

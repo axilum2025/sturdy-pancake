@@ -150,6 +150,74 @@ export const deleteFile = async (projectId: string, path: string): Promise<void>
   await api.delete(`/projects/${projectId}/files/${path}`);
 };
 
+// ============ Agents ============
+
+export interface AgentTool {
+  id: string;
+  name: string;
+  type: 'mcp' | 'api' | 'function';
+  description?: string;
+  enabled: boolean;
+}
+
+export interface AgentConfig {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  systemPrompt: string;
+  welcomeMessage?: string;
+  tools: AgentTool[];
+  knowledgeBase?: string[];
+}
+
+export interface Agent {
+  id: string;
+  name: string;
+  description?: string;
+  tier: 'free' | 'pro';
+  config: AgentConfig;
+  status: 'draft' | 'active' | 'deployed';
+  endpoint?: string;
+  totalConversations: number;
+  totalMessages: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const listAgents = async (): Promise<{ agents: Agent[]; total: number }> => {
+  const response = await api.get('/agents');
+  return response.data;
+};
+
+export const getAgent = async (agentId: string): Promise<Agent> => {
+  const response = await api.get(`/agents/${agentId}`);
+  return response.data;
+};
+
+export const createAgent = async (name: string, description?: string): Promise<Agent> => {
+  const response = await api.post('/agents', { name, description });
+  return response.data;
+};
+
+export const updateAgent = async (agentId: string, data: Partial<Agent>): Promise<Agent> => {
+  const response = await api.patch(`/agents/${agentId}`, data);
+  return response.data;
+};
+
+export const updateAgentConfig = async (agentId: string, config: Partial<AgentConfig>): Promise<Agent> => {
+  const response = await api.patch(`/agents/${agentId}/config`, config);
+  return response.data;
+};
+
+export const deployAgent = async (agentId: string): Promise<{ message: string; agent: Agent; endpoint: string }> => {
+  const response = await api.post(`/agents/${agentId}/deploy`);
+  return response.data;
+};
+
+export const deleteAgent = async (agentId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}`);
+};
+
 // ============ Deployment ============
 
 export interface Deployment {

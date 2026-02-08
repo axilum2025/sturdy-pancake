@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Package, Code2, Rocket, Loader2, CheckCircle, XCircle, ArrowLeft, Eye, Clock } from 'lucide-react';
+import { Settings, Package, Rocket, Loader2, CheckCircle, XCircle, ArrowLeft, Eye, Clock, Sliders } from 'lucide-react';
 import ChatPanel from '../components/ChatPanel';
-import PreviewPanel from '../components/PreviewPanel';
+import Playground from '../components/Playground';
 import TimelinePanel from '../components/TimelinePanel';
 import MCPSettings from '../components/MCPSettings';
 import MCPBrowser from '../components/MCPBrowser';
-import FileEditor from '../components/FileEditor';
+import AgentConfig from '../components/AgentConfig';
 import { useSessionStore } from '../store/sessionStore';
 import { useBuilderStore } from '../store/builderStore';
 import { deployProject, getDeployment } from '../services/api';
@@ -162,7 +162,7 @@ export default function Builder() {
           }`}
           title="Configuration"
         >
-          <Code2 className="w-5 h-5" />
+          <Sliders className="w-5 h-5" />
         </button>
         <button
           onClick={handleDeploy}
@@ -213,7 +213,7 @@ export default function Builder() {
               className={`p-2 rounded-lg transition-colors ${showFileEditor ? 'bg-blue-500/20 text-blue-400' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
               title="Configuration"
             >
-              <Code2 className="w-4 h-4" />
+              <Sliders className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
@@ -260,7 +260,7 @@ export default function Builder() {
           <ChatPanel />
         </div>
 
-        {/* File Editor Slidebar */}
+        {/* Agent Config Slidebar */}
         {showFileEditor && projectId && (
           <>
             <div
@@ -268,7 +268,7 @@ export default function Builder() {
               onClick={() => setShowFileEditor(false)}
             />
             <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-white/10 shadow-2xl flex flex-col animate-slide-in-right">
-              <FileEditor projectId={projectId} onClose={() => setShowFileEditor(false)} />
+              <AgentConfig agentId={projectId} onClose={() => setShowFileEditor(false)} />
             </div>
           </>
         )}
@@ -286,8 +286,8 @@ export default function Builder() {
           </>
         )}
 
-        {/* Preview Modal */}
-        {showPreview && (
+        {/* Playground Modal */}
+        {showPreview && projectId && (
           <>
             {/* Backdrop */}
             <div 
@@ -297,7 +297,7 @@ export default function Builder() {
             {/* Modal */}
             <div className="fixed inset-4 md:inset-8 lg:inset-12 z-50 flex items-center justify-center animate-fade-in-up">
               <div className="w-full h-full glass-strong rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col relative">
-                <PreviewPanel onClose={() => setShowPreview(false)} />
+                <Playground agentId={projectId} onClose={() => setShowPreview(false)} />
               </div>
             </div>
           </>

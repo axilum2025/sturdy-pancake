@@ -1,67 +1,36 @@
-import React from 'react';
-import { Folder, Globe, Clock, Code, ExternalLink, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
-import { Project } from '../services/api';
+import { Bot, Clock, Wrench, MessageSquare, Globe, ExternalLink, CheckCircle, AlertCircle, FileEdit } from 'lucide-react';
+import { Agent } from '../services/api';
 
 interface ProjectCardProps {
-  project: Project;
+  project: Agent;
   onClick: () => void;
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
-  const getTierColor = (tier: string) => {
-    switch (tier) {
-      case 'pro': return {
-        border: 'border-purple-500/30',
-        bg: 'bg-purple-500/10',
-        text: 'text-purple-300',
-        glow: 'glow-purple'
-      };
-      case 'team': return {
-        border: 'border-yellow-500/30',
-        bg: 'bg-yellow-500/10',
-        text: 'text-yellow-300',
-        glow: 'glow-cyan'
-      };
-      default: return {
-        border: 'border-green-500/30',
-        bg: 'bg-green-500/10',
-        text: 'text-green-300',
-        glow: 'glow-blue'
-      };
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case 'deployed': return { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30', label: 'Déployé', icon: CheckCircle };
+      case 'active': return { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/30', label: 'Actif', icon: AlertCircle };
+      default: return { bg: 'bg-white/5', text: 'text-white/50', border: 'border-white/10', label: 'Brouillon', icon: FileEdit };
     }
   };
 
-  const tierStyle = getTierColor(project.tier);
-
-  const getDeploymentStatus = () => {
-    if (!project.deployment) return null;
-    
-    const status = project.deployment.status;
-    switch (status) {
-      case 'deployed':
-        return (
-          <div className="flex items-center gap-1.5 text-green-400">
-            <CheckCircle className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">Déployé</span>
-          </div>
-        );
-      case 'failed':
-        return (
-          <div className="flex items-center gap-1.5 text-red-400">
-            <XCircle className="w-3.5 h-3.5" />
-            <span className="text-xs font-medium">Échoué</span>
-          </div>
-        );
-      case 'deploying':
-        return (
-          <div className="flex items-center gap-1.5 text-yellow-400">
-            <AlertCircle className="w-3.5 h-3.5 animate-pulse" />
-            <span className="text-xs font-medium">En cours</span>
-          </div>
-        );
-      default:
-        return null;
+  const getTierStyle = (tier: string) => {
+    switch (tier) {
+      case 'pro': return { bg: 'bg-purple-500/10', text: 'text-purple-300', border: 'border-purple-500/30' };
+      default: return { bg: 'bg-blue-500/10', text: 'text-blue-300', border: 'border-blue-500/30' };
     }
+  };
+
+  const statusStyle = getStatusStyle(project.status);
+  const tierStyle = getTierStyle(project.tier);
+  const StatusIcon = statusStyle.icon;
+
+  const modelShortName = (model: string) => {
+    if (model.includes('nano')) return 'GPT-4.1 Nano';
+    if (model.includes('mini')) return 'GPT-4.1 Mini';
+    if (model.includes('4.1')) return 'GPT-4.1';
+    return model.split('/').pop() || model;
   };
 
   const formatDate = (dateString: string) => {
@@ -77,6 +46,8 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
+  const toolsCount = project.config?.tools?.filter(t => t.enabled).length || 0;
+
   return (
     <div
       onClick={onClick}
@@ -86,34 +57,39 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className={`p-2.5 rounded-xl bg-gradient-to-br ${tierStyle.bg} border border-white/5 group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-            <Folder className={`w-5 h-5 ${tierStyle.text} glow-icon`} />
+            <Bot className={`w-5 h-5 ${tierStyle.text} glow-icon`} />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold text-white truncate">{project.name}</h3>
-            <p className="text-white/40 text-sm line-clamp-1">{project.description}</p>
+            <p className="text-white/40 text-sm line-clamp-1">{project.description || 'Aucune description'}</p>
           </div>
         </div>
-        <span className={`px-2.5 py-1 rounded-lg text-xs font-bold ${tierStyle.bg} ${tierStyle.text} border border-white/5 flex-shrink-0`}>
-          {project.tier.toUpperCase()}
-        </span>
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} flex-shrink-0`}>
+          <StatusIcon className="w-3 h-3" />
+          {statusStyle.label}
+        </div>
       </div>
 
-      {/* Tech Stack */}
+      {/* Model & Tools */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {project.techStack.frontend.map((tech) => (
-          <span 
-            key={tech} 
-            className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 font-medium"
-          >
-            {tech}
+        <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 font-medium">
+          {modelShortName(project.config?.model || 'openai/gpt-4.1')}
+        </span>
+        {toolsCount > 0 && (
+          <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 font-medium flex items-center gap-1">
+            <Wrench className="w-3 h-3" />
+            {toolsCount} outil{toolsCount > 1 ? 's' : ''}
           </span>
-        ))}
+        )}
       </div>
 
-      {/* Deployment Status */}
-      {project.deployment && (
+      {/* Endpoint */}
+      {project.endpoint && (
         <div className="mb-4">
-          {getDeploymentStatus()}
+          <div className="flex items-center gap-1.5 text-green-400">
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span className="text-xs font-medium truncate">{project.endpoint}</span>
+          </div>
         </div>
       )}
 
@@ -121,24 +97,24 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
       <div className="flex items-center justify-between pt-3 border-t border-white/5">
         <div className="flex items-center gap-4 text-xs text-white/40">
           <span className="flex items-center gap-1.5">
-            <Code className="w-3.5 h-3.5" />
-            {project.filesCount} outils
+            <MessageSquare className="w-3.5 h-3.5" />
+            {project.totalConversations} conv.
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5" />
-            {formatDate(project.createdAt)}
+            {formatDate(project.updatedAt)}
           </span>
         </div>
-        {project.deployment?.url && (
+        {project.endpoint && (
           <a
-            href={project.deployment.url}
+            href={project.endpoint}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:text-white flex items-center gap-1.5 transition-all duration-200"
           >
             <Globe className="w-3.5 h-3.5" />
-            Visiter
+            API
             <ExternalLink className="w-3 h-3" />
           </a>
         )}

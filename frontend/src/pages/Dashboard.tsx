@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Zap, Cloud, FolderOpen, HardDrive, Rocket, Crown, Sparkles } from 'lucide-react';
+import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { listProjects, createProject, Project, TechStack } from '../services/api';
+import { listAgents, createAgent, Agent } from '../services/api';
 import AuthModal from '../components/AuthModal';
 import ProjectCard from '../components/ProjectCard';
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<Agent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAuth, setShowAuth] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -23,10 +23,10 @@ export default function Dashboard() {
 
   const fetchProjects = async () => {
     try {
-      const data = await listProjects();
-      setProjects(data.projects);
+      const data = await listAgents();
+      setProjects(data.agents);
     } catch (error) {
-      console.error('Error fetching projects:', error);
+      console.error('Error fetching agents:', error);
     } finally {
       setIsLoading(false);
     }
@@ -36,13 +36,13 @@ export default function Dashboard() {
     if (!newProjectName.trim()) return;
     
     try {
-      const project = await createProject(newProjectName, 'Created with GiLo AI');
-      setProjects([project, ...projects]);
+      const agent = await createAgent(newProjectName, 'Créé avec GiLo AI');
+      setProjects([agent, ...projects]);
       setShowCreateModal(false);
       setNewProjectName('');
-      navigate(`/builder/${project.id}`);
+      navigate(`/builder/${agent.id}`);
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Error creating agent:', error);
     }
   };
 
@@ -98,17 +98,12 @@ export default function Dashboard() {
     );
   }
 
-  const projectsProgress = user && (user?.quotas.projectsMax || 1) > 0 
-    ? (projects.length / user.quotas.projectsMax) * 100 
-    : 0;
+  const agentsMax = user?.tier === 'pro' ? 20 : 5;
+  const agentsProgress = (projects.length / agentsMax) * 100;
   
-  const storageProgress = user && (user?.quotas.storageMax || 1) > 0 
-    ? ((user?.usage.storageUsed || 0) / (1024 * 1024) / user.quotas.storageMax) * 100 
-    : 0;
-  
-  const deploymentsProgress = user && (user?.quotas.deploymentsPerMonth || 1) > 0 
-    ? ((user?.usage.deploymentsThisMonth || 0) / user.quotas.deploymentsPerMonth) * 100 
-    : 0;
+  const totalConversations = projects.reduce((sum, a) => sum + (a.totalConversations || 0), 0);
+  const totalMessages = projects.reduce((sum, a) => sum + (a.totalMessages || 0), 0);
+  const deployedCount = projects.filter(a => a.status === 'deployed').length;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
@@ -161,59 +156,54 @@ export default function Dashboard() {
       <div className="relative z-10 py-4 sm:py-8">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {/* Projects Stat */}
+            {/* Agents Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                  <FolderOpen className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
+                  <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 glow-icon" />
                 </div>
                 <span className="text-[10px] sm:text-xs text-white/40">Agents</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
-                {projects.length} <span className="text-white/30 text-xs sm:text-base font-normal">/ {user?.quotas.projectsMax}</span>
+                {projects.length} <span className="text-white/30 text-xs sm:text-base font-normal">/ {agentsMax}</span>
               </p>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(projectsProgress, 100)}%` }}
+                  style={{ width: `${Math.min(agentsProgress, 100)}%` }}
                 />
               </div>
             </div>
 
-            {/* Storage Stat */}
+            {/* Conversations Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-100">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                  <HardDrive className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 glow-icon" />
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-purple-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Stockage</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Conversations</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
-                {user ? Math.round(user.usage.storageUsed / 1024 / 1024) : 0} <span className="text-white/30 text-xs sm:text-base font-normal">MB</span>
+                {totalConversations}
               </p>
-              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(storageProgress, 100)}%` }}
-                />
-              </div>
+              <p className="text-xs text-white/30">{totalMessages} messages au total</p>
             </div>
 
-            {/* Deployments Stat */}
+            {/* Deployed Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-200">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className="p-1.5 sm:p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
                   <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-400 glow-icon" />
                 </div>
-                <span className="text-[10px] sm:text-xs text-white/40">Déploiements</span>
+                <span className="text-[10px] sm:text-xs text-white/40">Déployés</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold text-white mb-2">
-                {user?.usage.deploymentsThisMonth} <span className="text-white/30 text-xs sm:text-base font-normal">/ {user?.quotas.deploymentsPerMonth}</span>
+                {deployedCount} <span className="text-white/30 text-xs sm:text-base font-normal">/ {projects.length}</span>
               </p>
               <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
                 <div 
                   className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(deploymentsProgress, 100)}%` }}
+                  style={{ width: `${projects.length > 0 ? (deployedCount / projects.length) * 100 : 0}%` }}
                 />
               </div>
             </div>
@@ -256,7 +246,7 @@ export default function Dashboard() {
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              disabled={projects.length >= (user?.quotas.projectsMax || 0)}
+              disabled={projects.length >= agentsMax}
               className="btn-gradient px-5 py-2.5 rounded-xl text-white font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-4 h-4" />
