@@ -11,9 +11,7 @@ export const storeRouter = Router();
 storeRouter.get('/', async (req: Request, res: Response) => {
   try {
     const { category, search } = req.query;
-    const options: { category?: StoreCategory; search?: string; visibility?: 'public' } = {
-      visibility: 'public',
-    };
+    const options: { category?: StoreCategory; search?: string } = {};
 
     if (category && category !== 'all') {
       options.category = category as StoreCategory;
