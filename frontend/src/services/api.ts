@@ -4,7 +4,7 @@ import axios from 'axios';
 // In dev, it's empty and requests go through the Vite proxy
 export const API_BASE = import.meta.env.VITE_API_URL || '';
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: `${API_BASE}/api`,
   headers: {
     'Content-Type': 'application/json',

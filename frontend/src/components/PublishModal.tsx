@@ -3,7 +3,7 @@ import {
   Rocket, X, Globe, Lock, Tag, Sparkles, Plus, Trash2, Check, Loader2, Upload, Image
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { API_BASE } from '../services/api';
+import { api } from '../services/api';
 
 interface PublishModalProps {
   agentId: string;
@@ -76,10 +76,6 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
     setError(null);
 
     try {
-      const token = localStorage.getItem('authToken');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       const body = {
         agentId,
         name,
@@ -93,21 +89,11 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         visibility,
       };
 
-      const res = await fetch(`${API_BASE}/api/store/publish`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || t('publish.publishError'));
-      }
-
-      const listing = await res.json();
+      const response = await api.post('/store/publish', body);
+      const listing = response.data;
       onPublished(listing.id);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.response?.data?.error || err.message || t('publish.publishError'));
     } finally {
       setIsPublishing(false);
     }
