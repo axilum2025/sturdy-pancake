@@ -153,7 +153,7 @@
 
   "builder": {
     "loading": "Initialisation...",
-    "title": "Agent Studio",
+    "title": "Studio",
     "newAgent": "Nouvel Agent",
     "playground": "Playground",
     "logs": "Logs",
@@ -170,7 +170,7 @@
     "copilotOffline": "Copilot hors ligne",
     "copilotChecking": "Vérification...",
     "welcome": "Bienvenue dans",
-    "describeAgent": "Décrivez votre agent — Propulsé par GitHub Copilot",
+    "describeAgent": "Décrivez votre agent",
     "placeholder": "Décrivez ce que vous voulez construire...",
     "stopGeneration": "Arrêter la génération",
     "tasksDone": "Tâches terminées",

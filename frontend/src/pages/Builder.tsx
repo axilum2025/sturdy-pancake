@@ -128,7 +128,7 @@ export default function Builder() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Header */}
         <header className="glass-strong border-b-0 md:border-b md:border-t-overlay/10 px-3 md:px-6 py-2 md:py-3 flex items-center gap-2 md:gap-4 animate-fade-in-down flex-shrink-0">
-          <h1 className="text-base md:text-xl font-bold text-t-text truncate">{t('builder.title')}</h1>
+          <h1 className="text-base md:text-xl font-bold gradient-text truncate">{t('builder.title')}</h1>
           <span className="text-t-text/40 text-sm hidden sm:inline">/</span>
           <span className="text-t-text/60 text-sm hidden sm:inline">{projectId || t('builder.newAgent')}</span>
           <div className="flex-1"></div>
