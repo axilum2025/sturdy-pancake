@@ -294,6 +294,48 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
 });
 
 // ============================================================
+// POST /api/store/:id/remix — Remix (clone) a store agent
+// ============================================================
+storeRouter.post('/:id/remix', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const listing = await storeModel.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ error: 'Agent not found in store' });
+    }
+
+    // Create a new agent cloned from the store agent's config
+    const user = (req as AuthenticatedRequest).user;
+    const newAgent = await agentModel.create(userId, {
+      name: `${listing.name} (Remix)`,
+      description: listing.shortDescription,
+      config: {
+        model: listing.configSnapshot.model,
+        systemPrompt: listing.configSnapshot.systemPrompt,
+        welcomeMessage: listing.configSnapshot.welcomeMessage,
+        temperature: listing.configSnapshot.temperature,
+        maxTokens: listing.configSnapshot.maxTokens,
+        tools: listing.configSnapshot.tools.map((t) => ({
+          id: t.name,
+          name: t.name,
+          type: t.type as 'mcp' | 'api' | 'function',
+          enabled: true,
+        })),
+      },
+    }, user?.tier || 'free');
+
+    // Increment remix count on original
+    await storeModel.incrementRemix(listing.id);
+
+    res.status(201).json({ agent: agentModel.toResponse(newAgent) });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
 // DELETE /api/store/:id — Remove from store
 // ============================================================
 storeRouter.delete('/:id', async (req: Request, res: Response) => {

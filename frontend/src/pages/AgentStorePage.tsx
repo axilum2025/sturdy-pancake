@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MessageSquare, Star, Users, Sparkles, Lock, Globe,
-  Copy, Check, Tag, Clock, Cpu, Thermometer, Shield, RefreshCw
+  Copy, Check, Tag, Clock, Cpu, Thermometer, Shield, RefreshCw, CheckCircle, Loader2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
 import { API_BASE } from '../services/api';
 
 interface StoreAgentDetail {
@@ -57,11 +58,14 @@ export default function AgentStorePage() {
   const { agentId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { isAuthenticated } = useAuth();
   const [agent, setAgent] = useState<StoreAgentDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [tokenInput, setTokenInput] = useState('');
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
+  const [remixing, setRemixing] = useState(false);
+  const [remixSuccess, setRemixSuccess] = useState(false);
 
   useEffect(() => {
     fetchAgent();
@@ -105,6 +109,35 @@ export default function AgentStorePage() {
     if (agent?.requiresToken && !tokenValid) return;
     const params = tokenValid && tokenInput ? `?token=${tokenInput}` : '';
     navigate(`/store/${agentId}/chat${params}`);
+  };
+
+  const handleRemix = async () => {
+    if (!agent || remixing) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) {
+      navigate('/dashboard');
+      return;
+    }
+    setRemixing(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/store/${agent.id}/remix`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error('Remix failed');
+      const data = await res.json();
+      setRemixSuccess(true);
+      setTimeout(() => {
+        navigate(`/builder/${data.agent.id}`);
+      }, 1500);
+    } catch (error) {
+      console.error('Error remixing agent:', error);
+    } finally {
+      setRemixing(false);
+    }
   };
 
   const handleCopyId = () => {
@@ -249,12 +282,17 @@ export default function AgentStorePage() {
                 <MessageSquare className="w-5 h-5" />
                 {t('store.useAgent')}
               </button>
-              {agent.visibility === 'public' && (
+              {agent.visibility === 'public' && isAuthenticated && (
                 <button
-                  onClick={() => {/* TODO: remix */}}
-                  className="px-6 py-3 rounded-xl font-medium border border-t-overlay/10 bg-t-overlay/[0.04] text-t-text/70 hover:text-t-text hover:bg-t-overlay/[0.08] transition-colors flex items-center justify-center gap-2"
+                  onClick={handleRemix}
+                  disabled={remixing}
+                  className="px-6 py-3 rounded-xl font-medium border border-t-overlay/10 bg-t-overlay/[0.04] text-t-text/70 hover:text-t-text hover:bg-t-overlay/[0.08] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  {remixing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4" />
+                  )}
                   {t('store.remix')}
                 </button>
               )}
@@ -346,6 +384,16 @@ export default function AgentStorePage() {
                   #{tag}
                 </span>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Remix Success Toast */}
+        {remixSuccess && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-fade-in-up">
+            <div className="flex items-center gap-3 px-5 py-3 rounded-xl bg-green-500/90 text-white shadow-lg shadow-green-500/25 backdrop-blur-sm">
+              <CheckCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium">{t('store.remixSuccess')}</span>
             </div>
           </div>
         )}

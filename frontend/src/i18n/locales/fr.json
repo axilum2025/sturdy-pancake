@@ -252,6 +252,7 @@
     "remixes": "{{count}} remixes",
     "useAgent": "Utiliser cet Agent",
     "remix": "Remixer",
+    "remixSuccess": "Agent remixé avec succès ! Redirection...",
     "description": "Description",
     "features": "Fonctionnalités",
     "technicalDetails": "Détails techniques",
