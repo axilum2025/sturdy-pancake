@@ -6,6 +6,7 @@ import Builder from './pages/Builder';
 import Home from './pages/Home';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Documentation from './pages/Documentation';
 import Dashboard from './pages/Dashboard';
 import AgentStore from './pages/AgentStore';
 import AgentStorePage from './pages/AgentStorePage';
@@ -22,6 +23,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/docs" element={<Documentation />} />
             {/* Agent Store — public, no auth required */}
             <Route path="/store" element={<AgentStore />} />
             <Route path="/store/:agentId" element={<AgentStorePage />} />
