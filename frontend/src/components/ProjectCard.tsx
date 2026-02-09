@@ -75,7 +75,7 @@ export default function ProjectCard({ project, onClick, onDelete }: ProjectCardP
           {onDelete && (
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
-              className="p-1.5 rounded-lg text-t-text/20 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
+              className="p-1.5 rounded-lg text-t-text/30 hover:text-red-400 hover:bg-red-500/10 active:text-red-400 active:bg-red-500/10 transition-all duration-200"
               title={t('projectCard.delete')}
             >
               <Trash2 className="w-3.5 h-3.5" />
