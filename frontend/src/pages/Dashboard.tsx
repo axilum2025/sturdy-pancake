@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store } from 'lucide-react';
+import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { listAgents, createAgent, Agent } from '../services/api';
+import { listAgents, createAgent, deleteAgent, Agent } from '../services/api';
 import AuthModal from '../components/AuthModal';
 import ProjectCard from '../components/ProjectCard';
 
@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [showAuth, setShowAuth] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Agent | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -45,6 +47,20 @@ export default function Dashboard() {
       navigate(`/builder/${agent.id}`);
     } catch (error) {
       console.error('Error creating agent:', error);
+    }
+  };
+
+  const handleDeleteAgent = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteAgent(deleteTarget.id);
+      setProjects((prev) => prev.filter((p) => p.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -290,6 +306,7 @@ export default function Dashboard() {
                   <ProjectCard
                     project={project}
                     onClick={() => navigate(`/builder/${project.id}`)}
+                    onDelete={(id) => setDeleteTarget(projects.find((p) => p.id === id) || null)}
                   />
                 </div>
               ))}
@@ -342,6 +359,59 @@ export default function Dashboard() {
                 className="flex-1 btn-gradient px-4 py-3 rounded-xl text-t-text font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('common.create')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
+            onClick={() => !isDeleting && setDeleteTarget(null)}
+          />
+          <div className="relative glass-strong rounded-2xl w-full max-w-md p-5 sm:p-8 border border-red-500/20 animate-fade-in-scale">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 border border-red-500/30 flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-t-text">{t('dashboard.deleteModal.title')}</h2>
+                <p className="text-t-text/40 text-sm">{deleteTarget.name}</p>
+              </div>
+            </div>
+
+            <div className="mb-6 p-4 rounded-xl bg-red-500/5 border border-red-500/10">
+              <p className="text-sm text-red-300/90 mb-2 font-medium">{t('dashboard.deleteModal.warning')}</p>
+              <ul className="text-xs text-t-text/50 space-y-1 ml-4 list-disc">
+                <li>{t('dashboard.deleteModal.item1')}</li>
+                <li>{t('dashboard.deleteModal.item2')}</li>
+                <li>{t('dashboard.deleteModal.item3')}</li>
+                <li>{t('dashboard.deleteModal.item4')}</li>
+              </ul>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 rounded-xl text-t-text/70 font-medium border border-t-overlay/10 hover:bg-t-overlay/5 hover:border-t-overlay/20 transition-all duration-200 disabled:opacity-50"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={handleDeleteAgent}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-3 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 font-semibold hover:bg-red-500/30 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Trash2 className="w-4 h-4" />
+                )}
+                {t('dashboard.deleteModal.confirm')}
               </button>
             </div>
           </div>

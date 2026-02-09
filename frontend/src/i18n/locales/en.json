@@ -139,6 +139,15 @@
       "subtitle": "Create a new AI agent",
       "nameLabel": "Agent name",
       "namePlaceholder": "Customer support agent"
+    },
+    "deleteModal": {
+      "title": "Delete agent",
+      "warning": "This action is irreversible. All associated data will be permanently deleted:",
+      "item1": "Configuration and system prompt",
+      "item2": "Conversation history",
+      "item3": "Project files",
+      "item4": "Store listing (if published)",
+      "confirm": "Delete permanently"
     }
   },
 
@@ -325,7 +334,8 @@
     "today": "Today",
     "yesterday": "Yesterday",
     "daysAgo": "{{count}} days ago",
-    "weeksAgo": "{{count}} wk. ago"
+    "weeksAgo": "{{count}} wk. ago",
+    "delete": "Delete"
   },
 
   "models": {

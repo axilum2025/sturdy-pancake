@@ -1,13 +1,14 @@
-import { Bot, Clock, Wrench, MessageSquare, Globe, ExternalLink, CheckCircle, AlertCircle, FileEdit } from 'lucide-react';
+import { Bot, Clock, Wrench, MessageSquare, Globe, ExternalLink, CheckCircle, AlertCircle, FileEdit, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Agent } from '../services/api';
 
 interface ProjectCardProps {
   project: Agent;
   onClick: () => void;
+  onDelete?: (id: string) => void;
 }
 
-export default function ProjectCard({ project, onClick }: ProjectCardProps) {
+export default function ProjectCard({ project, onClick, onDelete }: ProjectCardProps) {
   const { t } = useTranslation();
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -66,9 +67,20 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
             <p className="text-t-text/40 text-sm line-clamp-1">{project.description || t('projectCard.noDescription')}</p>
           </div>
         </div>
-        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border} flex-shrink-0`}>
-          <StatusIcon className="w-3 h-3" />
-          {statusStyle.label}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold ${statusStyle.bg} ${statusStyle.text} border ${statusStyle.border}`}>
+            <StatusIcon className="w-3 h-3" />
+            {statusStyle.label}
+          </div>
+          {onDelete && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(project.id); }}
+              className="p-1.5 rounded-lg text-t-text/20 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200 opacity-0 group-hover:opacity-100"
+              title={t('projectCard.delete')}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
