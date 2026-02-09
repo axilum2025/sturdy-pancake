@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
-  Rocket, X, Globe, Lock, Tag, Sparkles, Plus, Trash2, Check, Loader2
+  Rocket, X, Globe, Lock, Tag, Sparkles, Plus, Trash2, Check, Loader2, Upload, Image
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
@@ -40,9 +40,28 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('other');
   const [iconColor, setIconColor] = useState(ICON_COLORS[0]);
+  const [customIcon, setCustomIcon] = useState<string | null>(null);
   const [features, setFeatures] = useState<string[]>(['']);
   const [tags, setTags] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 512 * 1024) return; // max 512KB
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCustomIcon(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeCustomIcon = () => {
+    setCustomIcon(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const addFeature = () => setFeatures([...features, '']);
   const removeFeature = (idx: number) => setFeatures(features.filter((_, i) => i !== idx));
@@ -66,6 +85,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         name,
         description,
         shortDescription,
+        icon: customIcon || '',
         iconColor,
         features: features.filter((f) => f.trim()),
         category,
@@ -196,18 +216,66 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
 
               <div>
                 <label className="block text-sm font-medium text-t-text/60 mb-2">{t('publish.iconColor')}</label>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
                   {ICON_COLORS.map((color) => (
                     <button
                       key={color}
-                      onClick={() => setIconColor(color)}
+                      onClick={() => { setIconColor(color); removeCustomIcon(); }}
                       className={`w-9 h-9 rounded-xl transition-all ${
-                        iconColor === color ? 'ring-2 ring-white/50 scale-110' : 'hover:scale-105'
+                        iconColor === color && !customIcon ? 'ring-2 ring-white/50 scale-110' : 'hover:scale-105'
                       }`}
                       style={{ backgroundColor: color }}
                     />
                   ))}
                 </div>
+              </div>
+
+              {/* Custom icon upload */}
+              <div>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">
+                  <Image className="w-4 h-4 inline mr-1" />
+                  {t('publish.customIcon')}
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                  onChange={handleIconUpload}
+                  className="hidden"
+                />
+                {customIcon ? (
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={customIcon}
+                      alt="Custom icon"
+                      className="w-14 h-14 rounded-[22%] object-cover border border-t-overlay/10 shadow-lg"
+                    />
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        {t('publish.changeIcon')}
+                      </button>
+                      <button
+                        onClick={removeCustomIcon}
+                        className="text-xs text-red-400/70 hover:text-red-400 transition-colors flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {t('common.delete')}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-t-overlay/20 hover:border-blue-500/40 bg-t-overlay/[0.02] hover:bg-t-overlay/[0.04] transition-all text-sm text-t-text/40 hover:text-t-text/60 w-full"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t('publish.uploadIcon')}
+                    <span className="ml-auto text-xs text-t-text/25">PNG, JPG, SVG · max 512KB</span>
+                  </button>
+                )}
               </div>
             </>
           )}
@@ -316,14 +384,23 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
               <div className="bg-t-overlay/[0.02] rounded-2xl border border-t-overlay/5 p-4">
                 <p className="text-xs text-t-text/40 mb-3">{t('publish.preview')}</p>
                 <div className="flex flex-col items-center gap-2">
-                  <div
-                    className="w-16 h-16 rounded-[22%] flex items-center justify-center"
-                    style={{ backgroundColor: iconColor, boxShadow: `0 4px 20px ${iconColor}30` }}
-                  >
-                    <span className="text-2xl font-bold text-t-text/90">
-                      {name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
+                  {customIcon ? (
+                    <img
+                      src={customIcon}
+                      alt={name}
+                      className="w-16 h-16 rounded-[22%] object-cover shadow-lg"
+                      style={{ boxShadow: `0 4px 20px ${iconColor}30` }}
+                    />
+                  ) : (
+                    <div
+                      className="w-16 h-16 rounded-[22%] flex items-center justify-center"
+                      style={{ backgroundColor: iconColor, boxShadow: `0 4px 20px ${iconColor}30` }}
+                    >
+                      <span className="text-2xl font-bold text-t-text/90">
+                        {name.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
                   <span className="text-sm text-t-text/70 text-center">{name}</span>
                   <span className="text-xs text-t-text/30">{shortDescription}</span>
                 </div>
