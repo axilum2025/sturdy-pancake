@@ -99,7 +99,7 @@ export default function AgentStore() {
           </button>
           <div className="flex items-center gap-2">
             <Store className="w-6 h-6 text-blue-400 glow-icon" />
-            <h1 className="text-xl font-bold gradient-text">Agent Store</h1>
+            <h1 className="hidden landscape:inline sm:inline text-xl font-bold gradient-text">Agent Store</h1>
           </div>
           <div className="flex-1" />
           {/* Search */}
