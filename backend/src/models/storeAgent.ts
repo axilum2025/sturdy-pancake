@@ -223,6 +223,11 @@ export class StoreModel {
     await db.delete(storeAgents).where(eq(storeAgents.id, id));
   }
 
+  async deleteByAgentId(agentId: string): Promise<void> {
+    const db = getDb();
+    await db.delete(storeAgents).where(eq(storeAgents.agentId, agentId));
+  }
+
   async validateToken(id: string, token: string): Promise<boolean> {
     const db = getDb();
     const row = await db.query.storeAgents.findFirst({ where: eq(storeAgents.id, id) });

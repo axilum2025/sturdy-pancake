@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { agentModel, AgentCreateDTO } from '../models/agent';
+import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -146,6 +147,8 @@ agentsRouter.delete('/:id', async (req: Request, res: Response) => {
     const userId = await verifyOwnership(req, res);
     if (!userId) return;
 
+    // Remove from store if published
+    await storeModel.deleteByAgentId(req.params.id);
     await agentModel.delete(req.params.id);
     res.json({ message: 'Agent deleted' });
   } catch (error: any) {
