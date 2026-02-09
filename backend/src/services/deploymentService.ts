@@ -22,6 +22,7 @@ export interface DeploymentConfig {
 
 export interface DeploymentResult {
   deploymentId: string;
+  projectId?: string;
   status: DeploymentStatus;
   url?: string;
   previewUrl?: string;
@@ -61,6 +62,7 @@ export class DeploymentService {
     // Create deployment record
     const deployment: DeploymentResult = {
       deploymentId,
+      projectId: config.projectId,
       status: 'pending',
     };
     

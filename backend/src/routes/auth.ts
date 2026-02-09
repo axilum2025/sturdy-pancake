@@ -118,6 +118,66 @@ authRouter.post('/downgrade', authMiddleware, async (req: Request, res: Response
       user: userModel.toResponse(user),
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to downgrade' });
+  }
+});
+
+// ============================================================
+// RGPD / GDPR Endpoints
+// ============================================================
+
+/**
+ * GET /api/auth/export
+ * GDPR Art. 15/20 — Right of Access / Data Portability
+ * Returns all user data as a JSON export
+ */
+authRouter.get('/export', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    const data = await userModel.exportUserData(userId);
+    if (!data) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.setHeader('Content-Disposition', 'attachment; filename="user-data-export.json"');
+    res.setHeader('Content-Type', 'application/json');
+    res.json(data);
+  } catch (error: any) {
+    console.error('Data export error:', error.message);
+    res.status(500).json({ error: 'Failed to export data' });
+  }
+});
+
+/**
+ * DELETE /api/auth/account
+ * GDPR Art. 17 — Right to Erasure (Right to be Forgotten)
+ * Permanently deletes user account and all associated data
+ */
+authRouter.delete('/account', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    const user = (req as AuthenticatedRequest).user;
+
+    // Require password confirmation for security
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: 'Password confirmation required' });
+    }
+
+    const valid = await userModel.verifyPassword(user, password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+    // Delete user — cascade removes all related data
+    const deleted = await userModel.delete(userId);
+    if (!deleted) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'Account and all associated data permanently deleted' });
+  } catch (error: any) {
+    console.error('Account deletion error:', error.message);
+    res.status(500).json({ error: 'Failed to delete account' });
   }
 });

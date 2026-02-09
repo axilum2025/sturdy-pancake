@@ -66,7 +66,7 @@ deploymentRouter.post('/:projectId', async (req: AuthenticatedRequest, res: Resp
       },
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Deployment failed' });
   }
 });
 
@@ -76,6 +76,7 @@ deploymentRouter.post('/:projectId', async (req: AuthenticatedRequest, res: Resp
  */
 deploymentRouter.get('/:deploymentId', async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const userId = req.userId;
     const deploymentId = req.params.deploymentId;
     const deployment = await deploymentService.getDeployment(deploymentId);
 
@@ -83,9 +84,15 @@ deploymentRouter.get('/:deploymentId', async (req: AuthenticatedRequest, res: Re
       return res.status(404).json({ error: 'Deployment not found' });
     }
 
+    // Verify project ownership
+    const project = await projectModel.findById(deployment.projectId);
+    if (!project || project.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     res.json(deployment);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to get deployment' });
   }
 });
 
@@ -95,7 +102,15 @@ deploymentRouter.get('/:deploymentId', async (req: AuthenticatedRequest, res: Re
  */
 deploymentRouter.get('/project/:projectId', async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const userId = req.userId;
     const projectId = req.params.projectId;
+
+    // Verify project ownership
+    const project = await projectModel.findById(projectId);
+    if (!project || project.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const deployments = await deploymentService.getProjectDeployments(projectId);
 
     res.json({
@@ -103,7 +118,7 @@ deploymentRouter.get('/project/:projectId', async (req: AuthenticatedRequest, re
       total: deployments.length,
     });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to list deployments' });
   }
 });
 
@@ -113,7 +128,20 @@ deploymentRouter.get('/project/:projectId', async (req: AuthenticatedRequest, re
  */
 deploymentRouter.delete('/:deploymentId', async (req: AuthenticatedRequest, res: Response) => {
   try {
+    const userId = req.userId;
     const deploymentId = req.params.deploymentId;
+
+    // Verify deployment ownership via project
+    const deployment = await deploymentService.getDeployment(deploymentId);
+    if (!deployment) {
+      return res.status(404).json({ error: 'Deployment not found' });
+    }
+
+    const project = await projectModel.findById(deployment.projectId);
+    if (!project || project.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const deleted = await deploymentService.deleteDeployment(deploymentId);
 
     if (!deleted) {
@@ -122,7 +150,7 @@ deploymentRouter.delete('/:deploymentId', async (req: AuthenticatedRequest, res:
 
     res.json({ message: 'Deployment deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to delete deployment' });
   }
 });
 

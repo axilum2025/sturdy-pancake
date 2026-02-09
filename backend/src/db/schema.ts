@@ -33,6 +33,10 @@ export const users = pgTable('users', {
     deploymentsThisMonth: number;
     lastResetDate: string;
   }>().notNull(),
+  // GDPR consent tracking
+  consentGiven: integer('consent_given').notNull().default(0),
+  consentAt: timestamp('consent_at', { withTimezone: true }),
+  consentVersion: varchar('consent_version', { length: 20 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
@@ -118,7 +122,7 @@ export const storeAgents = pgTable('store_agents', {
 export const conversations = pgTable('conversations', {
   id: uuid('id').primaryKey().defaultRandom(),
   agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
   messageCount: integer('message_count').notNull().default(0),
 });

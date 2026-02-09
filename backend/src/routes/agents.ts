@@ -2,24 +2,46 @@ import { Router, Request, Response } from 'express';
 import { agentModel, AgentCreateDTO } from '../models/agent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
+import { AuthenticatedRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 
 export const agentsRouter = Router();
+
+// Helper: verify agent ownership
+async function verifyOwnership(req: Request, res: Response): Promise<string | null> {
+  const userId = (req as AuthenticatedRequest).userId;
+  if (!userId) {
+    res.status(401).json({ error: 'Authentication required' });
+    return null;
+  }
+  const agent = await agentModel.findById(req.params.id);
+  if (!agent) {
+    res.status(404).json({ error: 'Agent not found' });
+    return null;
+  }
+  if (agent.userId !== userId) {
+    res.status(403).json({ error: 'Access denied' });
+    return null;
+  }
+  return userId;
+}
 
 // ----------------------------------------------------------
 // GET /api/agents  –  List user's agents
 // ----------------------------------------------------------
 agentsRouter.get('/', async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId || 'demo-user-id';
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
     const agents = await agentModel.findByUserId(userId);
     res.json({
       agents: agents.map((a) => agentModel.toResponse(a)),
       total: agents.length,
     });
   } catch (error: any) {
-    console.error('List agents error:', error);
-    res.status(500).json({ error: 'Failed to list agents', details: error.message });
+    console.error('List agents error:', error.message);
+    res.status(500).json({ error: 'Failed to list agents' });
   }
 });
 
@@ -28,8 +50,10 @@ agentsRouter.get('/', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 agentsRouter.post('/', async (req: Request, res: Response) => {
   try {
-    const userId = (req as any).userId || 'demo-user-id';
-    const userTier = (req as any).userTier || 'free';
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
     const { name, description, config } = req.body as AgentCreateDTO & { config?: any };
 
     if (!name || !name.trim()) {
@@ -39,58 +63,69 @@ agentsRouter.post('/', async (req: Request, res: Response) => {
     const agent = await agentModel.create(userId, { name, description, config }, userTier);
     res.status(201).json(agentModel.toResponse(agent));
   } catch (error: any) {
-    console.error('Create agent error:', error);
-    res.status(500).json({ error: 'Failed to create agent', details: error.message });
+    console.error('Create agent error:', error.message);
+    res.status(500).json({ error: 'Failed to create agent' });
   }
 });
 
 // ----------------------------------------------------------
-// GET /api/agents/:id  –  Get agent details
+// GET /api/agents/:id  –  Get agent details (owner only)
 // ----------------------------------------------------------
 agentsRouter.get('/:id', async (req: Request, res: Response) => {
   try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
     const agent = await agentModel.findById(req.params.id);
-    if (!agent) return res.status(404).json({ error: 'Agent not found' });
-    res.json(agentModel.toResponse(agent));
+    res.json(agentModel.toResponse(agent!));
   } catch (error: any) {
-    console.error('Get agent error:', error);
-    res.status(500).json({ error: 'Failed to get agent', details: error.message });
+    console.error('Get agent error:', error.message);
+    res.status(500).json({ error: 'Failed to get agent' });
   }
 });
 
 // ----------------------------------------------------------
-// PATCH /api/agents/:id  –  Update agent metadata
+// PATCH /api/agents/:id  –  Update agent metadata (owner only)
 // ----------------------------------------------------------
 agentsRouter.patch('/:id', async (req: Request, res: Response) => {
   try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
     const { name, description } = req.body;
     const agent = await agentModel.update(req.params.id, { name, description });
     res.json(agentModel.toResponse(agent));
   } catch (error: any) {
-    console.error('Update agent error:', error);
-    res.status(500).json({ error: 'Failed to update agent', details: error.message });
+    console.error('Update agent error:', error.message);
+    res.status(500).json({ error: 'Failed to update agent' });
   }
 });
 
 // ----------------------------------------------------------
-// PATCH /api/agents/:id/config  –  Update agent configuration
+// PATCH /api/agents/:id/config  –  Update agent config (owner only)
 // ----------------------------------------------------------
 agentsRouter.patch('/:id/config', async (req: Request, res: Response) => {
   try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
     const config = req.body;
     const agent = await agentModel.updateConfig(req.params.id, config);
     res.json(agentModel.toResponse(agent));
   } catch (error: any) {
-    console.error('Update agent config error:', error);
-    res.status(500).json({ error: 'Failed to update agent config', details: error.message });
+    console.error('Update agent config error:', error.message);
+    res.status(500).json({ error: 'Failed to update agent config' });
   }
 });
 
 // ----------------------------------------------------------
-// POST /api/agents/:id/deploy  –  Deploy agent
+// POST /api/agents/:id/deploy  –  Deploy agent (owner only)
 // ----------------------------------------------------------
 agentsRouter.post('/:id/deploy', async (req: Request, res: Response) => {
   try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
     const agent = await agentModel.deploy(req.params.id);
     res.json({
       message: 'Agent deployed successfully',
@@ -98,35 +133,36 @@ agentsRouter.post('/:id/deploy', async (req: Request, res: Response) => {
       endpoint: agent.endpoint,
     });
   } catch (error: any) {
-    console.error('Deploy agent error:', error);
-    res.status(500).json({ error: 'Failed to deploy agent', details: error.message });
+    console.error('Deploy agent error:', error.message);
+    res.status(500).json({ error: 'Failed to deploy agent' });
   }
 });
 
 // ----------------------------------------------------------
-// DELETE /api/agents/:id  –  Delete agent
+// DELETE /api/agents/:id  –  Delete agent (owner only)
 // ----------------------------------------------------------
 agentsRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
     await agentModel.delete(req.params.id);
     res.json({ message: 'Agent deleted' });
   } catch (error: any) {
-    console.error('Delete agent error:', error);
-    res.status(500).json({ error: 'Failed to delete agent', details: error.message });
+    console.error('Delete agent error:', error.message);
+    res.status(500).json({ error: 'Failed to delete agent' });
   }
 });
 
 // ----------------------------------------------------------
-// POST /api/agents/:id/chat  –  Chat with a deployed agent (Playground / Public)
-// Streaming SSE
+// POST /api/agents/:id/chat  –  Chat with agent (owner only)
 // ----------------------------------------------------------
 agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
   try {
-    const agent = await agentModel.findById(req.params.id);
-    if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
-    }
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
 
+    const agent = (await agentModel.findById(req.params.id))!;
     const { messages } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required' });
@@ -143,16 +179,14 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
         try {
           const results = await knowledgeService.search(agent.id, lastUserMsg.content, 5);
           if (results.length > 0) {
-            const ragContext = knowledgeService.buildRagContext(results);
-            systemPrompt += '\n\n' + ragContext;
+            systemPrompt += '\n\n' + knowledgeService.buildRagContext(results);
           }
-        } catch (ragErr) {
-          console.warn('RAG search failed, continuing without context:', ragErr);
+        } catch {
+          // RAG fallback: continue without context
         }
       }
     }
 
-    // Build messages: agent's system prompt + conversation history
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...(messages as CopilotMessage[]).map((m) => ({
@@ -178,7 +212,6 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
     for await (const chunk of stream) {
       const content = chunk.choices?.[0]?.delta?.content;
       const finishReason = chunk.choices?.[0]?.finish_reason;
-
       if (content) {
         res.write(`data: ${JSON.stringify({ type: 'content', content })}\n\n`);
       }
@@ -187,22 +220,19 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       }
     }
 
-    // Increment stats
-    agent.totalConversations += 1;
-    agent.totalMessages += messages.length + 1;
     await agentModel.update(agent.id, {
-      totalConversations: agent.totalConversations,
-      totalMessages: agent.totalMessages,
+      totalConversations: agent.totalConversations + 1,
+      totalMessages: agent.totalMessages + messages.length + 1,
     });
 
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (error: any) {
-    console.error('Agent chat error:', error);
+    console.error('Agent chat error:', error.message);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Agent chat failed', details: error.message });
+      res.status(500).json({ error: 'Agent chat failed' });
     } else {
-      res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Internal error' })}\n\n`);
       res.end();
     }
   }

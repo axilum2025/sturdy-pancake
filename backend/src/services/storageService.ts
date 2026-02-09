@@ -8,6 +8,7 @@ const PROJECTS_DIR = path.join(STORAGE_DIR, 'projects');
 
 export interface ProjectStorage {
   id: string;
+  userId?: string;
   name: string;
   files: Record<string, string>; // filename -> content
   metadata: Record<string, any>;
@@ -107,12 +108,16 @@ export class StorageService {
         }
       }
 
-      console.log(`📂 Listed ${projects.length} projects`);
       return projects;
     } catch (error: any) {
       console.error('Error listing projects:', error.message);
       return [];
     }
+  }
+
+  async listProjectsByUser(userId: string): Promise<ProjectStorage[]> {
+    const all = await this.listProjects();
+    return all.filter((p) => p.userId === userId);
   }
 
   async deleteProject(projectId: string): Promise<void> {

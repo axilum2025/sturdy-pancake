@@ -10,7 +10,6 @@ export interface AuthenticatedRequest extends Request {
 
 export interface JwtPayload {
   userId: string;
-  email: string;
   tier: string;
 }
 
@@ -22,8 +21,7 @@ function getJwtSecret(): string {
 
 /**
  * Authentication middleware
- * 1. Checks Authorization: Bearer <JWT> header
- * 2. Falls back to x-user-id header in development
+ * Checks Authorization: Bearer <JWT> header
  */
 export const authMiddleware = async (
   req: Request,
@@ -31,7 +29,6 @@ export const authMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Try JWT first
     const authHeader = req.headers['authorization'];
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
@@ -44,26 +41,13 @@ export const authMiddleware = async (
           return next();
         }
       } catch (jwtError) {
-        // JWT invalid — fall through to x-user-id or reject
-      }
-    }
-
-    // Fallback: x-user-id header (dev/compat only)
-    if (process.env.NODE_ENV !== 'production') {
-      const userId = req.headers['x-user-id'] as string;
-      if (userId) {
-        const user = await userModel.findById(userId);
-        if (user) {
-          (req as AuthenticatedRequest).userId = userId;
-          (req as AuthenticatedRequest).user = user;
-          return next();
-        }
+        // JWT invalid
       }
     }
 
     res.status(401).json({ error: 'Unauthorized. Invalid or missing authentication.' });
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Authentication error' });
   }
 };
 
@@ -89,15 +73,6 @@ export const optionalAuth = async (
       } catch {
         // ignore
       }
-    } else if (process.env.NODE_ENV !== 'production') {
-      const userId = req.headers['x-user-id'] as string;
-      if (userId) {
-        const user = await userModel.findById(userId);
-        if (user) {
-          (req as AuthenticatedRequest).userId = userId;
-          (req as AuthenticatedRequest).user = user;
-        }
-      }
     }
     next();
   } catch {
@@ -111,7 +86,6 @@ export const optionalAuth = async (
 export function generateToken(user: User): string {
   const payload: JwtPayload = {
     userId: user.id,
-    email: user.email,
     tier: user.tier,
   };
   return jwt.sign(payload, getJwtSecret(), { expiresIn: '24h' });

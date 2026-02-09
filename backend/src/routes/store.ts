@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
 import { agentModel } from '../models/agent';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export const storeRouter = Router();
 
@@ -115,7 +116,8 @@ storeRouter.post('/:id/validate-token', async (req: Request, res: Response) => {
 // ============================================================
 storeRouter.post('/publish', async (req: Request, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string || 'demo-user-id';
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
     const dto: PublishAgentDTO = req.body;
 
     if (!dto.agentId || !dto.name || !dto.description) {
@@ -281,11 +283,11 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
 
     res.end();
   } catch (error: any) {
-    console.error('Store chat error:', error);
+    console.error('Store chat error:', error.message);
     if (!res.headersSent) {
       res.status(500).json({ error: error.message });
     } else {
-      res.write(`data: ${JSON.stringify({ content: `\n\n[Erreur: ${error.message}]`, done: true })}\n\n`);
+      res.write(`data: ${JSON.stringify({ content: '\n\n[Erreur interne]', done: true })}\n\n`);
       res.end();
     }
   }
@@ -296,7 +298,8 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
 // ============================================================
 storeRouter.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const userId = req.headers['x-user-id'] as string || 'demo-user-id';
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
     const listing = await storeModel.findById(req.params.id);
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });

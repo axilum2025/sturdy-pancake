@@ -153,6 +153,117 @@ export class UserModel {
     });
   }
 
+  /**
+   * GDPR Art. 17 — Right to Erasure
+   * Cascade delete removes all related data (agents, conversations, etc.)
+   */
+  async delete(id: string): Promise<boolean> {
+    const db = getDb();
+    const result = await db.delete(users).where(eq(users.id, id)).returning({ id: users.id });
+    return result.length > 0;
+  }
+
+  /**
+   * GDPR Art. 15/20 — Right of Access / Data Portability
+   * Exports all user data as a structured object
+   */
+  async exportUserData(id: string): Promise<Record<string, any> | null> {
+    const db = getDb();
+    const user = await this.findById(id);
+    if (!user) return null;
+
+    // Get all user's agents
+    const { agents } = await import('../db/schema');
+    const userAgents = await db.query.agents.findMany({
+      where: eq(agents.userId, id),
+    });
+
+    // Get all conversations
+    const { conversations, messages } = await import('../db/schema');
+    const userConversations = await db.query.conversations.findMany({
+      where: eq(conversations.userId, id),
+      with: { messages: true },
+    });
+
+    // Get all store agents
+    const { storeAgents } = await import('../db/schema');
+    const userStoreAgents = await db.query.storeAgents.findMany({
+      where: eq(storeAgents.userId, id),
+    });
+
+    // Get all knowledge documents
+    const { knowledgeDocuments } = await import('../db/schema');
+    const userDocs = await db.query.knowledgeDocuments.findMany({
+      where: eq(knowledgeDocuments.userId, id),
+    });
+
+    // Get API keys (metadata only, not hashes)
+    const { apiKeys } = await import('../db/schema');
+    const userApiKeys = await db.query.apiKeys.findMany({
+      where: eq(apiKeys.userId, id),
+    });
+
+    // Get webhooks
+    const { webhooks } = await import('../db/schema');
+    const userWebhooks = await db.query.webhooks.findMany({
+      where: eq(webhooks.userId, id),
+    });
+
+    return {
+      exportedAt: new Date().toISOString(),
+      user: {
+        id: user.id,
+        email: user.email,
+        tier: user.tier,
+        quotas: user.quotas,
+        usage: user.usage,
+        createdAt: user.createdAt,
+      },
+      agents: userAgents.map((a) => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        config: a.config,
+        status: a.status,
+        createdAt: a.createdAt,
+      })),
+      conversations: userConversations.map((c: any) => ({
+        id: c.id,
+        agentId: c.agentId,
+        startedAt: c.startedAt,
+        messages: c.messages?.map((m: any) => ({
+          role: m.role,
+          content: m.content,
+          createdAt: m.createdAt,
+        })),
+      })),
+      storeAgents: userStoreAgents.map((s) => ({
+        id: s.id,
+        name: s.name,
+        category: s.category,
+        publishedAt: s.publishedAt,
+      })),
+      knowledgeDocuments: userDocs.map((d) => ({
+        id: d.id,
+        filename: d.filename,
+        mimeType: d.mimeType,
+        createdAt: d.createdAt,
+      })),
+      apiKeys: userApiKeys.map((k) => ({
+        id: k.id,
+        name: k.name,
+        keyPrefix: k.keyPrefix,
+        createdAt: k.createdAt,
+      })),
+      webhooks: userWebhooks.map((w) => ({
+        id: w.id,
+        url: w.url,
+        events: w.events,
+        createdAt: w.createdAt,
+      })),
+    };
+  }
+
   toResponse(user: User): UserResponse {
     return {
       id: user.id,
