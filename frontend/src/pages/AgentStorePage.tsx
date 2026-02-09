@@ -230,18 +230,18 @@ export default function AgentStorePage() {
             <div className="flex items-center gap-5 justify-center sm:justify-start text-sm">
               <div className="flex items-center gap-1.5">
                 <Star className="w-4 h-4 text-yellow-400" />
-                <span className="text-t-text/80 font-medium">{agent.rating.toFixed(1)}</span>
-                {agent.ratingCount > 0 && (
+                <span className="text-t-text/80 font-medium">{(agent.rating ?? 0).toFixed(1)}</span>
+                {(agent.ratingCount ?? 0) > 0 && (
                   <span className="text-t-text/30">({agent.ratingCount})</span>
                 )}
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-t-text/80">{t('store.uses', { count: agent.usageCount })}</span>
+                <span className="text-t-text/80">{t('store.uses', { count: agent.usageCount ?? 0 })}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <RefreshCw className="w-4 h-4 text-blue-400" />
-                <span className="text-t-text/80">{t('store.remixes', { count: agent.remixCount })}</span>
+                <span className="text-t-text/80">{t('store.remixes', { count: agent.remixCount ?? 0 })}</span>
               </div>
             </div>
           </div>

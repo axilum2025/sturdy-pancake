@@ -85,6 +85,13 @@ storeRouter.get('/:id', async (req: Request, res: Response) => {
           category: listing.category,
           visibility: 'private',
           creatorName: listing.creatorName,
+          usageCount: listing.usageCount,
+          remixCount: listing.remixCount,
+          rating: listing.rating,
+          ratingCount: listing.ratingCount,
+          version: listing.version,
+          publishedAt: listing.publishedAt,
+          updatedAt: listing.updatedAt,
           requiresToken: true,
         });
       }
