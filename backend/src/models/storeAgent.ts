@@ -207,6 +207,15 @@ export class StoreModel {
       .where(eq(storeAgents.id, id));
   }
 
+  async regenerateToken(id: string): Promise<string> {
+    const db = getDb();
+    const newToken = randomUUID().replace(/-/g, '');
+    await db.update(storeAgents)
+      .set({ accessToken: newToken, updatedAt: new Date() })
+      .where(eq(storeAgents.id, id));
+    return newToken;
+  }
+
   async update(id: string, data: Partial<StoreAgentListing>): Promise<StoreAgentListing> {
     const db = getDb();
     const { publishedAt, ...updateData } = data as any;

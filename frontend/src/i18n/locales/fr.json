@@ -235,7 +235,13 @@
     "preview": "Aperçu dans le Store :",
     "publishBtn": "Publier",
     "publishing": "Publication...",
-    "publishError": "Erreur lors de la publication"
+    "publishError": "Erreur lors de la publication",
+    "tokenTitle": "Agent publié avec succès !",
+    "tokenSubtitle": "Voici votre token d'accès privé. Conservez-le précieusement.",
+    "accessToken": "Token d'accès",
+    "tokenWarning": "⚠️ Ce token ne sera plus affiché après fermeture. Copiez-le maintenant et partagez-le uniquement avec les personnes autorisées. Toute personne possédant ce token pourra accéder à votre agent.",
+    "regenerateToken": "Régénérer le token",
+    "done": "Terminé"
   },
 
   "store": {

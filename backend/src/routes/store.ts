@@ -341,6 +341,32 @@ storeRouter.post('/:id/remix', async (req: Request, res: Response) => {
 });
 
 // ============================================================
+// POST /api/store/:id/regenerate-token — Regenerate access token
+// ============================================================
+storeRouter.post('/:id/regenerate-token', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const listing = await storeModel.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+    if (listing.userId !== userId) {
+      return res.status(403).json({ error: 'Not authorized' });
+    }
+    if (listing.visibility !== 'private') {
+      return res.status(400).json({ error: 'Only private agents have access tokens' });
+    }
+
+    const newToken = await storeModel.regenerateToken(listing.id);
+    res.json({ accessToken: newToken });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
 // DELETE /api/store/:id — Remove from store
 // ============================================================
 storeRouter.delete('/:id', async (req: Request, res: Response) => {

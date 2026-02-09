@@ -235,7 +235,13 @@
     "preview": "Store preview:",
     "publishBtn": "Publish",
     "publishing": "Publishing...",
-    "publishError": "Error publishing"
+    "publishError": "Error publishing",
+    "tokenTitle": "Agent published successfully!",
+    "tokenSubtitle": "Here is your private access token. Keep it safe.",
+    "accessToken": "Access Token",
+    "tokenWarning": "⚠️ This token will not be shown again after closing. Copy it now and only share it with authorized people. Anyone with this token can access your agent.",
+    "regenerateToken": "Regenerate token",
+    "done": "Done"
   },
 
   "store": {
