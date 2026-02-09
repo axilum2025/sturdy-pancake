@@ -8,10 +8,6 @@ on:
       - '.github/workflows/deploy-frontend.yml'
   workflow_dispatch:
 
-env:
-  APP_LOCATION: '/frontend'
-  OUTPUT_LOCATION: 'dist'
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -53,8 +49,13 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.SWA_DEPLOYMENT_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: 'upload'
-          app_location: 'frontend/dist'
+          app_location: 'frontend'
+          output_location: 'dist'
           skip_app_build: true # Already built above with env vars
+        env:
+          # Clear env vars that SWA action might pick up and override inputs
+          APP_LOCATION: ''
+          OUTPUT_LOCATION: ''
 
       - name: Summary
         run: |
