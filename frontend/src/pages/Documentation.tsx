@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Key, Bot, Globe, Zap, Shield,
   ArrowLeft, Copy, Check, Terminal, Layers,
-  Webhook, Brain, Rocket
+  Webhook, Brain, Rocket, LayoutDashboard, Wrench,
+  MessageSquare, Upload, Store, Settings, ChevronRight,
+  User, Sparkles, PanelLeft
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -55,10 +57,19 @@ function MethodBadge({ method }: { method: string }) {
 export default function Documentation() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [activeSection, setActiveSection] = useState('quickstart');
+  const [activeSection, setActiveSection] = useState('getting-started');
 
-  const sections = [
-    { id: 'quickstart', icon: Rocket, label: t('docs.navQuickstart') },
+  const guidesSections = [
+    { id: 'getting-started', icon: Rocket, label: t('docs.navGettingStarted') },
+    { id: 'guide-dashboard', icon: LayoutDashboard, label: t('docs.navGuideDashboard') },
+    { id: 'guide-create-agent', icon: Bot, label: t('docs.navGuideCreateAgent') },
+    { id: 'guide-builder', icon: Wrench, label: t('docs.navGuideBuilder') },
+    { id: 'guide-knowledge', icon: Upload, label: t('docs.navGuideKnowledge') },
+    { id: 'guide-chat', icon: MessageSquare, label: t('docs.navGuideChat') },
+    { id: 'guide-store', icon: Store, label: t('docs.navGuideStore') },
+  ];
+
+  const apiSections = [
     { id: 'auth', icon: Key, label: t('docs.navAuth') },
     { id: 'agents', icon: Bot, label: t('docs.navAgents') },
     { id: 'knowledge', icon: Brain, label: t('docs.navKnowledge') },
@@ -194,9 +205,16 @@ export default function Documentation() {
           onChange={(e) => setActiveSection(e.target.value)}
           className="w-full px-4 py-3 rounded-xl bg-t-surface border border-t-border/30 text-sm font-medium"
         >
-          {sections.map((s) => (
-            <option key={s.id} value={s.id}>{s.label}</option>
-          ))}
+          <optgroup label={t('docs.sidebarGuide')}>
+            {guidesSections.map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </optgroup>
+          <optgroup label={t('docs.sidebarApi')}>
+            {apiSections.map((s) => (
+              <option key={s.id} value={s.id}>{s.label}</option>
+            ))}
+          </optgroup>
         </select>
       </div>
 
@@ -204,8 +222,24 @@ export default function Documentation() {
         {/* Sidebar */}
         <nav className="hidden lg:block w-60 flex-shrink-0">
           <div className="sticky top-24 space-y-1">
-            <p className="text-xs font-semibold text-t-text/50 uppercase tracking-wider mb-3 px-3">{t('docs.sidebarTitle')}</p>
-            {sections.map((s) => (
+            <p className="text-xs font-semibold text-t-text/50 uppercase tracking-wider mb-3 px-3">{t('docs.sidebarGuide')}</p>
+            {guidesSections.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => setActiveSection(s.id)}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                  activeSection === s.id
+                    ? 'bg-primary/10 text-primary font-semibold border-l-2 border-primary'
+                    : 'text-t-text/60 hover:text-t-text/90 hover:bg-t-surface/50'
+                }`}
+              >
+                <s.icon className="w-4 h-4 flex-shrink-0" />
+                {s.label}
+              </button>
+            ))}
+            <div className="h-px bg-t-border/20 my-4" />
+            <p className="text-xs font-semibold text-t-text/50 uppercase tracking-wider mb-3 px-3">{t('docs.sidebarApi')}</p>
+            {apiSections.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setActiveSection(s.id)}
@@ -224,85 +258,238 @@ export default function Documentation() {
 
         {/* Content */}
         <main className="flex-1 min-w-0 max-w-3xl">
-          {/* ===== QUICKSTART ===== */}
-          {activeSection === 'quickstart' && (
+
+          {/* ===== GETTING STARTED (UI Guide) ===== */}
+          {activeSection === 'getting-started' && (
             <div>
-              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.quickstartTitle')}</h1>
-              <p className="text-t-text/70 mb-8 text-lg leading-relaxed">{t('docs.quickstartSubtitle')}</p>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.gettingStartedTitle')}</h1>
+              <p className="text-t-text/70 mb-8 text-lg leading-relaxed">{t('docs.gettingStartedSubtitle')}</p>
 
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-t-text">
-                    <span className="text-primary font-bold">1.</span> {t('docs.step1Title')}
-                  </h3>
-                  <p className="text-t-text/70 mb-3 leading-relaxed">{t('docs.step1Desc')}</p>
-                  <CodeBlock language="bash" code={`curl -X POST https://your-api.com/api/auth/register \\
-  -H "Content-Type: application/json" \\
-  -d '{"email": "you@example.com", "password": "yourpassword"}'`} />
+              <div className="space-y-6">
+                {/* Step 1 */}
+                <div className="p-6 rounded-2xl bg-t-surface/40 border border-t-border/20">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <User className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-t-text mb-2">{t('docs.gsStep1Title')}</h3>
+                      <p className="text-t-text/70 leading-relaxed mb-3">{t('docs.gsStep1Desc')}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep1Item1')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep1Item2')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep1Item3')}</span></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-t-text">
-                    <span className="text-primary font-bold">2.</span> {t('docs.step2Title')}
-                  </h3>
-                  <p className="text-t-text/70 mb-3 leading-relaxed">{t('docs.step2Desc')}</p>
-                  <CodeBlock language="bash" code={`curl -X POST https://your-api.com/api/agents \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "My Agent",
-    "description": "A helpful assistant",
-    "config": {
-      "model": "openai/gpt-4.1",
-      "systemPrompt": "You are a helpful assistant.",
-      "temperature": 0.7,
-      "maxTokens": 2048,
-      "tools": []
-    }
-  }'`} />
+                {/* Step 2 */}
+                <div className="p-6 rounded-2xl bg-t-surface/40 border border-t-border/20">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-t-text mb-2">{t('docs.gsStep2Title')}</h3>
+                      <p className="text-t-text/70 leading-relaxed mb-3">{t('docs.gsStep2Desc')}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep2Item1')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep2Item2')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep2Item3')}</span></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-t-text">
-                    <span className="text-primary font-bold">3.</span> {t('docs.step3Title')}
-                  </h3>
-                  <p className="text-t-text/70 mb-3 leading-relaxed">{t('docs.step3Desc')}</p>
-                  <CodeBlock language="bash" code={`curl -X POST https://your-api.com/api/agents/AGENT_ID/chat \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{"messages": [{"role": "user", "content": "Hello!"}]}'`} />
+                {/* Step 3 */}
+                <div className="p-6 rounded-2xl bg-t-surface/40 border border-t-border/20">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <MessageSquare className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-t-text mb-2">{t('docs.gsStep3Title')}</h3>
+                      <p className="text-t-text/70 leading-relaxed mb-3">{t('docs.gsStep3Desc')}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep3Item1')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep3Item2')}</span></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <h3 className="text-lg font-semibold mb-2 flex items-center gap-2 text-t-text">
-                    <span className="text-primary font-bold">4.</span> {t('docs.step4Title')}
-                  </h3>
-                  <p className="text-t-text/70 mb-3 leading-relaxed">{t('docs.step4Desc')}</p>
-                  <CodeBlock language="bash" code={`# Upload a document to the knowledge base
-curl -X POST https://your-api.com/api/agents/AGENT_ID/knowledge/upload \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
-  -F "file=@document.pdf"
-
-# Deploy your agent
-curl -X POST https://your-api.com/api/agents/AGENT_ID/deploy \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
-
-# Publish to the store
-curl -X POST https://your-api.com/api/store/publish \\
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{"agentId": "AGENT_ID", "name": "My Agent", "description": "..."}'`} />
+                {/* Step 4 */}
+                <div className="p-6 rounded-2xl bg-t-surface/40 border border-t-border/20">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-t-text mb-2">{t('docs.gsStep4Title')}</h3>
+                      <p className="text-t-text/70 leading-relaxed mb-3">{t('docs.gsStep4Desc')}</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep4Item1')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep4Item2')}</span></div>
+                        <div className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.gsStep4Item3')}</span></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              {/* Base URL */}
-              <div className="mt-10 p-5 rounded-2xl bg-primary/5 border border-primary/20">
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-primary" />
-                  {t('docs.baseUrlTitle')}
-                </h3>
-                <p className="text-sm text-t-text/70 mb-3 leading-relaxed">{t('docs.baseUrlDesc')}</p>
-                <CodeBlock language="text" code="https://gilo-prod-api.victoriousplant-cf550291.canadacentral.azurecontainerapps.io" />
+          {/* ===== GUIDE: DASHBOARD ===== */}
+          {activeSection === 'guide-dashboard' && (
+            <div>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.guideDashboardTitle')}</h1>
+              <p className="text-t-text/70 mb-6 text-lg leading-relaxed">{t('docs.guideDashboardDesc')}</p>
+
+              <div className="space-y-5">
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2 flex items-center gap-2"><PanelLeft className="w-4 h-4 text-primary" /> {t('docs.dashOverviewTitle')}</h3>
+                  <p className="text-sm text-t-text/70 leading-relaxed">{t('docs.dashOverviewDesc')}</p>
+                </div>
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2 flex items-center gap-2"><Bot className="w-4 h-4 text-primary" /> {t('docs.dashAgentsTitle')}</h3>
+                  <p className="text-sm text-t-text/70 leading-relaxed">{t('docs.dashAgentsDesc')}</p>
+                </div>
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2 flex items-center gap-2"><Settings className="w-4 h-4 text-primary" /> {t('docs.dashActionsTitle')}</h3>
+                  <ul className="space-y-1.5 mt-2">
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.dashAction1')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.dashAction2')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.dashAction3')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.dashAction4')}</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===== GUIDE: CREATE AGENT ===== */}
+          {activeSection === 'guide-create-agent' && (
+            <div>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.guideCreateTitle')}</h1>
+              <p className="text-t-text/70 mb-6 text-lg leading-relaxed">{t('docs.guideCreateDesc')}</p>
+
+              <div className="space-y-5">
+                {[1,2,3,4,5].map((n) => (
+                  <div key={n} className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                    <h3 className="font-semibold text-t-text mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">{n}</span>
+                      {t(`docs.guideCreate${n}Title`)}
+                    </h3>
+                    <p className="text-sm text-t-text/70 leading-relaxed">{t(`docs.guideCreate${n}Desc`)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ===== GUIDE: BUILDER ===== */}
+          {activeSection === 'guide-builder' && (
+            <div>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.guideBuilderTitle')}</h1>
+              <p className="text-t-text/70 mb-6 text-lg leading-relaxed">{t('docs.guideBuilderDesc')}</p>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                {['config', 'chat', 'tools', 'preview'].map((panel) => (
+                  <div key={panel} className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                    <h3 className="font-semibold text-t-text mb-2">{t(`docs.builder${panel.charAt(0).toUpperCase() + panel.slice(1)}Title`)}</h3>
+                    <p className="text-sm text-t-text/70 leading-relaxed">{t(`docs.builder${panel.charAt(0).toUpperCase() + panel.slice(1)}Desc`)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                <p className="text-sm text-t-text/70 leading-relaxed">
+                  <strong className="text-primary">{t('docs.builderTip')}</strong> {t('docs.builderTipDesc')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ===== GUIDE: KNOWLEDGE ===== */}
+          {activeSection === 'guide-knowledge' && (
+            <div>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.guideKnowledgeTitle')}</h1>
+              <p className="text-t-text/70 mb-6 text-lg leading-relaxed">{t('docs.guideKnowledgeDesc')}</p>
+
+              <div className="space-y-5">
+                {[1,2,3].map((n) => (
+                  <div key={n} className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                    <h3 className="font-semibold text-t-text mb-2 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">{n}</span>
+                      {t(`docs.guideKb${n}Title`)}
+                    </h3>
+                    <p className="text-sm text-t-text/70 leading-relaxed">{t(`docs.guideKb${n}Desc`)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3 text-t-text">{t('docs.guideKbFormatsTitle')}</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {['PDF', 'TXT', 'Markdown', 'CSV', 'JSON', 'DOCX', 'HTML', 'XML'].map((fmt) => (
+                    <div key={fmt} className="text-center p-3 rounded-xl bg-t-surface/50 border border-t-border/20">
+                      <p className="text-sm font-mono font-semibold text-t-text/80">.{fmt.toLowerCase()}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===== GUIDE: CHAT ===== */}
+          {activeSection === 'guide-chat' && (
+            <div>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.guideChatTitle')}</h1>
+              <p className="text-t-text/70 mb-6 text-lg leading-relaxed">{t('docs.guideChatDesc')}</p>
+
+              <div className="space-y-5">
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2">{t('docs.chatPlaygroundTitle')}</h3>
+                  <p className="text-sm text-t-text/70 leading-relaxed">{t('docs.chatPlaygroundDesc')}</p>
+                </div>
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2">{t('docs.chatFeaturesTitle')}</h3>
+                  <ul className="space-y-1.5 mt-2">
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.chatFeature1')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.chatFeature2')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.chatFeature3')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.chatFeature4')}</span></li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ===== GUIDE: STORE ===== */}
+          {activeSection === 'guide-store' && (
+            <div>
+              <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.guideStoreTitle')}</h1>
+              <p className="text-t-text/70 mb-6 text-lg leading-relaxed">{t('docs.guideStoreDesc')}</p>
+
+              <div className="space-y-5">
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2">{t('docs.storeBrowseTitle')}</h3>
+                  <p className="text-sm text-t-text/70 leading-relaxed">{t('docs.storeBrowseDesc')}</p>
+                </div>
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2">{t('docs.storePublishTitle')}</h3>
+                  <p className="text-sm text-t-text/70 leading-relaxed mb-3">{t('docs.storePublishGuideDesc')}</p>
+                  <ul className="space-y-1.5">
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.storePublishStep1')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.storePublishStep2')}</span></li>
+                    <li className="flex items-start gap-2"><ChevronRight className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-sm text-t-text/70">{t('docs.storePublishStep3')}</span></li>
+                  </ul>
+                </div>
+                <div className="p-5 rounded-xl bg-t-surface/40 border border-t-border/20">
+                  <h3 className="font-semibold text-t-text mb-2">{t('docs.storeTestTitle')}</h3>
+                  <p className="text-sm text-t-text/70 leading-relaxed">{t('docs.storeTestDesc')}</p>
+                </div>
               </div>
             </div>
           )}
@@ -312,6 +499,16 @@ curl -X POST https://your-api.com/api/store/publish \\
             <div>
               <h1 className="text-3xl font-bold mb-3 text-t-text">{t('docs.authTitle')}</h1>
               <p className="text-t-text/70 mb-6 leading-relaxed">{t('docs.authDesc')}</p>
+
+              {/* Base URL */}
+              <div className="mb-6 p-5 rounded-2xl bg-primary/5 border border-primary/20">
+                <h3 className="font-semibold mb-2 flex items-center gap-2">
+                  <Globe className="w-4 h-4 text-primary" />
+                  {t('docs.baseUrlTitle')}
+                </h3>
+                <p className="text-sm text-t-text/70 mb-3 leading-relaxed">{t('docs.baseUrlDesc')}</p>
+                <CodeBlock language="text" code="https://gilo-prod-api.victoriousplant-cf550291.canadacentral.azurecontainerapps.io" />
+              </div>
 
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 mb-6">
                 <p className="text-sm text-amber-400">
