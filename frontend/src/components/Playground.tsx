@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, X, Bot, User, Trash2 } from 'lucide-react';
+import { Loader2, X, Bot, User, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
 
@@ -233,26 +233,40 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
 
       {/* Input */}
       <div className="p-3 border-t border-t-overlay/10">
-        <div className="flex items-end gap-2">
+        <div className="relative">
           <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('playground.placeholder')}
-            className="flex-1 bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+            className="w-full bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 pr-12 rounded-xl text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
             rows={2}
             disabled={isStreaming}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isStreaming}
-            className="p-3 rounded-xl btn-gradient disabled:opacity-30 transition-all"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-t-text flex items-center justify-center disabled:opacity-50 hover:bg-t-overlay/10 transition-colors"
           >
             {isStreaming ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5"
+              >
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
             )}
           </button>
         </div>
