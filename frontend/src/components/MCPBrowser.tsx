@@ -42,6 +42,14 @@ export default function MCPBrowser({
   const [resources, setResources] = useState<MCPResource[]>([]);
   const [prompts, setPrompts] = useState<MCPPrompt[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('authToken');
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
 
   useEffect(() => {
     fetchData();
@@ -49,17 +57,33 @@ export default function MCPBrowser({
 
   const fetchData = async () => {
     try {
+      setError(null);
+      const authHeaders = getAuthHeaders();
       const [toolsRes, resourcesRes, promptsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/mcp/tools`),
-        fetch(`${API_BASE}/api/mcp/resources`),
-        fetch(`${API_BASE}/api/mcp/prompts`),
+        fetch(`${API_BASE}/api/mcp/tools`, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/mcp/resources`, { headers: authHeaders }),
+        fetch(`${API_BASE}/api/mcp/prompts`, { headers: authHeaders }),
       ]);
 
-      setTools(await toolsRes.json());
-      setResources(await resourcesRes.json());
-      setPrompts(await promptsRes.json());
-    } catch (error) {
-      console.error('Error fetching MCP data:', error);
+      if (!toolsRes.ok || !resourcesRes.ok || !promptsRes.ok) {
+        if (toolsRes.status === 401) { setError(t('common.unauthorized')); return; }
+        throw new Error('Failed to fetch MCP data');
+      }
+
+      const [toolsData, resourcesData, promptsData] = await Promise.all([
+        toolsRes.json(),
+        resourcesRes.json(),
+        promptsRes.json(),
+      ]);
+      setTools(Array.isArray(toolsData) ? toolsData : []);
+      setResources(Array.isArray(resourcesData) ? resourcesData : []);
+      setPrompts(Array.isArray(promptsData) ? promptsData : []);
+    } catch (err) {
+      console.error('Error fetching MCP data:', err);
+      setTools([]);
+      setResources([]);
+      setPrompts([]);
+      setError(t('mcp.fetchError') || 'Failed to load MCP data');
     } finally {
       setLoading(false);
     }
@@ -123,6 +147,12 @@ export default function MCPBrowser({
         {loading ? (
           <div className="text-center py-8 animate-fade-in-up">
             <div className="animate-pulse text-t-text/40">{t('common.loading')}</div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 animate-fade-in-up">
+            <Wrench className="w-12 h-12 mx-auto mb-3 text-red-400/40" />
+            <p className="text-red-400/70 text-sm">{error}</p>
+            <button onClick={fetchData} className="mt-3 text-xs text-blue-400 hover:underline">{t('common.retry') || 'Retry'}</button>
           </div>
         ) : (
           <>

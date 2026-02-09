@@ -62,7 +62,16 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
       const res = await fetch(`${API_BASE}/api/agents/${agentId}`, { headers });
       if (res.ok) {
         const agent = await res.json();
-        setConfig(agent.config);
+        if (agent.config && typeof agent.config === 'object') {
+          setConfig({
+            model: agent.config.model || 'openai/gpt-4.1',
+            temperature: typeof agent.config.temperature === 'number' ? agent.config.temperature : 0.7,
+            maxTokens: typeof agent.config.maxTokens === 'number' ? agent.config.maxTokens : 2048,
+            systemPrompt: agent.config.systemPrompt || '',
+            welcomeMessage: agent.config.welcomeMessage || '',
+            tools: Array.isArray(agent.config.tools) ? agent.config.tools : [],
+          });
+        }
       }
     } catch (error) {
       console.error('Error loading agent config:', error);

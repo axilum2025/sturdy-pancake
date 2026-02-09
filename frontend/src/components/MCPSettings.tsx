@@ -21,6 +21,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
   const { t } = useTranslation();
   const [servers, setServers] = useState<MCPServer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newServer, setNewServer] = useState({
     name: '',
@@ -29,17 +30,31 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
     description: '',
   });
 
+  const getAuthHeaders = (): Record<string, string> => {
+    const token = localStorage.getItem('authToken');
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
   useEffect(() => {
     fetchServers();
   }, []);
 
   const fetchServers = async () => {
     try {
-      const response = await fetch(`${API_BASE}/api/mcp/servers`);
+      setError(null);
+      const response = await fetch(`${API_BASE}/api/mcp/servers`, { headers: getAuthHeaders() });
+      if (!response.ok) {
+        if (response.status === 401) { setError(t('common.unauthorized')); return; }
+        throw new Error(`HTTP ${response.status}`);
+      }
       const data = await response.json();
-      setServers(data);
-    } catch (error) {
-      console.error('Error fetching MCP servers:', error);
+      setServers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Error fetching MCP servers:', err);
+      setServers([]);
+      setError(t('mcp.fetchError') || 'Failed to load servers');
     } finally {
       setLoading(false);
     }
@@ -51,11 +66,11 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
         ? `${API_BASE}/api/mcp/servers/${serverId}/connect`
         : `${API_BASE}/api/mcp/servers/${serverId}/disconnect`;
       
-      await fetch(endpoint, { method: 'POST' });
+      await fetch(endpoint, { method: 'POST', headers: getAuthHeaders() });
       
       await fetch(`${API_BASE}/api/mcp/servers/${serverId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ enabled }),
       });
       
@@ -69,7 +84,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
     if (!confirm(t('mcp.confirmDelete'))) return;
     
     try {
-      await fetch(`${API_BASE}/api/mcp/servers/${serverId}`, { method: 'DELETE' });
+      await fetch(`${API_BASE}/api/mcp/servers/${serverId}`, { method: 'DELETE', headers: getAuthHeaders() });
       fetchServers();
     } catch (error) {
       console.error('Error deleting server:', error);
@@ -82,7 +97,7 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
       
       await fetch(`${API_BASE}/api/mcp/servers`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           name: newServer.name,
           command: newServer.command,
@@ -188,6 +203,12 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
         {loading ? (
           <div className="text-center py-8 animate-fade-in-up">
             <div className="animate-pulse text-t-text/40">{t('common.loading')}</div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 animate-fade-in-up">
+            <Settings className="w-12 h-12 mx-auto mb-3 text-red-400/40" />
+            <p className="text-red-400/70 text-sm">{error}</p>
+            <button onClick={fetchServers} className="mt-3 text-xs text-blue-400 hover:underline">{t('common.retry') || 'Retry'}</button>
           </div>
         ) : servers.length === 0 ? (
           <div className="text-center py-8 animate-fade-in-up">

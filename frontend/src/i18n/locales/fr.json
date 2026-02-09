@@ -20,7 +20,9 @@
     "private": "Privé",
     "all": "Tous",
     "none": "Aucun",
-    "error": "Erreur"
+    "error": "Erreur",
+    "unauthorized": "Non autorisé — veuillez vous reconnecter",
+    "retry": "Réessayer"
   },
 
   "nav": {
@@ -290,7 +292,8 @@
     "noTools": "Aucun outil disponible",
     "noResources": "Aucune ressource disponible",
     "noPrompts": "Aucun prompt disponible",
-    "enableServersHint": "Activez des serveurs MCP dans les paramètres"
+    "enableServersHint": "Activez des serveurs MCP dans les paramètres",
+    "fetchError": "Impossible de charger les données MCP"
   },
 
   "playground": {

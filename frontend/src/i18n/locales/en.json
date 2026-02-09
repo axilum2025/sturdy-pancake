@@ -20,7 +20,9 @@
     "private": "Private",
     "all": "All",
     "none": "None",
-    "error": "Error"
+    "error": "Error",
+    "unauthorized": "Unauthorized — please sign in again",
+    "retry": "Retry"
   },
 
   "nav": {
@@ -290,7 +292,8 @@
     "noTools": "No tools available",
     "noResources": "No resources available",
     "noPrompts": "No prompts available",
-    "enableServersHint": "Enable MCP servers in settings"
+    "enableServersHint": "Enable MCP servers in settings",
+    "fetchError": "Failed to load MCP data"
   },
 
   "playground": {
