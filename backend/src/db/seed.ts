@@ -13,7 +13,7 @@ import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 const DEMO_USER_EMAIL = 'demo@example.com';
-const DEMO_PASSWORD = 'demo';
+const DEMO_PASSWORD = 'demo123';
 
 async function seed() {
   console.log('🌱 Seeding database...');

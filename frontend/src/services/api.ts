@@ -20,14 +20,18 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 responses globally (token expired)
+// Handle responses globally — extract server error messages + handle 401
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('authToken');
-      // Optionally redirect to login
       window.dispatchEvent(new CustomEvent('auth:expired'));
+    }
+    // Replace Axios generic message with server error message when available
+    const serverMessage = error.response?.data?.error;
+    if (serverMessage) {
+      error.message = serverMessage;
     }
     return Promise.reject(error);
   }
@@ -59,6 +63,9 @@ export interface User {
 
 export const register = async (email: string, password: string): Promise<{ user: User; token: string }> => {
   const response = await api.post('/auth/register', { email, password });
+  if (response.data.token) {
+    localStorage.setItem('authToken', response.data.token);
+  }
   return response.data;
 };
 

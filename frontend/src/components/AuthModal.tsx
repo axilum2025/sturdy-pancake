@@ -191,10 +191,19 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Demo credentials */}
           <div className="relative mt-5 pt-5">
             <div className="divider-glow mb-5" />
-            <div className="flex items-center justify-center gap-2 text-t-text/20 text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setEmail('demo@example.com');
+                setPassword('demo123');
+                setMode('login');
+                setError('');
+              }}
+              className="flex items-center justify-center gap-2 text-t-text/30 hover:text-blue-400 text-xs transition-colors mx-auto cursor-pointer"
+            >
               <Zap className="w-3 h-3" />
               <span>{t('auth.demo')}</span>
-            </div>
+            </button>
           </div>
 
           {/* Powered by */}
