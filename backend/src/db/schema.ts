@@ -3,7 +3,7 @@
 // All tables for the application
 // ============================================================
 
-import { pgTable, uuid, varchar, text, integer, real, timestamp, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, integer, real, timestamp, jsonb, vector } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // ============================================================
@@ -132,6 +132,43 @@ export const messages = pgTable('messages', {
 });
 
 // ============================================================
+// Knowledge Documents (uploaded files for RAG)
+// ============================================================
+
+export const knowledgeDocuments = pgTable('knowledge_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  filename: varchar('filename', { length: 500 }).notNull(),
+  mimeType: varchar('mime_type', { length: 100 }).notNull(),
+  fileSize: integer('file_size').notNull(), // bytes
+  chunkCount: integer('chunk_count').notNull().default(0),
+  status: varchar('status', { length: 20 }).notNull().default('processing'), // processing | ready | error
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
+// Knowledge Chunks (vector-indexed document segments)
+// ============================================================
+
+export const knowledgeChunks = pgTable('knowledge_chunks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  documentId: uuid('document_id').notNull().references(() => knowledgeDocuments.id, { onDelete: 'cascade' }),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  content: text('content').notNull(),
+  chunkIndex: integer('chunk_index').notNull(),
+  tokenCount: integer('token_count').notNull().default(0),
+  embedding: vector('embedding', { dimensions: 1536 }), // text-embedding-3-small = 1536 dims
+  metadata: jsonb('metadata').$type<{
+    page?: number;
+    section?: string;
+    source?: string;
+  }>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
 // API Keys (for public agent endpoints)
 // ============================================================
 
@@ -189,6 +226,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   refreshTokens: many(refreshTokens),
   apiKeys: many(apiKeys),
   webhooks: many(webhooks),
+  knowledgeDocuments: many(knowledgeDocuments),
 }));
 
 export const agentsRelations = relations(agents, ({ one, many }) => ({
@@ -196,6 +234,8 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   conversations: many(conversations),
   apiKeys: many(apiKeys),
   webhooks: many(webhooks),
+  knowledgeDocuments: many(knowledgeDocuments),
+  knowledgeChunks: many(knowledgeChunks),
 }));
 
 export const storeAgentsRelations = relations(storeAgents, ({ one }) => ({
@@ -220,4 +260,15 @@ export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
 export const webhooksRelations = relations(webhooks, ({ one }) => ({
   agent: one(agents, { fields: [webhooks.agentId], references: [agents.id] }),
   user: one(users, { fields: [webhooks.userId], references: [users.id] }),
+}));
+
+export const knowledgeDocumentsRelations = relations(knowledgeDocuments, ({ one, many }) => ({
+  agent: one(agents, { fields: [knowledgeDocuments.agentId], references: [agents.id] }),
+  user: one(users, { fields: [knowledgeDocuments.userId], references: [users.id] }),
+  chunks: many(knowledgeChunks),
+}));
+
+export const knowledgeChunksRelations = relations(knowledgeChunks, ({ one }) => ({
+  document: one(knowledgeDocuments, { fields: [knowledgeChunks.documentId], references: [knowledgeDocuments.id] }),
+  agent: one(agents, { fields: [knowledgeChunks.agentId], references: [agents.id] }),
 }));

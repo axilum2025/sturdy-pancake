@@ -1,5 +1,5 @@
 // ============================================================
-// GiLo AI – Webhook Routes
+// GiLo AI – Webhooks Routes
 // CRUD for agent webhooks (JWT-protected)
 // ============================================================
 
@@ -11,32 +11,7 @@ import { AuthenticatedRequest } from '../middleware/auth';
 export const webhooksRouter = Router();
 
 // ----------------------------------------------------------
-// GET /api/agents/:id/webhooks — List webhooks for an agent
-// ----------------------------------------------------------
-webhooksRouter.get('/:id/webhooks', async (req: Request, res: Response) => {
-  try {
-    const userId = (req as AuthenticatedRequest).userId;
-    const agentId = req.params.id;
-
-    // Verify agent belongs to user
-    const agent = await agentModel.findById(agentId);
-    if (!agent) return res.status(404).json({ error: 'Agent not found' });
-    if (agent.userId !== userId) return res.status(403).json({ error: 'Access denied' });
-
-    const hooks = await webhookModel.findByAgentId(agentId);
-    res.json({
-      webhooks: hooks.map(h => webhookModel.toResponse(h)),
-      total: hooks.length,
-      availableEvents: WEBHOOK_EVENTS,
-    });
-  } catch (error: any) {
-    console.error('List webhooks error:', error);
-    res.status(500).json({ error: 'Failed to list webhooks', details: error.message });
-  }
-});
-
-// ----------------------------------------------------------
-// POST /api/agents/:id/webhooks — Create a webhook
+// POST /api/agents/:id/webhooks — Create a new webhook
 // ----------------------------------------------------------
 webhooksRouter.post('/:id/webhooks', async (req: Request, res: Response) => {
   try {
@@ -48,10 +23,7 @@ webhooksRouter.post('/:id/webhooks', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Webhook URL is required' });
     }
     if (!events || !Array.isArray(events) || events.length === 0) {
-      return res.status(400).json({
-        error: 'At least one event is required',
-        availableEvents: WEBHOOK_EVENTS,
-      });
+      return res.status(400).json({ error: 'At least one event is required', availableEvents: WEBHOOK_EVENTS });
     }
 
     // Validate events
@@ -65,13 +37,17 @@ webhooksRouter.post('/:id/webhooks', async (req: Request, res: Response) => {
 
     // Verify agent belongs to user
     const agent = await agentModel.findById(agentId);
-    if (!agent) return res.status(404).json({ error: 'Agent not found' });
-    if (agent.userId !== userId) return res.status(403).json({ error: 'Access denied' });
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    if (agent.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
 
-    const result = await webhookModel.create(agentId, userId, { url, events });
+    const result = await webhookModel.create(agentId, userId, { url: url.trim(), events });
 
     res.status(201).json({
-      message: 'Webhook created. Store the secret securely — it will not be shown again.',
+      message: 'Webhook created. Store the signing secret securely.',
       webhook: result.webhook,
       secret: result.secret,
     });
@@ -82,7 +58,35 @@ webhooksRouter.post('/:id/webhooks', async (req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------
-// PATCH /api/agents/:id/webhooks/:webhookId — Update webhook
+// GET /api/agents/:id/webhooks — List webhooks for an agent
+// ----------------------------------------------------------
+webhooksRouter.get('/:id/webhooks', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    const agentId = req.params.id;
+
+    // Verify agent belongs to user
+    const agent = await agentModel.findById(agentId);
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+    if (agent.userId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const hooks = await webhookModel.findByAgentId(agentId);
+    res.json({
+      webhooks: hooks.map(h => webhookModel.toResponse(h)),
+      total: hooks.length,
+    });
+  } catch (error: any) {
+    console.error('List webhooks error:', error);
+    res.status(500).json({ error: 'Failed to list webhooks', details: error.message });
+  }
+});
+
+// ----------------------------------------------------------
+// PATCH /api/agents/:id/webhooks/:webhookId — Update a webhook
 // ----------------------------------------------------------
 webhooksRouter.patch('/:id/webhooks/:webhookId', async (req: Request, res: Response) => {
   try {
@@ -90,23 +94,12 @@ webhooksRouter.patch('/:id/webhooks/:webhookId', async (req: Request, res: Respo
     const { webhookId } = req.params;
     const { url, events, active } = req.body;
 
-    // Validate events if provided
-    if (events) {
-      const invalidEvents = events.filter((e: string) => !WEBHOOK_EVENTS.includes(e as any));
-      if (invalidEvents.length > 0) {
-        return res.status(400).json({
-          error: `Invalid events: ${invalidEvents.join(', ')}`,
-          availableEvents: WEBHOOK_EVENTS,
-        });
-      }
-    }
-
-    const result = await webhookModel.update(webhookId, userId, { url, events, active });
-    if (!result) {
+    const updated = await webhookModel.update(webhookId, userId, { url, events, active });
+    if (!updated) {
       return res.status(404).json({ error: 'Webhook not found' });
     }
 
-    res.json({ webhook: result });
+    res.json({ webhook: updated });
   } catch (error: any) {
     console.error('Update webhook error:', error);
     res.status(500).json({ error: 'Failed to update webhook', details: error.message });
@@ -114,7 +107,7 @@ webhooksRouter.patch('/:id/webhooks/:webhookId', async (req: Request, res: Respo
 });
 
 // ----------------------------------------------------------
-// DELETE /api/agents/:id/webhooks/:webhookId — Delete webhook
+// DELETE /api/agents/:id/webhooks/:webhookId — Delete a webhook
 // ----------------------------------------------------------
 webhooksRouter.delete('/:id/webhooks/:webhookId', async (req: Request, res: Response) => {
   try {
@@ -123,7 +116,7 @@ webhooksRouter.delete('/:id/webhooks/:webhookId', async (req: Request, res: Resp
 
     const deleted = await webhookModel.delete(webhookId, userId);
     if (!deleted) {
-      return res.status(404).json({ error: 'Webhook not found' });
+      return res.status(404).json({ error: 'Webhook not found or access denied' });
     }
 
     res.json({ message: 'Webhook deleted' });

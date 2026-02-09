@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { agentModel, AgentCreateDTO } from '../models/agent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
+import { knowledgeService } from '../services/knowledgeService';
 import OpenAI from 'openai';
 
 export const agentsRouter = Router();
@@ -133,9 +134,27 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
 
     const { client } = copilotService.getClientInfo();
 
+    // RAG: search knowledge base for relevant context
+    let systemPrompt = agent.config.systemPrompt;
+    const ragEnabled = agent.config.knowledgeBase && agent.config.knowledgeBase.length > 0;
+    if (ragEnabled) {
+      const lastUserMsg = [...messages].reverse().find((m: CopilotMessage) => m.role === 'user');
+      if (lastUserMsg) {
+        try {
+          const results = await knowledgeService.search(agent.id, lastUserMsg.content, 5);
+          if (results.length > 0) {
+            const ragContext = knowledgeService.buildRagContext(results);
+            systemPrompt += '\n\n' + ragContext;
+          }
+        } catch (ragErr) {
+          console.warn('RAG search failed, continuing without context:', ragErr);
+        }
+      }
+    }
+
     // Build messages: agent's system prompt + conversation history
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'system', content: agent.config.systemPrompt },
+      { role: 'system', content: systemPrompt },
       ...(messages as CopilotMessage[]).map((m) => ({
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,

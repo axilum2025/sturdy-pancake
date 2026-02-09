@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store, Globe } from 'lucide-react';
+import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
@@ -9,7 +9,6 @@ import MCPSettings from '../components/MCPSettings';
 import MCPBrowser from '../components/MCPBrowser';
 import AgentConfig from '../components/AgentConfig';
 import PublishModal from '../components/PublishModal';
-import DeployPanel from '../components/DeployPanel';
 import { useSessionStore } from '../store/sessionStore';
 import { useBuilderStore } from '../store/builderStore';
 
@@ -26,7 +25,6 @@ export default function Builder() {
   const [showHistory, setShowHistory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
-  const [showDeploy, setShowDeploy] = useState(false);
   const [publishedStoreId, setPublishedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,13 +99,6 @@ export default function Builder() {
           title={publishedStoreId ? t('builder.publishedStore') : t('builder.publishStore')}
         >
           <Rocket className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => setShowDeploy(true)}
-          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
-          title="Déploiement API"
-        >
-          <Globe className="w-5 h-5" />
         </button>
         <button
           onClick={() => navigate('/store')}
@@ -271,19 +262,6 @@ export default function Builder() {
               setShowPublish(false);
             }}
           />
-        )}
-
-        {/* Deploy Panel Slidebar */}
-        {showDeploy && projectId && (
-          <>
-            <div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
-              onClick={() => setShowDeploy(false)}
-            />
-            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
-              <DeployPanel agentId={projectId} onClose={() => setShowDeploy(false)} />
-            </div>
-          </>
         )}
         </div>
       </div>

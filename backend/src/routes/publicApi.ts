@@ -1,11 +1,12 @@
 // ============================================================
-// GiLo AI – Public API v1 Routes
-// Public endpoints authenticated by API keys (not JWT)
+// GiLo AI – Public API Routes (v1)
+// API-key authenticated endpoints for deployed agents
 // ============================================================
 
 import { Router, Request, Response } from 'express';
 import { agentModel } from '../models/agent';
 import { webhookModel } from '../models/webhook';
+import { knowledgeService } from '../services/knowledgeService';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { ApiKeyRequest } from '../middleware/apiKeyAuth';
 import OpenAI from 'openai';
@@ -13,18 +14,16 @@ import OpenAI from 'openai';
 export const publicApiRouter = Router();
 
 // ----------------------------------------------------------
-// POST /api/v1/agents/:id/chat — Chat with a deployed agent
-// Authenticated via API key (not JWT)
-// Supports both SSE streaming and JSON response
+// GET /api/v1/agents/:id — Get public agent info
 // ----------------------------------------------------------
-publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => {
+publicApiRouter.get('/agents/:id', async (req: Request, res: Response) => {
   try {
     const apiReq = req as ApiKeyRequest;
     const agentId = req.params.id;
 
-    // Verify this key is for this specific agent
+    // Verify the API key matches this agent
     if (apiReq.agentId !== agentId) {
-      return res.status(403).json({ error: 'API key is not authorized for this agent' });
+      return res.status(403).json({ error: 'API key does not match this agent' });
     }
 
     const agent = await agentModel.findById(agentId);
@@ -32,32 +31,89 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
       return res.status(404).json({ error: 'Agent not found' });
     }
 
-    const { messages, stream: wantStream } = req.body;
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({
-        error: 'messages array is required',
-        example: { messages: [{ role: 'user', content: 'Hello' }] },
-      });
+    res.json({
+      id: agent.id,
+      name: agent.name,
+      description: agent.description,
+      model: agent.config.model,
+      welcomeMessage: agent.config.welcomeMessage,
+      status: agent.status,
+    });
+  } catch (error: any) {
+    console.error('Public API get agent error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ----------------------------------------------------------
+// POST /api/v1/agents/:id/chat — Chat with deployed agent
+// Supports SSE streaming (default) and JSON mode (?stream=false)
+// ----------------------------------------------------------
+publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => {
+  try {
+    const apiReq = req as ApiKeyRequest;
+    const agentId = req.params.id;
+
+    // Verify the API key matches this agent
+    if (apiReq.agentId !== agentId) {
+      return res.status(403).json({ error: 'API key does not match this agent' });
     }
 
+    const agent = await agentModel.findById(agentId);
+    if (!agent) {
+      return res.status(404).json({ error: 'Agent not found' });
+    }
+
+    const { messages } = req.body;
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      return res.status(400).json({ error: 'messages array is required' });
+    }
+
+    const streamMode = req.query.stream !== 'false';
     const { client } = copilotService.getClientInfo();
 
+    // Fire webhook: on_conversation_start (if first message)
+    if (messages.length === 1) {
+      webhookModel.fire(agentId, 'on_conversation_start', {
+        messageCount: messages.length,
+      }).catch(err => console.error('Webhook fire error:', err));
+    }
+
+    // Fire webhook: on_message
+    webhookModel.fire(agentId, 'on_message', {
+      role: 'user',
+      content: messages[messages.length - 1]?.content?.substring(0, 200),
+    }).catch(err => console.error('Webhook fire error:', err));
+
+    // RAG: search knowledge base for relevant context
+    let systemPrompt = agent.config.systemPrompt;
+    const ragEnabled = agent.config.knowledgeBase && agent.config.knowledgeBase.length > 0;
+    if (ragEnabled) {
+      const lastUserMsg = [...messages].reverse().find((m: CopilotMessage) => m.role === 'user');
+      if (lastUserMsg) {
+        try {
+          const results = await knowledgeService.search(agent.id, lastUserMsg.content, 5);
+          if (results.length > 0) {
+            const ragContext = knowledgeService.buildRagContext(results);
+            systemPrompt += '\n\n' + ragContext;
+          }
+        } catch (ragErr) {
+          console.warn('RAG search failed, continuing without context:', ragErr);
+        }
+      }
+    }
+
+    // Build messages
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'system', content: agent.config.systemPrompt },
+      { role: 'system', content: systemPrompt },
       ...(messages as CopilotMessage[]).map((m) => ({
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
       })),
     ];
 
-    // Fire webhook: on_conversation_start
-    webhookModel.fire(agentId, 'on_conversation_start', {
-      messagesCount: messages.length,
-      firstMessage: messages[0]?.content?.substring(0, 200),
-    }).catch(err => console.error('Webhook fire error:', err));
-
-    // --- Streaming mode (default) ---
-    if (wantStream !== false) {
+    if (streamMode) {
+      // --- SSE Streaming ---
       const stream = await client.chat.completions.create({
         model: agent.config.model,
         messages: openaiMessages,
@@ -86,14 +142,7 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
         }
       }
 
-      // Fire webhook: on_message
-      webhookModel.fire(agentId, 'on_message', {
-        role: 'assistant',
-        contentPreview: fullContent.substring(0, 500),
-        contentLength: fullContent.length,
-      }).catch(err => console.error('Webhook fire error:', err));
-
-      // Update agent stats
+      // Increment stats
       await agentModel.update(agent.id, {
         totalConversations: agent.totalConversations + 1,
         totalMessages: agent.totalMessages + messages.length + 1,
@@ -102,85 +151,43 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
       res.write('data: [DONE]\n\n');
       res.end();
     } else {
-      // --- Non-streaming (JSON) mode ---
+      // --- JSON mode ---
       const completion = await client.chat.completions.create({
         model: agent.config.model,
         messages: openaiMessages,
         temperature: agent.config.temperature,
         max_tokens: agent.config.maxTokens,
-        stream: false,
       });
 
-      const content = completion.choices[0]?.message?.content || '';
+      const assistantMessage = completion.choices?.[0]?.message?.content || '';
 
-      // Fire webhook: on_message
-      webhookModel.fire(agentId, 'on_message', {
-        role: 'assistant',
-        contentPreview: content.substring(0, 500),
-        contentLength: content.length,
-      }).catch(err => console.error('Webhook fire error:', err));
-
-      // Update agent stats
+      // Increment stats
       await agentModel.update(agent.id, {
         totalConversations: agent.totalConversations + 1,
         totalMessages: agent.totalMessages + messages.length + 1,
       });
 
       res.json({
-        id: completion.id,
-        model: completion.model,
         message: {
           role: 'assistant',
-          content,
+          content: assistantMessage,
         },
         usage: completion.usage,
-        finishReason: completion.choices[0]?.finish_reason,
       });
     }
   } catch (error: any) {
     console.error('Public API chat error:', error);
 
     // Fire webhook: on_error
-    const apiReq = req as ApiKeyRequest;
-    webhookModel.fire(apiReq.agentId, 'on_error', {
+    webhookModel.fire(req.params.id, 'on_error', {
       error: error.message,
-    }).catch(err => console.error('Webhook fire error:', err));
+    }).catch(() => {});
 
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Chat request failed', details: error.message });
+      res.status(500).json({ error: 'Chat failed', details: error.message });
     } else {
       res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
       res.end();
     }
-  }
-});
-
-// ----------------------------------------------------------
-// GET /api/v1/agents/:id — Get public agent info
-// ----------------------------------------------------------
-publicApiRouter.get('/agents/:id', async (req: Request, res: Response) => {
-  try {
-    const apiReq = req as ApiKeyRequest;
-    const agentId = req.params.id;
-
-    if (apiReq.agentId !== agentId) {
-      return res.status(403).json({ error: 'API key is not authorized for this agent' });
-    }
-
-    const agent = await agentModel.findById(agentId);
-    if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
-    }
-
-    res.json({
-      id: agent.id,
-      name: agent.name,
-      description: agent.description,
-      status: agent.status,
-      model: agent.config.model,
-      welcomeMessage: agent.config.welcomeMessage,
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: 'Failed to get agent info' });
   }
 });

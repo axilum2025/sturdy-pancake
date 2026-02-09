@@ -235,87 +235,6 @@ export const deleteAgent = async (agentId: string): Promise<void> => {
   await api.delete(`/agents/${agentId}`);
 };
 
-// ============ API Keys ============
-
-export interface ApiKeyInfo {
-  id: string;
-  agentId: string;
-  name: string;
-  keyPrefix: string;
-  lastUsedAt: string | null;
-  requestCount: number;
-  createdAt: string;
-  revoked: boolean;
-}
-
-export interface CreateApiKeyResponse {
-  message: string;
-  key: string;
-  apiKey: ApiKeyInfo;
-}
-
-export const createApiKey = async (agentId: string, name: string): Promise<CreateApiKeyResponse> => {
-  const response = await api.post(`/agents/${agentId}/api-keys`, { name });
-  return response.data;
-};
-
-export const listApiKeys = async (agentId: string): Promise<{ apiKeys: ApiKeyInfo[]; total: number }> => {
-  const response = await api.get(`/agents/${agentId}/api-keys`);
-  return response.data;
-};
-
-export const revokeApiKey = async (agentId: string, keyId: string): Promise<void> => {
-  await api.delete(`/agents/${agentId}/api-keys/${keyId}`);
-};
-
-// ============ Webhooks ============
-
-export interface WebhookInfo {
-  id: string;
-  agentId: string;
-  url: string;
-  events: string[];
-  active: boolean;
-  lastTriggeredAt: string | null;
-  failureCount: number;
-  createdAt: string;
-}
-
-export interface CreateWebhookResponse {
-  message: string;
-  webhook: WebhookInfo;
-  secret: string;
-}
-
-export const createWebhook = async (
-  agentId: string,
-  url: string,
-  events: string[],
-): Promise<CreateWebhookResponse> => {
-  const response = await api.post(`/agents/${agentId}/webhooks`, { url, events });
-  return response.data;
-};
-
-export const listWebhooks = async (
-  agentId: string,
-): Promise<{ webhooks: WebhookInfo[]; total: number; availableEvents: string[] }> => {
-  const response = await api.get(`/agents/${agentId}/webhooks`);
-  return response.data;
-};
-
-export const updateWebhook = async (
-  agentId: string,
-  webhookId: string,
-  data: Partial<{ url: string; events: string[]; active: boolean }>,
-): Promise<{ webhook: WebhookInfo }> => {
-  const response = await api.patch(`/agents/${agentId}/webhooks/${webhookId}`, data);
-  return response.data;
-};
-
-export const deleteWebhook = async (agentId: string, webhookId: string): Promise<void> => {
-  await api.delete(`/agents/${agentId}/webhooks/${webhookId}`);
-};
-
 // ============ Deployment ============
 
 export interface Deployment {
@@ -523,4 +442,122 @@ export const getRepoInfo = async (owner: string, repo: string) => {
 export const getRepoTree = async (owner: string, repo: string, branch?: string) => {
   const response = await api.post('/copilot/repo/tree', { owner, repo, branch });
   return response.data;
+};
+
+// ============ API Keys ============
+
+export interface ApiKeyResponse {
+  id: string;
+  agentId: string;
+  name: string;
+  keyPrefix: string;
+  lastUsedAt: string | null;
+  requestCount: number;
+  createdAt: string;
+  revoked: boolean;
+}
+
+export const createApiKey = async (agentId: string, name: string): Promise<{ key: string; apiKey: ApiKeyResponse }> => {
+  const response = await api.post(`/agents/${agentId}/api-keys`, { name });
+  return response.data;
+};
+
+export const listApiKeys = async (agentId: string): Promise<{ apiKeys: ApiKeyResponse[]; total: number }> => {
+  const response = await api.get(`/agents/${agentId}/api-keys`);
+  return response.data;
+};
+
+export const revokeApiKey = async (agentId: string, keyId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/api-keys/${keyId}`);
+};
+
+// ============ Webhooks ============
+
+export interface WebhookResponse {
+  id: string;
+  agentId: string;
+  url: string;
+  events: string[];
+  active: boolean;
+  lastTriggeredAt: string | null;
+  failureCount: number;
+  createdAt: string;
+}
+
+export const createWebhook = async (agentId: string, url: string, events: string[]): Promise<{ webhook: WebhookResponse; secret: string }> => {
+  const response = await api.post(`/agents/${agentId}/webhooks`, { url, events });
+  return response.data;
+};
+
+export const listWebhooks = async (agentId: string): Promise<{ webhooks: WebhookResponse[]; total: number }> => {
+  const response = await api.get(`/agents/${agentId}/webhooks`);
+  return response.data;
+};
+
+export const updateWebhook = async (agentId: string, webhookId: string, data: Partial<{ url: string; events: string[]; active: boolean }>): Promise<{ webhook: WebhookResponse }> => {
+  const response = await api.patch(`/agents/${agentId}/webhooks/${webhookId}`, data);
+  return response.data;
+};
+
+export const deleteWebhook = async (agentId: string, webhookId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/webhooks/${webhookId}`);
+};
+
+// ============ Knowledge Base ============
+
+export interface KnowledgeDocument {
+  id: string;
+  agentId: string;
+  userId: string;
+  filename: string;
+  mimeType: string;
+  fileSize: number;
+  chunkCount: number;
+  status: 'processing' | 'ready' | 'error';
+  errorMessage: string | null;
+  createdAt: string;
+}
+
+export interface KnowledgeSearchResult {
+  chunkId: string;
+  content: string;
+  score: number;
+  documentId: string;
+  filename: string;
+  metadata: { page?: number; section?: string; source?: string } | null;
+}
+
+export interface KnowledgeStats {
+  documents: number;
+  chunks: number;
+  totalTokens: number;
+}
+
+export const uploadKnowledgeDocument = async (agentId: string, file: File): Promise<{ document: KnowledgeDocument }> => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await api.post(`/agents/${agentId}/knowledge`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const listKnowledgeDocuments = async (agentId: string): Promise<{ documents: KnowledgeDocument[]; total: number }> => {
+  const response = await api.get(`/agents/${agentId}/knowledge`);
+  return response.data;
+};
+
+export const getKnowledgeStats = async (agentId: string): Promise<KnowledgeStats> => {
+  const response = await api.get(`/agents/${agentId}/knowledge/stats`);
+  return response.data;
+};
+
+export const searchKnowledge = async (agentId: string, query: string, topK?: number): Promise<{ results: KnowledgeSearchResult[]; total: number }> => {
+  const response = await api.post(`/agents/${agentId}/knowledge/search`, { query, topK });
+  return response.data;
+};
+
+export const deleteKnowledgeDocument = async (agentId: string, docId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/knowledge/${docId}`);
 };

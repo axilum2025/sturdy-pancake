@@ -1,6 +1,6 @@
 # GiLo AI — Agent Builder : Roadmap des Prochaines Phases
 
-> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → Phase 3 ✅ → **Phase 4** 🎯 prochaine
+> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → Phase 3 ✅ → Phase 4 ✅ → **Phase 5** ✅
 > **Dernière mise à jour** : Juin 2025
 
 ---
@@ -13,9 +13,9 @@
 | 2 | Agent Builder fonctionnel | ✅ Terminé | — |
 | 2.5 | Agent Store + Chat Interface | ✅ Core terminé | — |
 | 3 | Persistance & Auth réelle | ✅ Terminé | — |
-| **4** | **Déploiement réel des agents** | 🎯 **Prochaine** | **Haute** |
-| 5 | Knowledge Base & RAG | ⏳ Planifié | Haute |
-| 6 | Outils & MCP fonctionnel | ⏳ Planifié | Moyenne |
+| 4 | Déploiement réel des agents | ✅ Terminé | — |
+| **5** | **Knowledge Base & RAG** | ✅ **Terminé** | **—** |
+| 6 | Outils & MCP fonctionnel | ⏳ Planifié | Haute |
 | 7 | Analytics & Monitoring | ⏳ Planifié | Moyenne |
 | 8 | Versioning & Collaboration | ⏳ Planifié | Basse |
 | 9 | Billing Stripe | ⏳ Planifié | Haute |

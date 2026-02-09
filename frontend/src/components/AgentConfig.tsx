@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap } from 'lucide-react';
+import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
+import KnowledgePanel from './KnowledgePanel';
 
 interface AgentConfigProps {
   agentId: string;
@@ -43,7 +44,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools'>('prompt');
+  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge'>('prompt');
   const [showAddTool, setShowAddTool] = useState(false);
   const [newToolName, setNewToolName] = useState('');
   const [newToolDesc, setNewToolDesc] = useState('');
@@ -119,6 +120,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     { id: 'prompt' as const, label: t('agentConfig.instructions'), icon: MessageSquare },
     { id: 'model' as const, label: t('agentConfig.model'), icon: Cpu },
     { id: 'tools' as const, label: t('agentConfig.tools'), icon: Wrench },
+    { id: 'knowledge' as const, label: 'Knowledge', icon: BookOpen },
   ];
 
   if (isLoading) {
@@ -385,6 +387,10 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
               </div>
             )}
           </>
+        )}
+
+        {activeTab === 'knowledge' && (
+          <KnowledgePanel agentId={agentId} />
         )}
       </div>
     </div>

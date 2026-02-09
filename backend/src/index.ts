@@ -4,7 +4,6 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import path from 'path';
 import { initDb, closeDb } from './db';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
@@ -19,6 +18,7 @@ import { storeRouter } from './routes/store';
 import { apiKeysRouter } from './routes/apiKeys';
 import { webhooksRouter } from './routes/webhooks';
 import { publicApiRouter } from './routes/publicApi';
+import { knowledgeRouter } from './routes/knowledge';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { rateLimiter } from './middleware/rateLimiter';
@@ -39,9 +39,6 @@ async function main() {
   }));
   app.use(express.json());
 
-  // Serve static files (widget.js, etc.)
-  app.use(express.static(path.join(__dirname, '..', 'public')));
-
   // Public routes (no auth required)
   app.use('/api/auth', authRouter);
   app.use('/api/store', optionalAuth, storeRouter);
@@ -60,20 +57,21 @@ async function main() {
   app.use('/api/agents', authMiddleware, agentsRouter);
   app.use('/api/agents', authMiddleware, apiKeysRouter);
   app.use('/api/agents', authMiddleware, webhooksRouter);
+  app.use('/api/agents', authMiddleware, knowledgeRouter);
 
   // Health check
   app.get('/health', (req: Request, res: Response) => {
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      version: '4.0.0'
+      version: '3.0.0'
     });
   });
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      version: '4.0.0'
+      version: '3.0.0'
     });
   });
 
@@ -81,7 +79,7 @@ async function main() {
   app.get('/api', (req: Request, res: Response) => {
     res.json({
       name: 'GiLo AI — Agent Builder API',
-      version: '4.0.0',
+      version: '5.0.0',
       endpoints: {
         auth: '/api/auth',
         projects: '/api/projects',
@@ -90,6 +88,7 @@ async function main() {
         agents: '/api/agents',
         apiKeys: '/api/agents/:id/api-keys',
         webhooks: '/api/agents/:id/webhooks',
+        knowledge: '/api/agents/:id/knowledge',
         publicApi: '/api/v1/agents/:id/chat',
         store: '/api/store',
         sessions: '/api/sessions',
