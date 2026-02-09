@@ -754,5 +754,24 @@
     "tableDescription": "Description",
     "tableAuth": "Auth",
     "public": "Public"
+  },
+
+  "apiIntegration": {
+    "title": "Intégration API",
+    "endpoint": "Endpoint",
+    "apiKeys": "Clés API",
+    "createKey": "Créer",
+    "keyNamePlaceholder": "Nom de la clé (ex: production, test...)",
+    "keyCopyWarning": "Copiez cette clé maintenant. Elle ne sera plus affichée.",
+    "revokeKey": "Révoquer",
+    "noKeys": "Aucune clé API. Créez-en une pour commencer.",
+    "requests": "requêtes",
+    "lastUsed": "Dernière utilisation :",
+    "codeExamples": "Exemples de code",
+    "copied": "Copié !",
+    "helpText": "Utilisez ces exemples pour intégrer votre agent dans vos applications. Chaque requête nécessite une clé API valide. L'endpoint accepte un tableau de messages et retourne la réponse de l'agent.",
+    "errorCreatingKey": "Erreur lors de la création de la clé",
+    "errorRevokingKey": "Erreur lors de la révocation de la clé",
+    "sidebarTitle": "API"
   }
 }

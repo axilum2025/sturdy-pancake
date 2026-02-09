@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store } from 'lucide-react';
+import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store, Code2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
@@ -9,6 +9,7 @@ import MCPSettings from '../components/MCPSettings';
 import MCPBrowser from '../components/MCPBrowser';
 import AgentConfig from '../components/AgentConfig';
 import PublishModal from '../components/PublishModal';
+import ApiIntegrationModal from '../components/ApiIntegrationModal';
 import { useSessionStore } from '../store/sessionStore';
 import { useBuilderStore } from '../store/builderStore';
 
@@ -25,6 +26,7 @@ export default function Builder() {
   const [showHistory, setShowHistory] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showPublish, setShowPublish] = useState(false);
+  const [showApiIntegration, setShowApiIntegration] = useState(false);
   const [publishedStoreId, setPublishedStoreId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -101,6 +103,13 @@ export default function Builder() {
           <Rocket className="w-5 h-5" />
         </button>
         <button
+          onClick={() => setShowApiIntegration(true)}
+          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
+          title={t('apiIntegration.sidebarTitle')}
+        >
+          <Code2 className="w-5 h-5" />
+        </button>
+        <button
           onClick={() => navigate('/store')}
           className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
           title={t('builder.agentStore')}
@@ -162,6 +171,13 @@ export default function Builder() {
               title={t('builder.publishStore')}
             >
               <Rocket className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowApiIntegration(true)}
+              className="p-2 rounded-lg transition-colors text-t-text/60 hover:text-t-text hover:bg-t-overlay/10"
+              title={t('apiIntegration.sidebarTitle')}
+            >
+              <Code2 className="w-4 h-4" />
             </button>
           </div>
 
@@ -261,6 +277,15 @@ export default function Builder() {
               setPublishedStoreId(storeId);
               setShowPublish(false);
             }}
+          />
+        )}
+
+        {/* API Integration Modal */}
+        {showApiIntegration && projectId && (
+          <ApiIntegrationModal
+            agentId={projectId}
+            agentName={projectId}
+            onClose={() => setShowApiIntegration(false)}
           />
         )}
         </div>

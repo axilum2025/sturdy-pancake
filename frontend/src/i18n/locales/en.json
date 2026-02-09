@@ -754,5 +754,24 @@
     "tableDescription": "Description",
     "tableAuth": "Auth",
     "public": "Public"
+  },
+
+  "apiIntegration": {
+    "title": "API Integration",
+    "endpoint": "Endpoint",
+    "apiKeys": "API Keys",
+    "createKey": "Create",
+    "keyNamePlaceholder": "Key name (e.g. production, test...)",
+    "keyCopyWarning": "Copy this key now. It won't be shown again.",
+    "revokeKey": "Revoke",
+    "noKeys": "No API keys. Create one to get started.",
+    "requests": "requests",
+    "lastUsed": "Last used:",
+    "codeExamples": "Code examples",
+    "copied": "Copied!",
+    "helpText": "Use these examples to integrate your agent into your applications. Each request requires a valid API key. The endpoint accepts a messages array and returns the agent's response.",
+    "errorCreatingKey": "Error creating key",
+    "errorRevokingKey": "Error revoking key",
+    "sidebarTitle": "API"
   }
 }
