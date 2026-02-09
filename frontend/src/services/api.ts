@@ -235,6 +235,87 @@ export const deleteAgent = async (agentId: string): Promise<void> => {
   await api.delete(`/agents/${agentId}`);
 };
 
+// ============ API Keys ============
+
+export interface ApiKeyInfo {
+  id: string;
+  agentId: string;
+  name: string;
+  keyPrefix: string;
+  lastUsedAt: string | null;
+  requestCount: number;
+  createdAt: string;
+  revoked: boolean;
+}
+
+export interface CreateApiKeyResponse {
+  message: string;
+  key: string;
+  apiKey: ApiKeyInfo;
+}
+
+export const createApiKey = async (agentId: string, name: string): Promise<CreateApiKeyResponse> => {
+  const response = await api.post(`/agents/${agentId}/api-keys`, { name });
+  return response.data;
+};
+
+export const listApiKeys = async (agentId: string): Promise<{ apiKeys: ApiKeyInfo[]; total: number }> => {
+  const response = await api.get(`/agents/${agentId}/api-keys`);
+  return response.data;
+};
+
+export const revokeApiKey = async (agentId: string, keyId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/api-keys/${keyId}`);
+};
+
+// ============ Webhooks ============
+
+export interface WebhookInfo {
+  id: string;
+  agentId: string;
+  url: string;
+  events: string[];
+  active: boolean;
+  lastTriggeredAt: string | null;
+  failureCount: number;
+  createdAt: string;
+}
+
+export interface CreateWebhookResponse {
+  message: string;
+  webhook: WebhookInfo;
+  secret: string;
+}
+
+export const createWebhook = async (
+  agentId: string,
+  url: string,
+  events: string[],
+): Promise<CreateWebhookResponse> => {
+  const response = await api.post(`/agents/${agentId}/webhooks`, { url, events });
+  return response.data;
+};
+
+export const listWebhooks = async (
+  agentId: string,
+): Promise<{ webhooks: WebhookInfo[]; total: number; availableEvents: string[] }> => {
+  const response = await api.get(`/agents/${agentId}/webhooks`);
+  return response.data;
+};
+
+export const updateWebhook = async (
+  agentId: string,
+  webhookId: string,
+  data: Partial<{ url: string; events: string[]; active: boolean }>,
+): Promise<{ webhook: WebhookInfo }> => {
+  const response = await api.patch(`/agents/${agentId}/webhooks/${webhookId}`, data);
+  return response.data;
+};
+
+export const deleteWebhook = async (agentId: string, webhookId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/webhooks/${webhookId}`);
+};
+
 // ============ Deployment ============
 
 export interface Deployment {

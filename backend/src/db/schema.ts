@@ -132,6 +132,41 @@ export const messages = pgTable('messages', {
 });
 
 // ============================================================
+// API Keys (for public agent endpoints)
+// ============================================================
+
+export const apiKeys = pgTable('api_keys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 255 }).notNull(),
+  keyHash: varchar('key_hash', { length: 255 }).notNull(),
+  keyPrefix: varchar('key_prefix', { length: 12 }).notNull(), // first 8 chars for display
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  requestCount: integer('request_count').notNull().default(0),
+  revokedAt: timestamp('revoked_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
+// Webhooks (per-agent event hooks)
+// ============================================================
+
+export const webhooks = pgTable('webhooks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  url: varchar('url', { length: 2048 }).notNull(),
+  events: jsonb('events').$type<string[]>().notNull().default([]),
+  secret: varchar('secret', { length: 255 }).notNull(), // HMAC signing secret
+  active: integer('active').notNull().default(1),
+  lastTriggeredAt: timestamp('last_triggered_at', { withTimezone: true }),
+  failureCount: integer('failure_count').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
 // Refresh Tokens
 // ============================================================
 
@@ -152,11 +187,15 @@ export const usersRelations = relations(users, ({ many }) => ({
   storeAgents: many(storeAgents),
   conversations: many(conversations),
   refreshTokens: many(refreshTokens),
+  apiKeys: many(apiKeys),
+  webhooks: many(webhooks),
 }));
 
 export const agentsRelations = relations(agents, ({ one, many }) => ({
   user: one(users, { fields: [agents.userId], references: [users.id] }),
   conversations: many(conversations),
+  apiKeys: many(apiKeys),
+  webhooks: many(webhooks),
 }));
 
 export const storeAgentsRelations = relations(storeAgents, ({ one }) => ({
@@ -171,4 +210,14 @@ export const conversationsRelations = relations(conversations, ({ one, many }) =
 
 export const messagesRelations = relations(messages, ({ one }) => ({
   conversation: one(conversations, { fields: [messages.conversationId], references: [conversations.id] }),
+}));
+
+export const apiKeysRelations = relations(apiKeys, ({ one }) => ({
+  agent: one(agents, { fields: [apiKeys.agentId], references: [agents.id] }),
+  user: one(users, { fields: [apiKeys.userId], references: [users.id] }),
+}));
+
+export const webhooksRelations = relations(webhooks, ({ one }) => ({
+  agent: one(agents, { fields: [webhooks.agentId], references: [agents.id] }),
+  user: one(users, { fields: [webhooks.userId], references: [users.id] }),
 }));
