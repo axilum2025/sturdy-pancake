@@ -282,7 +282,7 @@ export default function AgentStorePage() {
                 <MessageSquare className="w-5 h-5" />
                 {t('store.useAgent')}
               </button>
-              {agent.visibility === 'public' && isAuthenticated && (
+              {isAuthenticated && (
                 <button
                   onClick={handleRemix}
                   disabled={remixing}
