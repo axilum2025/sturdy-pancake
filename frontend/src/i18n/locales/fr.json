@@ -420,5 +420,93 @@
     "contactContent": "Si vous avez des questions concernant la protection de vos données ou si vous souhaitez exercer vos droits RGPD, contactez notre équipe.",
     "contactButton": "Contacter l'équipe sécurité",
     "allRightsReserved": "Tous droits réservés."
+  },
+
+  "terms": {
+    "backHome": "Retour à l'accueil",
+    "badge": "Conditions d'utilisation",
+    "heroTitle1": "Conditions générales",
+    "heroTitle2": "d'utilisation",
+    "heroSubtitle": "En utilisant GiLo AI, vous acceptez les conditions suivantes. Veuillez les lire attentivement avant d'utiliser nos services.",
+    "lastUpdated": "Dernière mise à jour",
+    "summaryService": "Service",
+    "summaryServiceValue": "Plateforme de création d'agents IA",
+    "summaryProtection": "Protection",
+    "summaryProtectionValue": "Données isolées & chiffrées",
+    "summaryLaw": "Droit applicable",
+    "summaryLawValue": "Lois du Canada / RGPD UE",
+
+    "acceptanceTitle": "Acceptation des conditions",
+    "acceptanceContent": "En accédant à GiLo AI ou en l'utilisant, vous acceptez d'être lié par les présentes conditions d'utilisation. Si vous n'acceptez pas ces conditions, vous ne devez pas utiliser le service.",
+    "acceptanceItem1": "Les présentes conditions constituent un accord juridiquement contraignant entre vous et GiLo AI",
+    "acceptanceItem2": "Vous devez être âgé d'au moins 16 ans pour utiliser ce service",
+    "acceptanceItem3": "Nous nous réservons le droit de modifier ces conditions avec un préavis de 30 jours",
+
+    "descriptionTitle": "Description du service",
+    "descriptionContent": "GiLo AI est une plateforme SaaS permettant de créer, configurer, tester et déployer des agents IA personnalisés.",
+    "descriptionItem1": "Créateur d'agents IA avec configuration du modèle, prompt système et outils",
+    "descriptionItem2": "Playground de test en temps réel avec streaming SSE",
+    "descriptionItem3": "Store d'agents pour publier et partager vos créations",
+    "descriptionItem4": "API publique avec clés d'accès pour intégration externe",
+    "descriptionItem5": "Base de connaissances RAG avec embeddings vectoriels (pgvector)",
+
+    "accountsTitle": "Comptes utilisateur",
+    "accountsContent": "Chaque utilisateur doit créer un compte pour accéder aux fonctionnalités protégées. Vous êtes responsable de la sécurité de vos identifiants.",
+    "accountsItem1": "Un seul compte par utilisateur — les comptes multiples sont interdits",
+    "accountsItem2": "Vous êtes responsable de la confidentialité de votre mot de passe",
+    "accountsItem3": "Signalez immédiatement tout accès non autorisé à votre compte",
+    "accountsItem4": "Vous pouvez supprimer votre compte et toutes vos données à tout moment (RGPD Art. 17)",
+
+    "tiersTitle": "Forfaits & Quotas",
+    "tiersContent": "GiLo AI propose plusieurs niveaux de service avec des quotas adaptés à chaque usage.",
+    "tiersItem1": "Free : 3 projets max, 100 Mo de stockage, 5 déploiements/mois",
+    "tiersItem2": "Pro : 10 projets max, 5 Go de stockage, 20 déploiements/mois",
+    "tiersItem3": "Le dépassement de quota entraîne le blocage de l'action concernée (pas de surfacturation)",
+    "tiersItem4": "Vous pouvez upgrader ou downgrader votre forfait à tout moment",
+
+    "usageTitle": "Utilisation acceptable",
+    "usageContent": "Vous vous engagez à utiliser GiLo AI de manière responsable et conforme aux lois applicables.",
+    "usageItem1": "Utiliser le service uniquement pour des fins légales et légitimes",
+    "usageItem2": "Respecter les droits de propriété intellectuelle des tiers",
+    "usageItem3": "Ne pas surcharger l'infrastructure avec des requêtes abusives (rate limiting appliqué)",
+    "usageItem4": "Ne pas contourner les mécanismes de sécurité ou d'authentification",
+    "usageItem5": "Signaler les vulnérabilités de manière responsable",
+
+    "prohibitedTitle": "Utilisations interdites",
+    "prohibitedContent": "Les activités suivantes sont strictement interdites et entraîneront la suspension immédiate du compte.",
+    "prohibitedItem1": "Créer des agents produisant du contenu illégal, haineux, discriminatoire ou trompeur",
+    "prohibitedItem2": "Utiliser le service pour du spam, phishing ou ingénierie sociale",
+    "prohibitedItem3": "Tenter d'accéder aux données d'autres utilisateurs",
+    "prohibitedItem4": "Utiliser le service pour miner des cryptomonnaies ou exécuter du code malveillant",
+    "prohibitedItem5": "Reverse-engineering ou scraping systématique de la plateforme",
+
+    "ipTitle": "Propriété intellectuelle",
+    "ipContent": "La plateforme GiLo AI et son code source sont protégés par le droit d'auteur. En revanche, vous conservez la pleine propriété de vos créations.",
+    "ipItem1": "Vous restez propriétaire de vos agents, prompts, fichiers et configurations",
+    "ipItem2": "Les agents publiés sur le store sont sous licence que vous définissez",
+    "ipItem3": "GiLo AI ne revendique aucun droit sur le contenu généré par vos agents",
+
+    "liabilityTitle": "Limitation de responsabilité",
+    "liabilityContent": "GiLo AI fournit le service « en l'état » sans garantie d'aucune sorte, expresse ou implicite.",
+    "liabilityItem1": "Le service est fourni sans garantie de disponibilité continue (SLA best-effort)",
+    "liabilityItem2": "GiLo AI n'est pas responsable du contenu généré par les modèles d'IA",
+    "liabilityItem3": "En aucun cas la responsabilité ne dépassera le montant payé pour le service sur les 12 derniers mois",
+
+    "terminationTitle": "Résiliation",
+    "terminationContent": "Chaque partie peut résilier cet accord à tout moment, sous réserve des conditions suivantes.",
+    "terminationItem1": "Vous pouvez supprimer votre compte à tout moment via DELETE /api/auth/account",
+    "terminationItem2": "GiLo AI peut suspendre un compte en cas de violation des présentes conditions",
+    "terminationItem3": "À la résiliation, toutes vos données sont supprimées en cascade sous 30 jours maximum",
+
+    "governingTitle": "Droit applicable",
+    "governingContent": "Les présentes conditions sont régies par le droit applicable dans les juridictions suivantes.",
+    "governingItem1": "Droit canadien pour les questions contractuelles générales",
+    "governingItem2": "RGPD de l'Union Européenne pour la protection des données personnelles",
+    "governingItem3": "Tout litige sera soumis à la médiation avant toute action judiciaire",
+
+    "contactTitle": "Questions juridiques ?",
+    "contactContent": "Si vous avez des questions sur les présentes conditions ou si vous souhaitez signaler un abus, contactez notre équipe juridique.",
+    "contactButton": "Contacter l'équipe juridique",
+    "allRightsReserved": "Tous droits réservés."
   }
 }
