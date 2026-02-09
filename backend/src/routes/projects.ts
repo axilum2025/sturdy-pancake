@@ -2,11 +2,30 @@ import { Router, Response } from 'express';
 import { projectModel, ProjectCreateDTO } from '../models/project';
 import { authMiddleware, AuthenticatedRequest, checkProjectQuota } from '../middleware/auth';
 import { userModel } from '../models/user';
+import { agentModel } from '../models/agent';
 
 export const projectsRouter = Router();
 
 // Apply auth middleware to all routes
 projectsRouter.use(authMiddleware);
+
+/**
+ * Helper: ensure a project exists for the given ID.
+ * If the ID matches an agent owned by this user, auto-create a linked project.
+ */
+async function ensureProject(id: string, userId: string, userTier: string = 'free') {
+  let project = await projectModel.findById(id);
+  if (project) return project;
+
+  // Maybe the ID is an agent ID – auto-create a linked project
+  const agent = await agentModel.findById(id);
+  if (agent && agent.userId === userId) {
+    project = await projectModel.ensureForAgent(id, userId, agent.name, (userTier as any) || 'free');
+    return project;
+  }
+
+  return null;
+}
 
 /**
  * GET /api/projects
@@ -68,7 +87,7 @@ projectsRouter.get('/:id', async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId;
     const id = req.params.id;
 
-    const project = await projectModel.findById(id);
+    const project = await ensureProject(id, userId, req.user?.tier);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -92,7 +111,7 @@ projectsRouter.get('/:id/files', async (req: AuthenticatedRequest, res: Response
     const userId = req.userId;
     const id = req.params.id;
 
-    const project = await projectModel.findById(id);
+    const project = await ensureProject(id, userId, req.user?.tier);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -121,7 +140,7 @@ projectsRouter.get('/:id/files/*', async (req: AuthenticatedRequest, res: Respon
     const id = req.params.id;
     const path = req.params[0];
 
-    const project = await projectModel.findById(id);
+    const project = await ensureProject(id, userId, req.user?.tier);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -156,7 +175,7 @@ projectsRouter.put('/:id/files/*', async (req: AuthenticatedRequest, res: Respon
       return res.status(400).json({ error: 'File content is required' });
     }
 
-    const project = await projectModel.findById(id);
+    const project = await ensureProject(id, userId, req.user?.tier);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -204,7 +223,7 @@ projectsRouter.delete('/:id/files/*', async (req: AuthenticatedRequest, res: Res
     const id = req.params.id;
     const path = req.params[0];
 
-    const project = await projectModel.findById(id);
+    const project = await ensureProject(id, userId, req.user?.tier);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
@@ -244,7 +263,7 @@ projectsRouter.patch('/:id', async (req: AuthenticatedRequest, res: Response) =>
     const id = req.params.id;
     const { name, description } = req.body;
 
-    const project = await projectModel.findById(id);
+    const project = await ensureProject(id, userId, req.user?.tier);
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }

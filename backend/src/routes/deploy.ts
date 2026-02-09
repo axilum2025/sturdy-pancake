@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/auth';
 import { deploymentService } from '../services/deploymentService';
 import { projectModel } from '../models/project';
+import { agentModel } from '../models/agent';
 
 export const deploymentRouter = Router();
 
@@ -18,8 +19,14 @@ deploymentRouter.post('/:projectId', async (req: AuthenticatedRequest, res: Resp
     const projectId = req.params.projectId;
     const { provider, customDomain } = req.body;
 
-    // Get project
-    const project = await projectModel.findById(projectId);
+    // Get project (auto-create from agent if needed)
+    let project = await projectModel.findById(projectId);
+    if (!project) {
+      const agent = await agentModel.findById(projectId);
+      if (agent && agent.userId === userId) {
+        project = await projectModel.ensureForAgent(projectId, userId, agent.name, (req.user?.tier as any) || 'free');
+      }
+    }
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }

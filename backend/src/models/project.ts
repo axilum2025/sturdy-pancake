@@ -196,6 +196,41 @@ export default function App() {
     return project;
   }
 
+  /**
+   * Auto-create a project linked to an agent ID.
+   * Used when the Builder tries to save files but no project exists yet.
+   */
+  async ensureForAgent(agentId: string, userId: string, agentName: string, userTier: ProjectTier = 'free'): Promise<Project> {
+    const existing = this.projects.get(agentId);
+    if (existing) return existing;
+
+    const project: Project = {
+      id: agentId,
+      userId,
+      name: agentName,
+      description: `Projet lié à l'agent ${agentName}`,
+      tier: userTier,
+      files: {},
+      techStack: { frontend: ['react', 'tailwind', 'vite'] },
+      deployment: {
+        provider: userTier === 'pro' ? 'azure-webapp' : 'azure-static',
+        status: 'idle',
+      },
+      storageUsed: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    this.projects.set(project.id, project);
+
+    if (!this.userProjects.has(userId)) {
+      this.userProjects.set(userId, new Set());
+    }
+    this.userProjects.get(userId)!.add(project.id);
+
+    return project;
+  }
+
   private generateTemplateFiles(stack: TechStack): Record<string, string> {
     const files: Record<string, string> = {};
     
