@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Send, Trash2, Bot, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Bot, User, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
 
@@ -322,32 +322,44 @@ export default function AgentChat() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 border-t border-t-overlay/10 glass-strong">
+      <div className="flex-shrink-0 glass-strong">
         <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="relative flex items-end gap-2">
-            <div className="flex-1 relative">
+          <div className="relative">
               <textarea
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
-                rows={1}
+                rows={4}
                 className="w-full bg-t-overlay/[0.04] border border-t-overlay/10 rounded-2xl px-4 py-3 pr-12 text-sm text-t-text/90 placeholder-t-text/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30 resize-none max-h-[200px]"
                 disabled={isStreaming}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isStreaming}
-                className="absolute right-2 bottom-2 p-2 rounded-xl btn-gradient disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-t-text flex items-center justify-center disabled:opacity-50 hover:bg-t-overlay/10 transition-colors"
               >
                 {isStreaming ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="w-5 h-5"
+                  >
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
                 )}
               </button>
-            </div>
           </div>
           <p className="text-center text-[10px] text-t-text/20 mt-2">
             {t('store.poweredBy', { name: agent?.name })}
