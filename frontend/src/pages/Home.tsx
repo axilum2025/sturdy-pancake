@@ -456,7 +456,6 @@ export default function Home() {
               <a href="/privacy" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">{t('home.footerPrivacy')}</a>
               <a href="/terms" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">{t('home.footerTerms')}</a>
               <a href="/docs" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">{t('home.footerDocs')}</a>
-              <a href="#" className="text-xs text-t-text/25 hover:text-t-text/50 transition-colors">GitHub</a>
             </div>
 
             <p className="text-xs text-t-text/15">
