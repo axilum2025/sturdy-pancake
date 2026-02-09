@@ -1,0 +1,5 @@
+  name  | default_version | installed_version |                       comment                        
+--------+-----------------+-------------------+------------------------------------------------------
+ vector | 0.8.0           |                   | vector data type and ivfflat and hnsw access methods
+(1 row)
+

@@ -338,5 +338,87 @@
   "theme": {
     "switchToLight": "Mode clair",
     "switchToDark": "Mode sombre"
+  },
+
+  "privacy": {
+    "backHome": "Retour à l'accueil",
+    "badge": "Sécurité & Confidentialité",
+    "heroTitle1": "Votre sécurité est notre",
+    "heroTitle2": "priorité absolue",
+    "heroSubtitle": "GiLo AI applique les standards les plus stricts en matière de protection des données, d'isolation utilisateur et de conformité RGPD. Chaque ligne de code est conçue pour protéger vos informations.",
+    "lastUpdated": "Dernière mise à jour",
+    "summaryEncryption": "Chiffrement",
+    "summaryEncryptionValue": "TLS 1.3 + Bcrypt 12 rounds",
+    "summaryIsolation": "Isolation",
+    "summaryIsolationValue": "Données cloisonnées par utilisateur",
+    "summaryCompliance": "Conformité",
+    "summaryComplianceValue": "RGPD — Articles 7, 15, 17, 20",
+
+    "isolationTitle": "Isolation des données par utilisateur",
+    "isolationContent": "Chaque ressource (agents, projets, fichiers, conversations, clés API, webhooks, base de connaissances) est strictement cloisonnée par identifiant utilisateur. Aucun utilisateur ne peut accéder aux données d'un autre.",
+    "isolationItem1": "Vérification de propriété (ownership check) sur chaque route API protégée",
+    "isolationItem2": "Les agents, projets et déploiements sont filtrés par userId issu du JWT",
+    "isolationItem3": "Le store vérifie la propriété avant publication ou suppression",
+    "isolationItem4": "Les sessions sont liées au JWT — impossible d'usurper un userId via le body ou les headers",
+    "isolationItem5": "Les services MCP et tâches requièrent une authentification valide",
+
+    "authTitle": "Authentification & Autorisation",
+    "authContent": "L'authentification repose sur des JSON Web Tokens (JWT) signés, vérifiés à chaque requête. Aucun mécanisme de contournement n'est autorisé, même en mode développement.",
+    "authItem1": "JWT signé avec secret 256 bits, expiration de 24 heures",
+    "authItem2": "Aucun bypass x-user-id — supprimé en développement et en production",
+    "authItem3": "Mot de passe haché avec bcrypt (12 rounds de salage)",
+    "authItem4": "Le token JWT ne contient aucune donnée personnelle sensible (pas d'email)",
+
+    "dataTitle": "Protection des données",
+    "dataContent": "Vos données sont stockées dans une base PostgreSQL hébergée sur Azure avec des contrôles d'accès stricts. Les relations en base garantissent la suppression en cascade pour l'intégrité des données.",
+    "dataItem1": "PostgreSQL 16 avec connexions SSL/TLS obligatoires",
+    "dataItem2": "Suppression en cascade — la suppression du compte efface toutes les données associées",
+    "dataItem3": "Les clés API sont stockées sous forme de hash SHA-256 (irréversible)",
+    "dataItem4": "Les secrets de webhooks sont chiffrés via HMAC",
+
+    "encryptionTitle": "Chiffrement",
+    "encryptionContent": "Toutes les communications et les données sensibles sont protégées par du chiffrement de niveau entreprise.",
+    "encryptionItem1": "TLS 1.3 pour toutes les connexions client ↔ serveur et serveur ↔ base de données",
+    "encryptionItem2": "Mots de passe hachés avec bcrypt (facteur de coût 12)",
+    "encryptionItem3": "Les embeddings vectoriels (pgvector) sont stockés dans la même base sécurisée",
+
+    "gdprTitle": "Conformité RGPD",
+    "gdprContent": "GiLo AI est conçu pour respecter le Règlement Général sur la Protection des Données (RGPD) de l'Union Européenne.",
+    "gdprItem1": "Article 7 — Suivi du consentement avec version et horodatage",
+    "gdprItem2": "Article 15 — Droit d'accès : exportez toutes vos données en un clic",
+    "gdprItem3": "Article 17 — Droit à l'effacement : suppression complète et irréversible de votre compte",
+    "gdprItem4": "Article 20 — Portabilité des données : export au format JSON structuré",
+    "gdprItem5": "Aucune donnée personnelle n'est vendue ou partagée avec des tiers",
+
+    "rightsTitle": "Vos droits",
+    "rightsContent": "En vertu du RGPD, vous disposez de droits étendus sur vos données personnelles que vous pouvez exercer à tout moment.",
+    "rightsItem1": "Droit d'accès — Consultez toutes les données que nous détenons sur vous (GET /api/auth/export)",
+    "rightsItem2": "Droit de rectification — Modifiez vos informations personnelles à tout moment",
+    "rightsItem3": "Droit à la portabilité — Exportez vos agents, conversations et fichiers en JSON",
+    "rightsItem4": "Droit d'opposition — Contactez-nous pour toute demande spécifique",
+
+    "deletionTitle": "Suppression de compte",
+    "deletionContent": "Vous pouvez supprimer définitivement votre compte et toutes vos données à tout moment. Cette action est irréversible.",
+    "deletionItem1": "Suppression en cascade : compte, agents, conversations, messages, clés API, webhooks, fichiers de connaissances",
+    "deletionItem2": "Confirmation par mot de passe requise pour la sécurité (DELETE /api/auth/account)",
+    "deletionItem3": "Aucune copie de sauvegarde n'est conservée après la suppression",
+
+    "infraTitle": "Infrastructure & Hébergement",
+    "infraContent": "Notre infrastructure est hébergée sur Microsoft Azure dans la région Canada Central avec des mesures de sécurité de niveau entreprise.",
+    "infraItem1": "Azure Container Apps pour le backend avec scaling automatique",
+    "infraItem2": "Azure PostgreSQL Flexible Server avec haute disponibilité",
+    "infraItem3": "Azure Static Web Apps pour le frontend avec CDN global",
+    "infraItem4": "CI/CD automatisé via GitHub Actions avec vérifications de sécurité",
+
+    "logsTitle": "Journalisation & Audit",
+    "logsContent": "Les logs applicatifs sont conçus pour ne jamais contenir de données personnelles identifiables (PII).",
+    "logsItem1": "Aucune donnée personnelle (email, mot de passe, contenu) dans les logs serveur",
+    "logsItem2": "Les messages d'erreur sont assainis — seul error.message est journalisé",
+    "logsItem3": "Les réponses d'erreur API ne divulguent jamais de détails d'implémentation",
+
+    "contactTitle": "Questions sur la confidentialité ?",
+    "contactContent": "Si vous avez des questions concernant la protection de vos données ou si vous souhaitez exercer vos droits RGPD, contactez notre équipe.",
+    "contactButton": "Contacter l'équipe sécurité",
+    "allRightsReserved": "Tous droits réservés."
   }
 }

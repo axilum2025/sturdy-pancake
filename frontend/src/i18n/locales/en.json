@@ -338,5 +338,87 @@
   "theme": {
     "switchToLight": "Light mode",
     "switchToDark": "Dark mode"
+  },
+
+  "privacy": {
+    "backHome": "Back to home",
+    "badge": "Security & Privacy",
+    "heroTitle1": "Your security is our",
+    "heroTitle2": "top priority",
+    "heroSubtitle": "GiLo AI applies the strictest standards for data protection, user isolation, and GDPR compliance. Every line of code is designed to protect your information.",
+    "lastUpdated": "Last updated",
+    "summaryEncryption": "Encryption",
+    "summaryEncryptionValue": "TLS 1.3 + Bcrypt 12 rounds",
+    "summaryIsolation": "Isolation",
+    "summaryIsolationValue": "Data siloed per user",
+    "summaryCompliance": "Compliance",
+    "summaryComplianceValue": "GDPR — Articles 7, 15, 17, 20",
+
+    "isolationTitle": "Per-user data isolation",
+    "isolationContent": "Every resource (agents, projects, files, conversations, API keys, webhooks, knowledge base) is strictly siloed by user ID. No user can access another user's data.",
+    "isolationItem1": "Ownership check on every protected API route",
+    "isolationItem2": "Agents, projects, and deployments are filtered by JWT-derived userId",
+    "isolationItem3": "The store verifies ownership before publication or deletion",
+    "isolationItem4": "Sessions are tied to JWT — impossible to spoof a userId via request body or headers",
+    "isolationItem5": "MCP services and tasks require valid authentication",
+
+    "authTitle": "Authentication & Authorization",
+    "authContent": "Authentication is based on signed JSON Web Tokens (JWT), verified on every request. No bypass mechanisms are allowed, even in development mode.",
+    "authItem1": "JWT signed with 256-bit secret, 24-hour expiration",
+    "authItem2": "No x-user-id bypass — removed in both development and production",
+    "authItem3": "Passwords hashed with bcrypt (12 salt rounds)",
+    "authItem4": "JWT token contains no sensitive personal data (no email)",
+
+    "dataTitle": "Data protection",
+    "dataContent": "Your data is stored in a PostgreSQL database hosted on Azure with strict access controls. Database relationships ensure cascade deletion for data integrity.",
+    "dataItem1": "PostgreSQL 16 with mandatory SSL/TLS connections",
+    "dataItem2": "Cascade deletion — deleting your account removes all associated data",
+    "dataItem3": "API keys stored as SHA-256 hashes (irreversible)",
+    "dataItem4": "Webhook secrets encrypted via HMAC",
+
+    "encryptionTitle": "Encryption",
+    "encryptionContent": "All communications and sensitive data are protected with enterprise-grade encryption.",
+    "encryptionItem1": "TLS 1.3 for all client ↔ server and server ↔ database connections",
+    "encryptionItem2": "Passwords hashed with bcrypt (cost factor 12)",
+    "encryptionItem3": "Vector embeddings (pgvector) are stored in the same secured database",
+
+    "gdprTitle": "GDPR Compliance",
+    "gdprContent": "GiLo AI is designed to comply with the European Union's General Data Protection Regulation (GDPR).",
+    "gdprItem1": "Article 7 — Consent tracking with version and timestamp",
+    "gdprItem2": "Article 15 — Right of access: export all your data in one click",
+    "gdprItem3": "Article 17 — Right to erasure: complete and irreversible account deletion",
+    "gdprItem4": "Article 20 — Data portability: export in structured JSON format",
+    "gdprItem5": "No personal data is sold or shared with third parties",
+
+    "rightsTitle": "Your rights",
+    "rightsContent": "Under the GDPR, you have extensive rights over your personal data that you can exercise at any time.",
+    "rightsItem1": "Right of access — View all the data we hold about you (GET /api/auth/export)",
+    "rightsItem2": "Right to rectification — Update your personal information at any time",
+    "rightsItem3": "Right to portability — Export your agents, conversations, and files as JSON",
+    "rightsItem4": "Right to object — Contact us for any specific request",
+
+    "deletionTitle": "Account deletion",
+    "deletionContent": "You can permanently delete your account and all your data at any time. This action is irreversible.",
+    "deletionItem1": "Cascade deletion: account, agents, conversations, messages, API keys, webhooks, knowledge files",
+    "deletionItem2": "Password confirmation required for security (DELETE /api/auth/account)",
+    "deletionItem3": "No backup copies are retained after deletion",
+
+    "infraTitle": "Infrastructure & Hosting",
+    "infraContent": "Our infrastructure is hosted on Microsoft Azure in the Canada Central region with enterprise-grade security measures.",
+    "infraItem1": "Azure Container Apps for the backend with auto-scaling",
+    "infraItem2": "Azure PostgreSQL Flexible Server with high availability",
+    "infraItem3": "Azure Static Web Apps for the frontend with global CDN",
+    "infraItem4": "Automated CI/CD via GitHub Actions with security checks",
+
+    "logsTitle": "Logging & Audit",
+    "logsContent": "Application logs are designed to never contain personally identifiable information (PII).",
+    "logsItem1": "No personal data (email, password, content) in server logs",
+    "logsItem2": "Error messages are sanitized — only error.message is logged",
+    "logsItem3": "API error responses never disclose implementation details",
+
+    "contactTitle": "Privacy questions?",
+    "contactContent": "If you have questions about the protection of your data or wish to exercise your GDPR rights, contact our team.",
+    "contactButton": "Contact security team",
+    "allRightsReserved": "All rights reserved."
   }
 }

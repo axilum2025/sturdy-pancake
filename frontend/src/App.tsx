@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Builder from './pages/Builder';
 import Home from './pages/Home';
+import Privacy from './pages/Privacy';
 import Dashboard from './pages/Dashboard';
 import AgentStore from './pages/AgentStore';
 import AgentStorePage from './pages/AgentStorePage';
@@ -18,6 +19,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/privacy" element={<Privacy />} />
             {/* Agent Store — public, no auth required */}
             <Route path="/store" element={<AgentStore />} />
             <Route path="/store/:agentId" element={<AgentStorePage />} />
