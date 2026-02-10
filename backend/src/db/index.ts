@@ -5,6 +5,7 @@
 import { drizzle, NodePgDatabase } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 import * as schema from './schema';
+import { ensureSchema } from './migrate';
 
 const { Pool } = pg;
 
@@ -38,6 +39,9 @@ export async function initDb(): Promise<Database> {
   } finally {
     client.release();
   }
+
+  // Auto-create tables if they don't exist (production-safe)
+  await ensureSchema(pool);
 
   db = drizzle(pool, { schema });
   return db;
