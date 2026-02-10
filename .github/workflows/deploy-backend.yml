@@ -61,12 +61,8 @@ jobs:
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
 
-      - name: Run DB migrations
-        run: |
-          az containerapp exec \
-            --name ${{ env.CONTAINER_APP_NAME }} \
-            --resource-group ${{ env.RESOURCE_GROUP }} \
-            --command "npx drizzle-kit push" || echo "Migration may need manual run"
+      # DB migrations run automatically at server startup via ensureSchema() in src/db/migrate.ts
+      # No need for az containerapp exec (which fails in CI without TTY)
 
       - name: Verify deployment
         run: |
@@ -76,13 +72,19 @@ jobs:
             --query "properties.configuration.ingress.fqdn" -o tsv)
           echo "Backend URL: https://$FQDN"
           
-          # Wait for the app to start
-          sleep 15
+          # Wait for the app to start and run auto-migration
+          echo "⏳ Waiting 30s for container to start and run schema migration..."
+          sleep 30
           
-          # Health check
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/api/health" || echo "000")
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ Health check passed"
-          else
-            echo "⚠️  Health check returned $STATUS – app may still be starting"
-          fi
+          # Health check with retries
+          for i in 1 2 3; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://$FQDN/api/health" || echo "000")
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            echo "⏳ Attempt $i: got $STATUS, retrying in 10s..."
+            sleep 10
+          done
+          echo "⚠️  Health check did not return 200 after retries – check container logs"
+          exit 1
