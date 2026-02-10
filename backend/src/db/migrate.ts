@@ -74,6 +74,11 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     );
   `);
 
+  // 3b. Add missing columns to agents table (handles pre-existing tables)
+  await runSafe(pool, 'agents.slug', `
+    ALTER TABLE agents ADD COLUMN IF NOT EXISTS slug VARCHAR(255) UNIQUE;
+  `);
+
   // 4. Store Agents
   await runSafe(pool, 'store_agents', `
     CREATE TABLE IF NOT EXISTS store_agents (
