@@ -20,6 +20,8 @@ import { webhooksRouter } from './routes/webhooks';
 import { publicApiRouter } from './routes/publicApi';
 import { knowledgeRouter } from './routes/knowledge';
 import { toolsRouter } from './routes/tools';
+import { analyticsRouter } from './routes/analytics';
+import { alertsRouter } from './routes/alerts';
 import { subdomainRouter } from './routes/subdomain';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
@@ -68,6 +70,9 @@ async function main() {
   app.use('/api/agents', authMiddleware, knowledgeRouter);
   app.use('/api/agents', authMiddleware, toolsRouter);
   app.use('/api/tools', authMiddleware, toolsRouter);
+  app.use('/api/analytics', authMiddleware, analyticsRouter);
+  app.use('/api', authMiddleware, analyticsRouter);
+  app.use('/api/agents', authMiddleware, alertsRouter);
 
   // Health check
   app.get('/health', (req: Request, res: Response) => {
@@ -103,6 +108,11 @@ async function main() {
         toolCatalogue: '/api/tools/catalogue',
         publicApi: '/api/v1/agents/:id/chat',
         store: '/api/store',
+        analytics: '/api/analytics',
+        agentAnalytics: '/api/agents/:id/analytics',
+        agentLogs: '/api/agents/:id/logs',
+        communityTools: '/api/tools/community',
+        alerts: '/api/agents/:id/alerts',
         sessions: '/api/sessions',
         agent: '/api/agent',
         mcp: '/api/mcp',

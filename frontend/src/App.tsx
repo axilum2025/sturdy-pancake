@@ -11,6 +11,7 @@ import Dashboard from './pages/Dashboard';
 import AgentStore from './pages/AgentStore';
 import AgentStorePage from './pages/AgentStorePage';
 import AgentChat from './pages/AgentChat';
+import Analytics from './pages/Analytics';
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ function App() {
             {/* Protected routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/analytics" element={<Analytics />} />
               <Route path="/builder/:projectId?" element={<Builder />} />
             </Route>
           </Routes>

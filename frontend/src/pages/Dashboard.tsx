@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store, Trash2 } from 'lucide-react';
+import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store, Trash2, BarChart3 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { listAgents, createAgent, deleteAgent, Agent } from '../services/api';
@@ -153,6 +153,13 @@ export default function Dashboard() {
               >
                 <Store className="w-4 h-4 text-blue-400 group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-medium text-blue-300 hidden sm:inline">{t('dashboard.agentStore')}</span>
+              </button>
+              <button
+                onClick={() => navigate('/analytics')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all duration-200 group"
+              >
+                <BarChart3 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-emerald-300 hidden sm:inline">Analytics</span>
               </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">

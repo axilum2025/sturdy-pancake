@@ -8,6 +8,7 @@ import {
   executeToolCalls,
   AgentToolDefinition,
 } from '../services/toolExecutor';
+import { logChat, logToolCall, logError, recordConversation } from '../services/analyticsService';
 import { AuthenticatedRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 
@@ -186,6 +187,7 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'messages array is required' });
     }
 
+    const chatStartTime = Date.now();
     const { client } = copilotService.getClientInfo();
 
     // RAG: search knowledge base for relevant context
@@ -310,6 +312,15 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
                 result: toolContent,
                 durationMs: result?.durationMs,
               })}\n\n`);
+
+              // Log the tool call for analytics
+              logToolCall({
+                agentId: agent.id,
+                toolName: tc.function.name,
+                toolArgs: JSON.parse(tc.function.arguments || '{}'),
+                toolResult: toolContent.slice(0, 500),
+                success: result?.success ?? false,
+              }).catch(() => {});
             }
 
             // Continue the loop — LLM will process tool results
@@ -356,6 +367,24 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Tool call loop limit reached' })}\n\n`);
     }
 
+    // Track analytics (fire-and-forget)
+    const chatEndTime = Date.now();
+    const chatDuration = chatEndTime - chatStartTime;
+    const lastUserMessage = [...messages].reverse().find((m: CopilotMessage) => m.role === 'user')?.content || '';
+    recordConversation(agent.id).catch(() => {});
+    logChat({
+      agentId: agent.id,
+      userMessage: lastUserMessage,
+      assistantResponse: '(streamed)',
+      tokensPrompt: 0, // Not available in streaming mode
+      tokensCompletion: 0,
+      responseMs: chatDuration,
+      model: agent.config.model,
+      ragChunks: ragCitations.length,
+      toolCalls: round - 1,
+      userId,
+    }).catch(() => {});
+
     await agentModel.update(agent.id, {
       totalConversations: agent.totalConversations + 1,
       totalMessages: agent.totalMessages + messages.length + 1,
@@ -365,6 +394,14 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
     res.end();
   } catch (error: any) {
     console.error('Agent chat error:', error.message);
+    // Log error for analytics
+    if (req.params.id) {
+      logError({
+        agentId: req.params.id,
+        message: error.message || 'Agent chat failed',
+        errorStack: error.stack,
+      }).catch(() => {});
+    }
     if (!res.headersSent) {
       res.status(500).json({ error: 'Agent chat failed' });
     } else {

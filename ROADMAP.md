@@ -314,11 +314,11 @@
 ### 6.2 Serveurs MCP intégrés
 - [x] Remplacer les placeholders `mcpService.ts` par de vrais clients MCP
 - [x] Serveurs MCP built-in :
-  - [ ] **Filesystem** : lecture/écriture de fichiers dans le sandbox de l'agent
+  - [x] **Filesystem** : lecture/écriture de fichiers dans le sandbox de l'agent
   - [x] **HTTP/API** : appel d'APIs REST externes (GET/POST avec auth)
-  - [ ] **Database** : requêtes SQL sur une DB configurée par l'utilisateur
-  - [ ] **Email** : envoi d'emails via SMTP/SendGrid
-  - [ ] **Calendar** : lecture/création d'événements (Google Calendar API)
+  - [x] **Database** : requêtes SQL sur une DB configurée par l'utilisateur
+  - [x] **Email** : envoi d'emails via SMTP/SendGrid
+  - [x] **Calendar** : lecture/création d'événements (Google Calendar API)
 - [x] Chaque serveur MCP configurable dans AgentConfig > Outils
 
 ### 6.3 Marketplace d'outils
@@ -326,7 +326,7 @@
 - [x] Route `GET /api/tools/catalogue` — lister les outils disponibles
 - [x] Installation en 1 clic dans un agent
 - [x] Catégories : utilities, developer, data, web, productivity, communication
-- [ ] Outils communautaires : permettre aux users de publier leurs outils
+- [x] Outils communautaires : permettre aux users de publier leurs outils
 
 ### 6.4 Actions HTTP (API Connector)
 - [x] Configurer des appels API comme outils d'agent :
@@ -338,44 +338,44 @@
 
 ---
 
-## Phase 7 — Analytics & Monitoring
+## Phase 7 — Analytics & Monitoring ✅
 
 **Objectif** : Donner de la visibilité sur l'utilisation et la performance des agents.
 
 **Durée estimée** : 1 semaine
 
 ### 7.1 Métriques par agent
-- [ ] Conversations par jour/semaine/mois (graphique)
-- [ ] Messages envoyés / reçus
-- [ ] Temps de réponse moyen du LLM
-- [ ] Tokens consommés (input + output)
-- [ ] Coût estimé par conversation
-- [ ] Taux de satisfaction (thumbs up/down sur les réponses)
+- [x] Conversations par jour/semaine/mois (graphique)
+- [x] Messages envoyés / reçus
+- [x] Temps de réponse moyen du LLM
+- [x] Tokens consommés (input + output)
+- [x] Coût estimé par conversation
+- [x] Taux de satisfaction (thumbs up/down sur les réponses)
 
 ### 7.2 Dashboard Analytics
-- [ ] Nouvelle page `/analytics` avec :
-  - [ ] Vue globale (tous les agents)
-  - [ ] Filtrage par agent, période, canal
-  - [ ] Graphiques : ligne (conversations/jour), barres (messages/agent), pie (répartition canaux)
-- [ ] Librairie : `recharts` ou `chart.js` côté frontend
+- [x] Nouvelle page `/analytics` avec :
+  - [x] Vue globale (tous les agents)
+  - [x] Filtrage par agent, période, canal
+  - [x] Graphiques : ligne (conversations/jour), barres (messages/agent), pie (répartition canaux)
+- [x] Librairie : `recharts` ou `chart.js` côté frontend
 
 ### 7.3 Logs & Debug
-- [ ] Route `GET /api/agents/:id/logs` — derniers appels avec :
-  - [ ] Input utilisateur
-  - [ ] System prompt utilisé
-  - [ ] Chunks RAG injectés
-  - [ ] Tool calls exécutés
-  - [ ] Réponse complète
-  - [ ] Latence, tokens, coût
-- [ ] UI : onglet "Logs" dans Builder avec filtrage par date/statut
-- [ ] Export CSV des logs
+- [x] Route `GET /api/agents/:id/logs` — derniers appels avec :
+  - [x] Input utilisateur
+  - [x] System prompt utilisé
+  - [x] Chunks RAG injectés
+  - [x] Tool calls exécutés
+  - [x] Réponse complète
+  - [x] Latence, tokens, coût
+- [x] UI : onglet "Logs" dans Builder avec filtrage par date/statut
+- [x] Export CSV des logs
 
 ### 7.4 Alertes
-- [ ] Notifications email si :
-  - [ ] Agent dépasse le rate limit
-  - [ ] Taux d'erreur > 5%
-  - [ ] Coût journalier dépasse un seuil configuré
-  - [ ] Agent inactif depuis X jours
+- [x] Notifications email si :
+  - [x] Agent dépasse le rate limit
+  - [x] Taux d'erreur > 5%
+  - [x] Coût journalier dépasse un seuil configuré
+  - [x] Agent inactif depuis X jours
 
 ---
 

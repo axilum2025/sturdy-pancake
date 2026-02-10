@@ -652,3 +652,132 @@ export const testHttpAction = async (
   const response = await api.post('/tools/test-http', { config, args });
   return response.data;
 };
+
+// ============ Analytics ============
+
+export interface DailyMetric {
+  date: string;
+  conversations: number;
+  messages: number;
+  tokensUsed: number;
+  toolCalls: number;
+  errorCount: number;
+  avgResponseMs: number;
+  estimatedCost: number;
+}
+
+export interface AnalyticsSummary {
+  totalConversations: number;
+  totalMessages: number;
+  totalTokens: number;
+  totalToolCalls: number;
+  totalErrors: number;
+  avgResponseMs: number;
+  estimatedCost: number;
+  dailyMetrics: DailyMetric[];
+  startDate: string;
+  endDate: string;
+}
+
+export interface UserAnalytics extends AnalyticsSummary {
+  agentBreakdown: Array<{
+    agentId: string;
+    agentName: string;
+    messages: number;
+    tokens: number;
+    cost: number;
+  }>;
+}
+
+export interface LogEntry {
+  id: string;
+  agentId: string;
+  level: string;
+  event: string;
+  message: string;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export const getGlobalAnalytics = async (startDate?: string, endDate?: string): Promise<UserAnalytics> => {
+  const params = new URLSearchParams();
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  const response = await api.get(`/analytics?${params}`);
+  return response.data;
+};
+
+export const getAgentAnalytics = async (agentId: string, startDate?: string, endDate?: string): Promise<AnalyticsSummary & { agentId: string; agentName: string }> => {
+  const params = new URLSearchParams();
+  if (startDate) params.set('startDate', startDate);
+  if (endDate) params.set('endDate', endDate);
+  const response = await api.get(`/agents/${agentId}/analytics?${params}`);
+  return response.data;
+};
+
+export const getAgentLogs = async (
+  agentId: string,
+  options?: { level?: string; event?: string; startDate?: string; endDate?: string; limit?: number; offset?: number }
+): Promise<{ logs: LogEntry[]; total: number }> => {
+  const params = new URLSearchParams();
+  if (options?.level) params.set('level', options.level);
+  if (options?.event) params.set('event', options.event);
+  if (options?.startDate) params.set('startDate', options.startDate);
+  if (options?.endDate) params.set('endDate', options.endDate);
+  if (options?.limit) params.set('limit', String(options.limit));
+  if (options?.offset) params.set('offset', String(options.offset));
+  const response = await api.get(`/agents/${agentId}/logs?${params}`);
+  return response.data;
+};
+
+export const exportAgentLogs = async (agentId: string, options?: { level?: string; startDate?: string; endDate?: string }): Promise<Blob> => {
+  const params = new URLSearchParams();
+  if (options?.level) params.set('level', options.level);
+  if (options?.startDate) params.set('startDate', options.startDate);
+  if (options?.endDate) params.set('endDate', options.endDate);
+  const response = await api.get(`/agents/${agentId}/logs/export?${params}`, { responseType: 'blob' });
+  return response.data;
+};
+
+// ============ Community Tools ============
+
+export interface CommunityTool {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  tags: string[];
+  icon: string;
+  creatorName: string;
+  installCount: number;
+  rating: number;
+  ratingCount: number;
+  definition: Record<string, unknown>;
+  publishedAt: string;
+}
+
+export const getCommunityTools = async (category?: string, search?: string): Promise<{ tools: CommunityTool[]; total: number }> => {
+  const params = new URLSearchParams();
+  if (category) params.set('category', category);
+  if (search) params.set('search', search);
+  const response = await api.get(`/tools/community?${params}`);
+  return response.data;
+};
+
+export const publishTool = async (data: {
+  name: string;
+  description: string;
+  category?: string;
+  tags?: string[];
+  icon?: string;
+  creatorName?: string;
+  definition: Record<string, unknown>;
+}): Promise<{ tool: CommunityTool }> => {
+  const response = await api.post('/tools/publish', data);
+  return response.data;
+};
+
+export const installCommunityTool = async (toolId: string, agentId: string): Promise<{ tool: Record<string, unknown>; agent: Agent }> => {
+  const response = await api.post(`/tools/community/${toolId}/install`, { agentId });
+  return response.data;
+};

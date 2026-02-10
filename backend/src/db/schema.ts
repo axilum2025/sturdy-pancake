@@ -222,6 +222,105 @@ export const refreshTokens = pgTable('refresh_tokens', {
 });
 
 // ============================================================
+// Community Tools (user-published tools for sharing)
+// ============================================================
+
+export const communityTools = pgTable('community_tools', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  creatorName: varchar('creator_name', { length: 255 }).notNull(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description').notNull(),
+  category: varchar('category', { length: 50 }).notNull().default('other'),
+  tags: jsonb('tags').$type<string[]>().notNull().default([]),
+  icon: varchar('icon', { length: 50 }).default('Wrench'),
+  /** The full tool definition that can be installed into an agent */
+  definition: jsonb('definition').$type<{
+    name: string;
+    type: string;
+    description: string;
+    parameters: Record<string, unknown>;
+    config: Record<string, unknown>;
+  }>().notNull(),
+  installCount: integer('install_count').notNull().default(0),
+  rating: real('rating').notNull().default(0),
+  ratingCount: integer('rating_count').notNull().default(0),
+  status: varchar('status', { length: 20 }).notNull().default('active'), // active | flagged | removed
+  publishedAt: timestamp('published_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
+// Agent Metrics (aggregated daily analytics)
+// ============================================================
+
+export const agentMetrics = pgTable('agent_metrics', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  date: varchar('date', { length: 10 }).notNull(), // YYYY-MM-DD
+  conversations: integer('conversations').notNull().default(0),
+  messages: integer('messages').notNull().default(0),
+  tokensUsed: integer('tokens_used').notNull().default(0),
+  toolCalls: integer('tool_calls').notNull().default(0),
+  avgResponseMs: integer('avg_response_ms').notNull().default(0),
+  errorCount: integer('error_count').notNull().default(0),
+  uniqueUsers: integer('unique_users').notNull().default(0),
+  satisfaction: real('satisfaction'), // avg rating 1-5 from thumbs
+  estimatedCost: real('estimated_cost').notNull().default(0), // USD
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
+// Agent Logs (detailed per-interaction logs)
+// ============================================================
+
+export const agentLogs = pgTable('agent_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  conversationId: uuid('conversation_id'),
+  level: varchar('level', { length: 10 }).notNull().default('info'), // info | warn | error | debug
+  event: varchar('event', { length: 50 }).notNull(), // chat, tool_call, tool_error, rag_search, deploy, etc.
+  message: text('message').notNull(),
+  metadata: jsonb('metadata').$type<{
+    userMessage?: string;
+    assistantResponse?: string;
+    toolName?: string;
+    toolArgs?: Record<string, unknown>;
+    toolResult?: string;
+    ragChunks?: number;
+    tokensPrompt?: number;
+    tokensCompletion?: number;
+    responseMs?: number;
+    model?: string;
+    errorStack?: string;
+    userId?: string;
+    ip?: string;
+  }>(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
+// Agent Alerts (configurable alert rules)
+// ============================================================
+
+export const agentAlerts = pgTable('agent_alerts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: varchar('type', { length: 30 }).notNull(), // error_rate | cost_limit | inactivity | rate_limit
+  config: jsonb('config').$type<{
+    threshold: number;
+    window?: string; // e.g. '1h', '24h'
+    notifyEmail?: string;
+    notifyWebhook?: string;
+  }>().notNull(),
+  enabled: integer('enabled').notNull().default(1),
+  lastTriggeredAt: timestamp('last_triggered_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
 // Relations
 // ============================================================
 
@@ -233,6 +332,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   apiKeys: many(apiKeys),
   webhooks: many(webhooks),
   knowledgeDocuments: many(knowledgeDocuments),
+  communityTools: many(communityTools),
+  agentAlerts: many(agentAlerts),
 }));
 
 export const agentsRelations = relations(agents, ({ one, many }) => ({
@@ -242,6 +343,9 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   webhooks: many(webhooks),
   knowledgeDocuments: many(knowledgeDocuments),
   knowledgeChunks: many(knowledgeChunks),
+  metrics: many(agentMetrics),
+  logs: many(agentLogs),
+  alerts: many(agentAlerts),
 }));
 
 export const storeAgentsRelations = relations(storeAgents, ({ one }) => ({
@@ -277,4 +381,21 @@ export const knowledgeDocumentsRelations = relations(knowledgeDocuments, ({ one,
 export const knowledgeChunksRelations = relations(knowledgeChunks, ({ one }) => ({
   document: one(knowledgeDocuments, { fields: [knowledgeChunks.documentId], references: [knowledgeDocuments.id] }),
   agent: one(agents, { fields: [knowledgeChunks.agentId], references: [agents.id] }),
+}));
+
+export const communityToolsRelations = relations(communityTools, ({ one }) => ({
+  user: one(users, { fields: [communityTools.userId], references: [users.id] }),
+}));
+
+export const agentMetricsRelations = relations(agentMetrics, ({ one }) => ({
+  agent: one(agents, { fields: [agentMetrics.agentId], references: [agents.id] }),
+}));
+
+export const agentLogsRelations = relations(agentLogs, ({ one }) => ({
+  agent: one(agents, { fields: [agentLogs.agentId], references: [agents.id] }),
+}));
+
+export const agentAlertsRelations = relations(agentAlerts, ({ one }) => ({
+  agent: one(agents, { fields: [agentAlerts.agentId], references: [agents.id] }),
+  user: one(users, { fields: [agentAlerts.userId], references: [users.id] }),
 }));

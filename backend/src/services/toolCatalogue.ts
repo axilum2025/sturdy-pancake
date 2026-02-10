@@ -232,6 +232,230 @@ export const BUILTIN_TOOLS: ToolCatalogueEntry[] = [
     },
   },
 
+  // ==================== Filesystem ====================
+  {
+    category: 'productivity',
+    icon: 'FileText',
+    premium: false,
+    definition: {
+      id: 'builtin_fs_read',
+      name: 'fs_read',
+      type: 'builtin',
+      description: 'Read a file from the agent sandbox (sandboxed – cannot escape)',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description: 'Relative path inside the sandbox, e.g. "notes/todo.txt"',
+          },
+        },
+        required: ['path'],
+      },
+      config: { builtinId: 'fs_read' },
+    },
+  },
+  {
+    category: 'productivity',
+    icon: 'FilePlus',
+    premium: false,
+    definition: {
+      id: 'builtin_fs_write',
+      name: 'fs_write',
+      type: 'builtin',
+      description: 'Write or overwrite a file in the agent sandbox',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description: 'Relative path inside the sandbox, e.g. "output/report.md"',
+          },
+          content: {
+            type: 'string',
+            description: 'Content to write to the file',
+          },
+        },
+        required: ['path', 'content'],
+      },
+      config: { builtinId: 'fs_write' },
+    },
+  },
+  {
+    category: 'productivity',
+    icon: 'FolderOpen',
+    premium: false,
+    definition: {
+      id: 'builtin_fs_list',
+      name: 'fs_list',
+      type: 'builtin',
+      description: 'List files and directories in the agent sandbox',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          path: {
+            type: 'string',
+            description: 'Relative directory path inside the sandbox (default: root ".")',
+          },
+        },
+      },
+      config: { builtinId: 'fs_list' },
+    },
+  },
+
+  // ==================== Database ====================
+  {
+    category: 'data',
+    icon: 'Database',
+    premium: true,
+    definition: {
+      id: 'builtin_db_query',
+      name: 'db_query',
+      type: 'builtin',
+      description: 'Execute a read-only SQL query (SELECT/WITH/EXPLAIN only) against a PostgreSQL database',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'The SQL query to execute (SELECT only)',
+          },
+          connection_string: {
+            type: 'string',
+            description: 'PostgreSQL connection string, e.g. postgresql://user:pass@host:5432/db',
+          },
+        },
+        required: ['query', 'connection_string'],
+      },
+      config: { builtinId: 'db_query' },
+    },
+  },
+
+  // ==================== Communication ====================
+  {
+    category: 'communication',
+    icon: 'Mail',
+    premium: true,
+    definition: {
+      id: 'builtin_send_email',
+      name: 'send_email',
+      type: 'builtin',
+      description: 'Send an email via SendGrid API',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          to: {
+            type: 'string',
+            description: 'Recipient email address',
+          },
+          subject: {
+            type: 'string',
+            description: 'Email subject line',
+          },
+          body: {
+            type: 'string',
+            description: 'Email body (plain text)',
+          },
+          from: {
+            type: 'string',
+            description: 'Sender email address (optional, defaults to noreply@gilo.dev)',
+          },
+          api_key: {
+            type: 'string',
+            description: 'SendGrid API key (optional if SENDGRID_API_KEY env var is set)',
+          },
+        },
+        required: ['to', 'subject', 'body'],
+      },
+      config: { builtinId: 'send_email' },
+    },
+  },
+
+  // ==================== Calendar ====================
+  {
+    category: 'productivity',
+    icon: 'Calendar',
+    premium: true,
+    definition: {
+      id: 'builtin_calendar_list_events',
+      name: 'calendar_list_events',
+      type: 'builtin',
+      description: 'List upcoming events from a Google Calendar',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          access_token: {
+            type: 'string',
+            description: 'Google OAuth2 access token with calendar read scope',
+          },
+          calendar_id: {
+            type: 'string',
+            description: 'Calendar ID (default: "primary")',
+          },
+          max_results: {
+            type: 'number',
+            description: 'Max number of events to return (default: 10)',
+          },
+        },
+        required: ['access_token'],
+      },
+      config: { builtinId: 'calendar_list_events' },
+    },
+  },
+  {
+    category: 'productivity',
+    icon: 'CalendarPlus',
+    premium: true,
+    definition: {
+      id: 'builtin_calendar_create_event',
+      name: 'calendar_create_event',
+      type: 'builtin',
+      description: 'Create a new event in Google Calendar',
+      enabled: true,
+      parameters: {
+        type: 'object',
+        properties: {
+          access_token: {
+            type: 'string',
+            description: 'Google OAuth2 access token with calendar write scope',
+          },
+          summary: {
+            type: 'string',
+            description: 'Event title',
+          },
+          start_time: {
+            type: 'string',
+            description: 'Event start time in ISO 8601 format',
+          },
+          end_time: {
+            type: 'string',
+            description: 'Event end time in ISO 8601 format',
+          },
+          description: {
+            type: 'string',
+            description: 'Event description (optional)',
+          },
+          location: {
+            type: 'string',
+            description: 'Event location (optional)',
+          },
+          calendar_id: {
+            type: 'string',
+            description: 'Calendar ID (default: "primary")',
+          },
+        },
+        required: ['access_token', 'summary', 'start_time', 'end_time'],
+      },
+      config: { builtinId: 'calendar_create_event' },
+    },
+  },
+
   // ==================== Developer ====================
   {
     category: 'developer',
