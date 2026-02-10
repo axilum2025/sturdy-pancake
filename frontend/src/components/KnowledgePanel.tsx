@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   BookOpen, Upload, Trash2, Search, FileText, FileSpreadsheet,
   AlertCircle, CheckCircle2, Loader2, HardDrive, Hash, Database,
-  X,
+  X, Globe,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -11,6 +11,7 @@ import {
   deleteKnowledgeDocument,
   searchKnowledge,
   getKnowledgeStats,
+  scrapeKnowledgeUrl,
   KnowledgeDocument,
   KnowledgeSearchResult,
   KnowledgeStats,
@@ -67,6 +68,8 @@ export default function KnowledgePanel({ agentId }: KnowledgePanelProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<KnowledgeSearchResult[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
+  const [isScraping, setIsScraping] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadData = useCallback(async () => {
@@ -138,6 +141,22 @@ export default function KnowledgePanel({ agentId }: KnowledgePanelProps) {
       console.error('Search error:', error);
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const handleScrapeUrl = async () => {
+    const url = urlInput.trim();
+    if (!url) return;
+    setIsScraping(true);
+    setUploadError(null);
+    try {
+      await scrapeKnowledgeUrl(agentId, url);
+      setUrlInput('');
+      await loadData();
+    } catch (error: any) {
+      setUploadError(error?.response?.data?.details || error.message || 'Erreur lors du scraping');
+    } finally {
+      setIsScraping(false);
     }
   };
 
@@ -217,6 +236,31 @@ export default function KnowledgePanel({ agentId }: KnowledgePanelProps) {
           {uploadError}
         </div>
       )}
+
+      {/* URL Scraper */}
+      <div>
+        <h4 className="text-sm font-medium text-t-text/60 mb-2">
+          <Globe className="w-3.5 h-3.5 inline mr-1" />
+          Indexer une page web
+        </h4>
+        <div className="flex gap-2">
+          <input
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleScrapeUrl()}
+            className="flex-1 bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+            placeholder="https://example.com/page"
+          />
+          <button
+            onClick={handleScrapeUrl}
+            disabled={isScraping || !urlInput.trim()}
+            className="btn-gradient px-3 py-2 rounded-lg text-sm disabled:opacity-50 flex items-center gap-1"
+          >
+            {isScraping ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+            Scraper
+          </button>
+        </div>
+      </div>
 
       {/* Document List */}
       {documents.length > 0 && (

@@ -253,44 +253,41 @@
 **Durée estimée** : 1-2 semaines
 
 ### 5.1 Upload de documents
-- [ ] Route `POST /api/agents/:id/knowledge` — upload fichiers (PDF, TXT, MD, DOCX, CSV)
-- [ ] Parsing des documents :
-  - [ ] `pdf-parse` pour PDF
-  - [ ] `mammoth` pour DOCX
-  - [ ] CSV/JSON direct
-- [ ] Chunking intelligent : découpage en morceaux de ~500 tokens avec overlap de 50 tokens
-- [ ] Stockage des chunks en DB (table `knowledge_chunks`)
+- [x] Route `POST /api/agents/:id/knowledge` — upload fichiers (PDF, TXT, MD, DOCX, CSV)
+- [x] Parsing des documents :
+  - [x] `pdf-parse` pour PDF
+  - [x] `mammoth` pour DOCX
+  - [x] CSV/JSON direct
+- [x] Chunking intelligent : découpage en morceaux de ~500 tokens avec overlap de 50 tokens
+- [x] Stockage des chunks en DB (table `knowledge_chunks`)
 
 ### 5.2 Embeddings & Recherche vectorielle
-- [ ] Générer des embeddings via GitHub Models API (`text-embedding-3-small`)
-- [ ] Option A (simple) : stockage embeddings + recherche cosinus en SQLite/PG avec `pgvector`
+- [x] Générer des embeddings via GitHub Models API (`text-embedding-3-small`)
+- [x] Option A (simple) : stockage embeddings + recherche cosinus en PG avec `pgvector`
 - [ ] Option B (scalable) : intégration Qdrant / Pinecone / Azure AI Search
-- [ ] Route `POST /api/agents/:id/knowledge/search` — recherche sémantique pour test
+- [x] Route `POST /api/agents/:id/knowledge/search` — recherche sémantique pour test
 
 ### 5.3 Intégration RAG dans le chat
-- [ ] Avant chaque appel LLM, rechercher les 5 chunks les plus pertinents
-- [ ] Injecter comme contexte dans le system prompt :
-  ```
-  [Documents pertinents]
-  1. {chunk.content} (source: {chunk.filename}, page {chunk.page})
-  2. ...
-  ```
-- [ ] Ajouter les citations dans la réponse de l'agent
-- [ ] Toggle RAG on/off dans AgentConfig
+- [x] Avant chaque appel LLM, rechercher les 5 chunks les plus pertinents
+- [x] Injecter comme contexte dans le system prompt
+- [x] Citations structurées retournées via SSE (`type: 'citations'`)
+- [x] Toggle RAG on/off selon `agent.config.knowledgeBase`
 
 ### 5.4 Connecteurs de données
-- [ ] URL Scraper : donner une URL et l'agent indexe le contenu
+- [x] URL Scraper : donner une URL et l'agent indexe le contenu (`cheerio`)
 - [ ] Notion : connecter un workspace Notion comme knowledge base
 - [ ] Google Drive : indexer des fichiers depuis Drive
 - [ ] API custom : webhook pour push de données en continu
 
 ### 5.5 UI Knowledge Base
-- [ ] Onglet "Connaissances" dans AgentConfig :
-  - [ ] Upload drag & drop de fichiers
-  - [ ] Liste des documents indexés (nom, taille, chunks, date)
-  - [ ] Suppression de documents
-  - [ ] Barre de recherche pour tester le RAG
-  - [ ] Statut d'indexation (en cours / terminé / erreur)
+- [x] Onglet "Connaissances" dans AgentConfig :
+  - [x] Upload drag & drop de fichiers
+  - [x] Liste des documents indexés (nom, taille, chunks, date)
+  - [x] Suppression de documents
+  - [x] Barre de recherche pour tester le RAG
+  - [x] Statut d'indexation (en cours / terminé / erreur)
+  - [x] Scraper une URL depuis l'UI
+  - [x] Stats : documents, chunks, tokens
 
 ---
 

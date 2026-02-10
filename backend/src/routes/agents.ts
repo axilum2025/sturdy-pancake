@@ -185,6 +185,7 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
 
     // RAG: search knowledge base for relevant context
     let systemPrompt = agent.config.systemPrompt;
+    let ragCitations: import('../services/knowledgeService').RagCitation[] = [];
     const ragEnabled = agent.config.knowledgeBase && agent.config.knowledgeBase.length > 0;
     if (ragEnabled) {
       const lastUserMsg = [...messages].reverse().find((m: CopilotMessage) => m.role === 'user');
@@ -193,6 +194,7 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
           const results = await knowledgeService.search(agent.id, lastUserMsg.content, 5);
           if (results.length > 0) {
             systemPrompt += '\n\n' + knowledgeService.buildRagContext(results);
+            ragCitations = knowledgeService.buildCitations(results);
           }
         } catch {
           // RAG fallback: continue without context
@@ -221,6 +223,11 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
     });
+
+    // Send RAG citations first so the frontend can display sources
+    if (ragCitations.length > 0) {
+      res.write(`data: ${JSON.stringify({ type: 'citations', citations: ragCitations })}\n\n`);
+    }
 
     for await (const chunk of stream) {
       const content = chunk.choices?.[0]?.delta?.content;

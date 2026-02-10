@@ -9,6 +9,7 @@ import { knowledgeDocuments, knowledgeChunks } from '../db/schema';
 import { parseDocument, isSupportedMimeType } from './documentParser';
 import { chunkText, chunkTextWithPages, TextChunk } from './chunker';
 import { generateEmbeddings, generateQueryEmbedding, cosineSimilarity } from './embeddingService';
+import { scrapeUrl } from './urlScraperService';
 
 // ---- Types ----
 
@@ -44,6 +45,14 @@ export interface SearchResult {
   documentId: string;
   filename: string;
   metadata: KnowledgeChunk['metadata'];
+}
+
+export interface RagCitation {
+  documentId: string;
+  filename: string;
+  page: number | null;
+  score: number;
+  snippet: string;
 }
 
 // ---- Service ----
@@ -155,6 +164,97 @@ class KnowledgeService {
       console.log(`✅ Knowledge doc ${filename}: ${chunks.length} chunks indexed (${embeddings.length} with embeddings)`);
     } catch (error: any) {
       console.error(`Knowledge processing error:`, error);
+      await db.update(knowledgeDocuments)
+        .set({ status: 'error', errorMessage: error.message })
+        .where(eq(knowledgeDocuments.id, docId));
+    }
+  }
+
+  /**
+   * Process a URL: scrape → chunk → embed → store
+   */
+  async processUrl(
+    agentId: string,
+    userId: string,
+    url: string,
+  ): Promise<KnowledgeDocument> {
+    const db = getDb();
+
+    // 1. Create document record (status: processing)
+    const [doc] = await db.insert(knowledgeDocuments).values({
+      agentId,
+      userId,
+      filename: url,
+      mimeType: 'text/html',
+      fileSize: 0,
+      status: 'processing',
+    }).returning();
+
+    // Process asynchronously
+    this.processUrlAsync(doc.id, agentId, url).catch(err => {
+      console.error(`URL scrape error for doc ${doc.id}:`, err);
+    });
+
+    return doc as unknown as KnowledgeDocument;
+  }
+
+  private async processUrlAsync(docId: string, agentId: string, url: string): Promise<void> {
+    const db = getDb();
+
+    try {
+      const scraped = await scrapeUrl(url);
+
+      if (!scraped.text || scraped.text.length < 50) {
+        await db.update(knowledgeDocuments)
+          .set({ status: 'error', errorMessage: 'URL yielded too little text content' })
+          .where(eq(knowledgeDocuments.id, docId));
+        return;
+      }
+
+      // Update file size with actual byte length
+      await db.update(knowledgeDocuments)
+        .set({ fileSize: scraped.byteLength, filename: `🌐 ${scraped.title}` })
+        .where(eq(knowledgeDocuments.id, docId));
+
+      // Chunk → embed → store (reuse the same pipeline)
+      const chunks = chunkText(scraped.text, { maxTokens: 500, overlapTokens: 50 });
+
+      if (chunks.length === 0) {
+        await db.update(knowledgeDocuments)
+          .set({ status: 'error', errorMessage: 'No text chunks produced from URL' })
+          .where(eq(knowledgeDocuments.id, docId));
+        return;
+      }
+
+      let embeddings: number[][] = [];
+      try {
+        embeddings = await generateEmbeddings(chunks.map(c => c.content));
+      } catch (embErr: any) {
+        console.warn(`Embedding generation failed for URL doc ${docId}:`, embErr.message);
+      }
+
+      const chunkRows = chunks.map((chunk, i) => ({
+        documentId: docId,
+        agentId,
+        content: chunk.content,
+        chunkIndex: chunk.chunkIndex,
+        tokenCount: chunk.tokenCount,
+        embedding: embeddings[i] || null,
+        metadata: { source: url, section: scraped.title },
+      }));
+
+      for (let i = 0; i < chunkRows.length; i += 100) {
+        const batch = chunkRows.slice(i, i + 100);
+        await db.insert(knowledgeChunks).values(batch);
+      }
+
+      await db.update(knowledgeDocuments)
+        .set({ chunkCount: chunks.length, status: 'ready' })
+        .where(eq(knowledgeDocuments.id, docId));
+
+      console.log(`✅ URL scraped ${url}: ${chunks.length} chunks indexed`);
+    } catch (error: any) {
+      console.error(`URL scrape error:`, error);
       await db.update(knowledgeDocuments)
         .set({ status: 'error', errorMessage: error.message })
         .where(eq(knowledgeDocuments.id, docId));
@@ -307,10 +407,24 @@ class KnowledgeService {
     const lines = results.map((r, i) => {
       const source = r.metadata?.source || r.filename;
       const page = r.metadata?.page ? `, page ${r.metadata.page}` : '';
-      return `${i + 1}. ${r.content}\n   (source: ${source}${page})`;
+      return `${i + 1}. ${r.content}\n   [source: ${source}${page}]`;
     });
 
-    return `[Documents pertinents]\n${lines.join('\n\n')}`;
+    return `[Relevant Knowledge Base Documents]\n${lines.join('\n\n')}`;
+  }
+
+  /**
+   * Build structured citation metadata from search results.
+   * Returned alongside the SSE stream so the frontend can render source chips.
+   */
+  buildCitations(results: SearchResult[]): RagCitation[] {
+    return results.map((r) => ({
+      documentId: r.documentId,
+      filename: r.filename,
+      page: r.metadata?.page ?? null,
+      score: r.score,
+      snippet: r.content.slice(0, 200),
+    }));
   }
 
   /**

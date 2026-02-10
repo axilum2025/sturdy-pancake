@@ -36,6 +36,12 @@ param githubToken string = ''
 @description('Container image tag')
 param imageTag string = 'latest'
 
+@description('Custom domain for the application (e.g. gilo.dev)')
+param customDomain string = 'gilo.dev'
+
+@description('Enable custom domain configuration')
+param enableCustomDomain bool = true
+
 // ── Variables ───────────────────────────────────────
 var prefix = '${projectName}-${environment}'
 var tags = {
@@ -193,8 +199,8 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             { name: 'NODE_ENV', value: 'production' }
             { name: 'PORT', value: '3001' }
-            { name: 'GILO_DOMAIN', value: 'gilo.dev' }
-            { name: 'ALLOWED_ORIGINS', value: 'https://gilo.dev,https://www.gilo.dev' }
+            { name: 'GILO_DOMAIN', value: customDomain }
+            { name: 'ALLOWED_ORIGINS', value: 'https://${customDomain},https://www.${customDomain}' }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
             { name: 'GITHUB_TOKEN', secretRef: 'github-token' }
@@ -257,12 +263,27 @@ resource swa 'Microsoft.Web/staticSites@2023-12-01' = {
   }
 }
 
+// SWA custom domain – apex (gilo.dev)
+resource swaCustomDomainApex 'Microsoft.Web/staticSites/customDomains@2023-12-01' = if (enableCustomDomain) {
+  parent: swa
+  name: customDomain
+  properties: {}
+}
+
+// SWA custom domain – www (www.gilo.dev)
+resource swaCustomDomainWww 'Microsoft.Web/staticSites/customDomains@2023-12-01' = if (enableCustomDomain) {
+  parent: swa
+  name: 'www.${customDomain}'
+  properties: {}
+  dependsOn: [swaCustomDomainApex]
+}
+
 // SWA app settings – inject backend URL for frontend build
 resource swaSettings 'Microsoft.Web/staticSites/config@2023-12-01' = {
   parent: swa
   name: 'appsettings'
   properties: {
-    VITE_API_URL: 'https://${backendApp.properties.configuration.ingress.fqdn}'
+    VITE_API_URL: enableCustomDomain ? 'https://api.${customDomain}' : 'https://${backendApp.properties.configuration.ingress.fqdn}'
   }
 }
 
@@ -274,10 +295,10 @@ output acrLoginServer string = acr.properties.loginServer
 output backendFqdn string = backendApp.properties.configuration.ingress.fqdn
 
 @description('Backend Container App URL')
-output backendUrl string = 'https://${backendApp.properties.configuration.ingress.fqdn}'
+output backendUrl string = enableCustomDomain ? 'https://api.${customDomain}' : 'https://${backendApp.properties.configuration.ingress.fqdn}'
 
 @description('Static Web App default hostname')
-output frontendUrl string = 'https://${swa.properties.defaultHostname}'
+output frontendUrl string = enableCustomDomain ? 'https://${customDomain}' : 'https://${swa.properties.defaultHostname}'
 
 @description('Static Web App deployment token')
 output swaDeploymentToken string = swa.listSecrets().properties.apiKey
@@ -287,3 +308,12 @@ output postgresHost string = postgres.properties.fullyQualifiedDomainName
 
 @description('Container Apps Environment ID')
 output containerEnvId string = containerEnv.id
+
+@description('Custom domain')
+output customDomain string = customDomain
+
+@description('Container Apps Environment verification ID (for DNS TXT record)')
+output domainVerificationId string = containerEnv.properties.customDomainConfiguration.customDomainVerificationId
+
+@description('Container Apps static IP (for DNS A record)')
+output containerAppsStaticIp string = containerEnv.properties.staticIp

@@ -123,6 +123,53 @@ knowledgeRouter.get('/:id/knowledge/stats', async (req: Request, res: Response) 
 });
 
 // ----------------------------------------------------------
+// POST /api/agents/:id/knowledge/url — Scrape a URL
+// ----------------------------------------------------------
+knowledgeRouter.post('/:id/knowledge/url', async (req: Request, res: Response) => {
+  try {
+    const userId = await verifyAgentOwnership(req, res);
+    if (!userId) return;
+
+    const agentId = req.params.id;
+    const { url } = req.body;
+
+    if (!url || typeof url !== 'string' || !url.trim()) {
+      return res.status(400).json({ error: 'A valid URL is required in the request body' });
+    }
+
+    // Basic URL validation
+    try {
+      const parsed = new URL(url.trim());
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return res.status(400).json({ error: 'Only http and https URLs are supported' });
+      }
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    const doc = await knowledgeService.processUrl(agentId, userId, url.trim());
+
+    // Auto-add document ID to agent's knowledgeBase config
+    const agent = await agentModel.findById(agentId);
+    if (agent) {
+      const knowledgeBase = agent.config.knowledgeBase || [];
+      if (!knowledgeBase.includes(doc.id)) {
+        knowledgeBase.push(doc.id);
+        await agentModel.updateConfig(agentId, { knowledgeBase });
+      }
+    }
+
+    res.status(201).json({
+      message: 'URL scraping started',
+      document: doc,
+    });
+  } catch (error: any) {
+    console.error('Knowledge URL scrape error:', error);
+    res.status(500).json({ error: 'Failed to scrape URL', details: error.message });
+  }
+});
+
+// ----------------------------------------------------------
 // POST /api/agents/:id/knowledge/search — Test semantic search
 // ----------------------------------------------------------
 knowledgeRouter.post('/:id/knowledge/search', async (req: Request, res: Response) => {

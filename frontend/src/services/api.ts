@@ -562,3 +562,8 @@ export const searchKnowledge = async (agentId: string, query: string, topK?: num
 export const deleteKnowledgeDocument = async (agentId: string, docId: string): Promise<void> => {
   await api.delete(`/agents/${agentId}/knowledge/${docId}`);
 };
+
+export const scrapeKnowledgeUrl = async (agentId: string, url: string): Promise<{ document: KnowledgeDocument }> => {
+  const response = await api.post(`/agents/${agentId}/knowledge/url`, { url });
+  return response.data;
+};
