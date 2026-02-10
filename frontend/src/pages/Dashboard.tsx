@@ -47,9 +47,11 @@ export default function Dashboard() {
       setShowCreateModal(false);
       setNewProjectName('');
       navigate(`/builder/${agent.id}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating agent:', error);
-      alert(t('common.error') || 'Failed to create agent');
+      // Use the error message from the backend if available (via interceptor)
+      const message = error?.message || t('common.error') || 'Failed to create agent';
+      alert(message);
     } finally {
       setIsCreating(false);
     }
