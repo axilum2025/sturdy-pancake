@@ -33,6 +33,7 @@ export interface Agent {
   id: string;
   userId: string;
   name: string;
+  slug?: string;
   description?: string;
   tier: AgentTier;
   config: AgentConfig;
@@ -54,6 +55,7 @@ export interface AgentCreateDTO {
 export interface AgentResponse {
   id: string;
   name: string;
+  slug?: string;
   description?: string;
   tier: AgentTier;
   config: AgentConfig;
@@ -102,6 +104,7 @@ export class AgentModel {
     const [row] = await db.insert(agents).values({
       userId,
       name: data.name,
+      slug: this.generateSlug(data.name),
       description: data.description,
       tier: userTier,
       config,
@@ -128,7 +131,13 @@ export class AgentModel {
     return rows.map((r) => this.mapRow(r));
   }
 
-  async update(id: string, data: Partial<Pick<Agent, 'name' | 'description' | 'status' | 'endpoint' | 'totalConversations' | 'totalMessages'>>): Promise<Agent> {
+  async findBySlug(slug: string): Promise<Agent | undefined> {
+    const db = getDb();
+    const row = await db.query.agents.findFirst({ where: eq(agents.slug, slug) });
+    return row ? this.mapRow(row) : undefined;
+  }
+
+  async update(id: string, data: Partial<Pick<Agent, 'name' | 'description' | 'status' | 'endpoint' | 'slug' | 'totalConversations' | 'totalMessages'>>): Promise<Agent> {
     const db = getDb();
     const [row] = await db.update(agents)
       .set({ ...data, updatedAt: new Date() })
@@ -159,9 +168,12 @@ export class AgentModel {
 
   async deploy(id: string): Promise<Agent> {
     const db = getDb();
+    const existing = await db.query.agents.findFirst({ where: eq(agents.id, id) });
+    const slug = existing?.slug || this.generateSlug(existing?.name || id);
     const [row] = await db.update(agents)
       .set({
         status: 'deployed',
+        slug,
         endpoint: `/api/agents/${id}/chat`,
         deployedAt: new Date(),
         updatedAt: new Date(),
@@ -176,6 +188,7 @@ export class AgentModel {
     return {
       id: agent.id,
       name: agent.name,
+      slug: agent.slug,
       description: agent.description,
       tier: agent.tier,
       config: agent.config,
@@ -193,6 +206,7 @@ export class AgentModel {
       id: row.id,
       userId: row.userId,
       name: row.name,
+      slug: row.slug ?? undefined,
       description: row.description ?? undefined,
       tier: row.tier as AgentTier,
       config: row.config as AgentConfig,
@@ -204,6 +218,20 @@ export class AgentModel {
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
     };
+  }
+
+  /**
+   * Generate a URL-safe slug from an agent name.
+   * e.g. "Mon Agent Support" → "mon-agent-support"
+   */
+  private generateSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 60);
   }
 }
 

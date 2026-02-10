@@ -19,9 +19,11 @@ import { apiKeysRouter } from './routes/apiKeys';
 import { webhooksRouter } from './routes/webhooks';
 import { publicApiRouter } from './routes/publicApi';
 import { knowledgeRouter } from './routes/knowledge';
+import { subdomainRouter } from './routes/subdomain';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { rateLimiter } from './middleware/rateLimiter';
+import { subdomainMiddleware } from './middleware/subdomain';
 
 const port = process.env.PORT || 3001;
 
@@ -38,6 +40,11 @@ async function main() {
     credentials: true
   }));
   app.use(express.json());
+
+  // Subdomain routing: {slug}.gilo.com → agent
+  // Must be before other routes so subdomain requests are caught first
+  app.use(subdomainMiddleware);
+  app.use(subdomainRouter);
 
   // Public routes (no auth required)
   app.use('/api/auth', authRouter);

@@ -772,6 +772,8 @@
     "helpText": "Use these examples to integrate your agent into your applications. Each request requires a valid API key. The endpoint accepts a messages array and returns the agent's response.",
     "errorCreatingKey": "Error creating key",
     "errorRevokingKey": "Error revoking key",
-    "sidebarTitle": "API"
+    "sidebarTitle": "API",
+    "subdomainUrl": "Custom URL",
+    "subdomainHelp": "This link works when your domain is configured. Users can chat with your agent via this URL."
   }
 }

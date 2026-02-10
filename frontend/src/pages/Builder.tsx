@@ -12,6 +12,7 @@ import PublishModal from '../components/PublishModal';
 import ApiIntegrationModal from '../components/ApiIntegrationModal';
 import { useSessionStore } from '../store/sessionStore';
 import { useBuilderStore } from '../store/builderStore';
+import { getAgent } from '../services/api';
 
 export default function Builder() {
   const { projectId } = useParams();
@@ -28,6 +29,7 @@ export default function Builder() {
   const [showPublish, setShowPublish] = useState(false);
   const [showApiIntegration, setShowApiIntegration] = useState(false);
   const [publishedStoreId, setPublishedStoreId] = useState<string | null>(null);
+  const [agentSlug, setAgentSlug] = useState<string | undefined>();
 
   useEffect(() => {
     const initSession = async () => {
@@ -40,6 +42,11 @@ export default function Builder() {
       }
       setProjectId(id);
       setIsLoading(false);
+
+      // Fetch agent slug for subdomain URL
+      if (id !== 'new-project') {
+        getAgent(id).then(a => setAgentSlug(a.slug)).catch(() => {});
+      }
     };
 
     initSession();
@@ -285,6 +292,7 @@ export default function Builder() {
           <ApiIntegrationModal
             agentId={projectId}
             agentName={projectId}
+            agentSlug={agentSlug}
             onClose={() => setShowApiIntegration(false)}
           />
         )}

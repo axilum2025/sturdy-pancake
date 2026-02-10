@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield } from 'lucide-react';
+import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createApiKey, listApiKeys, revokeApiKey, ApiKeyResponse } from '../services/api';
 
 interface ApiIntegrationModalProps {
   agentId: string;
   agentName: string;
+  agentSlug?: string;
   onClose: () => void;
 }
 
 type CodeLang = 'curl' | 'python' | 'javascript' | 'nodejs';
 
-export default function ApiIntegrationModal({ agentId, agentName, onClose }: ApiIntegrationModalProps) {
+export default function ApiIntegrationModal({ agentId, agentName, agentSlug, onClose }: ApiIntegrationModalProps) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<CodeLang>('curl');
   const [apiKeys, setApiKeys] = useState<ApiKeyResponse[]>([]);
@@ -25,6 +26,8 @@ export default function ApiIntegrationModal({ agentId, agentName, onClose }: Api
 
   const baseUrl = window.location.origin;
   const endpoint = `${baseUrl}/api/v1/agents/${agentId}/chat`;
+  const giloDomain = import.meta.env.VITE_GILO_DOMAIN || '';
+  const subdomainUrl = agentSlug && giloDomain ? `https://${agentSlug}.${giloDomain}` : null;
 
   const loadKeys = useCallback(async () => {
     try {
@@ -223,6 +226,24 @@ chat("Hello!").then(console.log);`;
                   <Copy className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Subdomain URL */}
+              {subdomainUrl && (
+                <div className="mt-2">
+                  <label className="text-xs font-medium text-t-text/50 mb-1 block">{t('apiIntegration.subdomainUrl')}</label>
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-purple-500/5 border border-purple-500/15">
+                    <Globe className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                    <code className="text-sm text-purple-400 font-mono flex-1 break-all">{subdomainUrl}</code>
+                    <button
+                      onClick={() => copyToClipboard(subdomainUrl, 'snippet')}
+                      className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors flex-shrink-0"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-t-text/40 mt-1">{t('apiIntegration.subdomainHelp')}</p>
+                </div>
+              )}
             </div>
 
             {/* API Keys Section */}

@@ -194,6 +194,7 @@ export interface Agent {
   tier: 'free' | 'pro';
   config: AgentConfig;
   status: 'draft' | 'active' | 'deployed';
+  slug?: string;
   endpoint?: string;
   totalConversations: number;
   totalMessages: number;

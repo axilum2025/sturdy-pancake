@@ -49,6 +49,7 @@ export const agents = pgTable('agents', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
+  slug: varchar('slug', { length: 255 }).unique(),
   description: text('description'),
   tier: varchar('tier', { length: 20 }).notNull().default('free'),
   config: jsonb('config').$type<{
