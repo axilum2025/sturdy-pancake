@@ -25,6 +25,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 
 # Copy compiled JS
 COPY --from=builder /app/dist ./dist
+# Copy Drizzle config and schema for runtime migrations/push
+COPY drizzle.config.ts ./
+COPY src/db/schema.ts ./src/db/
 
 # Create data directory for runtime storage (MCP configs etc.)
 RUN mkdir -p ./data/projects && echo '[]' > ./data/mcp-servers.json
