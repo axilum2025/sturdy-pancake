@@ -101,21 +101,36 @@ export class AgentModel {
       tools: data.config?.tools || [],
     };
 
-    const slug = await this.generateUniqueSlug(data.name);
+    // Retry loop to handle race conditions where generated slug is taken before insert
+    let attempts = 0;
+    while (attempts < 3) {
+      try {
+        const slug = await this.generateUniqueSlug(data.name);
 
-    const [row] = await db.insert(agents).values({
-      userId,
-      name: data.name,
-      slug,
-      description: data.description,
-      tier: userTier,
-      config,
-      status: 'draft',
-      totalConversations: 0,
-      totalMessages: 0,
-    }).returning();
+        const [row] = await db.insert(agents).values({
+          userId,
+          name: data.name,
+          slug,
+          description: data.description,
+          tier: userTier,
+          config,
+          status: 'draft',
+          totalConversations: 0,
+          totalMessages: 0,
+        }).returning();
 
-    return this.mapRow(row);
+        return this.mapRow(row);
+      } catch (error: any) {
+        // Check for unique constraint violation on slug (Postgres code 23505)
+        if (error?.code === '23505' && error?.detail?.includes('slug')) {
+          attempts++;
+          continue;
+        }
+        throw error;
+      }
+    }
+    
+    throw new Error('Failed to generate unique slug after multiple attempts');
   }
 
   async findById(id: string): Promise<Agent | undefined> {

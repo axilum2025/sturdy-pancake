@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [newProjectName, setNewProjectName] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -37,8 +38,9 @@ export default function Dashboard() {
   };
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim()) return;
+    if (!newProjectName.trim() || isCreating) return;
     
+    setIsCreating(true);
     try {
       const agent = await createAgent(newProjectName, t('common.loading'));
       setProjects([agent, ...projects]);
@@ -47,6 +49,9 @@ export default function Dashboard() {
       navigate(`/builder/${agent.id}`);
     } catch (error) {
       console.error('Error creating agent:', error);
+      alert(t('common.error') || 'Failed to create agent');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -355,10 +360,17 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={handleCreateProject}
-                disabled={!newProjectName.trim()}
-                className="flex-1 btn-gradient px-4 py-3 rounded-xl text-t-text font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!newProjectName.trim() || isCreating}
+                className="flex-1 btn-gradient px-4 py-3 rounded-xl text-t-text font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {t('common.create')}
+                {isCreating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>{t('common.processing')}</span>
+                  </>
+                ) : (
+                  t('common.create')
+                )}
               </button>
             </div>
           </div>
