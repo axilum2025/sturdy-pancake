@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Key, Plus, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield } from 'lucide-react';
+import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createApiKey, listApiKeys, revokeApiKey, ApiKeyResponse } from '../services/api';
 
@@ -187,10 +187,10 @@ chat("Hello!").then(console.log);`;
       />
 
       {/* Modal */}
-      <div className="fixed inset-4 md:inset-8 lg:inset-y-12 lg:inset-x-[15%] z-50 flex items-center justify-center animate-fade-in-up">
-        <div className="w-full h-full glass-strong rounded-2xl border border-t-overlay/10 shadow-2xl overflow-hidden flex flex-col">
+      <div className="fixed inset-0 md:inset-8 lg:inset-y-12 lg:inset-x-[15%] z-50 flex items-center justify-center animate-fade-in-up">
+        <div className="w-full h-full glass-strong md:rounded-2xl border border-t-overlay/10 shadow-2xl overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-t-overlay/10">
+          <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-t-overlay/10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                 <Code2 className="w-5 h-5 text-white" />
@@ -209,7 +209,7 @@ chat("Hello!").then(console.log);`;
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5 md:space-y-6">
             {/* Endpoint */}
             <div>
               <label className="text-sm font-medium text-t-text/70 mb-2 block">{t('apiIntegration.endpoint')}</label>
@@ -252,7 +252,7 @@ chat("Hello!").then(console.log);`;
               )}
 
               {/* Create new key */}
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-3">
                 <input
                   type="text"
                   placeholder={t('apiIntegration.keyNamePlaceholder')}
@@ -264,13 +264,9 @@ chat("Hello!").then(console.log);`;
                 <button
                   onClick={handleCreateKey}
                   disabled={!newKeyName.trim() || creating}
-                  className="btn-gradient px-4 py-2 rounded-lg text-sm text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-gradient px-4 py-2 rounded-lg text-sm text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                 >
-                  {creating ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
+                  {creating && <RefreshCw className="w-4 h-4 animate-spin" />}
                   {t('apiIntegration.createKey')}
                 </button>
               </div>
@@ -325,18 +321,18 @@ chat("Hello!").then(console.log);`;
               </div>
 
               {/* Tabs */}
-              <div className="flex items-center gap-1 mb-3 p-1 rounded-xl bg-t-overlay/5 border border-t-overlay/10 w-fit">
+              <div className="flex items-center gap-1 mb-3 p-1 rounded-xl bg-t-overlay/5 border border-t-overlay/10 overflow-x-auto w-full md:w-fit">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                    className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 flex items-center gap-1.5 md:gap-2 whitespace-nowrap flex-shrink-0 ${
                       activeTab === tab.id
                         ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
                         : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'
                     }`}
                   >
-                    <span>{tab.icon}</span>
+                    <span className="hidden md:inline">{tab.icon}</span>
                     {tab.label}
                   </button>
                 ))}
@@ -363,7 +359,7 @@ chat("Hello!").then(console.log);`;
                     )}
                   </button>
                 </div>
-                <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-200 leading-relaxed">
+                <pre className="p-3 md:p-4 overflow-x-auto text-xs md:text-sm font-mono text-gray-200 leading-relaxed max-h-[40vh] md:max-h-[50vh] overflow-y-auto">
                   <code>{snippet}</code>
                 </pre>
               </div>
