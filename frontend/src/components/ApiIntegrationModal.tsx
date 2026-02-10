@@ -343,12 +343,12 @@ chat("Hello!").then(console.log);`;
               </div>
 
               {/* Code Block */}
-              <div className="relative rounded-xl bg-[#0d1117] border border-t-overlay/10 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2 border-b border-t-overlay/10 bg-t-overlay/5">
-                  <span className="text-xs text-t-text/40 font-mono">{activeTab === 'nodejs' ? 'javascript' : activeTab}</span>
+              <div className="relative rounded-xl bg-[#0d1117] border border-white/10 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5">
+                  <span className="text-xs text-gray-400 font-mono">{activeTab === 'nodejs' ? 'javascript' : activeTab}</span>
                   <button
                     onClick={() => copyToClipboard(snippet, 'snippet')}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors text-xs"
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-gray-200 transition-colors text-xs"
                   >
                     {copiedSnippet ? (
                       <>
@@ -363,7 +363,7 @@ chat("Hello!").then(console.log);`;
                     )}
                   </button>
                 </div>
-                <pre className="p-4 overflow-x-auto text-sm font-mono text-t-text/80 leading-relaxed">
+                <pre className="p-4 overflow-x-auto text-sm font-mono text-gray-200 leading-relaxed">
                   <code>{snippet}</code>
                 </pre>
               </div>
