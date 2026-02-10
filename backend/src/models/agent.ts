@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, like } from 'drizzle-orm';
 import { getDb } from '../db';
 import { agents } from '../db/schema';
 
@@ -101,10 +101,12 @@ export class AgentModel {
       tools: data.config?.tools || [],
     };
 
+    const slug = await this.generateUniqueSlug(data.name);
+
     const [row] = await db.insert(agents).values({
       userId,
       name: data.name,
-      slug: this.generateSlug(data.name),
+      slug,
       description: data.description,
       tier: userTier,
       config,
@@ -169,7 +171,11 @@ export class AgentModel {
   async deploy(id: string): Promise<Agent> {
     const db = getDb();
     const existing = await db.query.agents.findFirst({ where: eq(agents.id, id) });
-    const slug = existing?.slug || this.generateSlug(existing?.name || id);
+    if (!existing) throw new Error('Agent not found');
+
+    // Keep existing slug or generate a new unique one
+    const slug = existing.slug || await this.generateUniqueSlug(existing.name || id);
+
     const [row] = await db.update(agents)
       .set({
         status: 'deployed',
@@ -224,7 +230,7 @@ export class AgentModel {
    * Generate a URL-safe slug from an agent name.
    * e.g. "Mon Agent Support" → "mon-agent-support"
    */
-  private generateSlug(name: string): string {
+  private slugify(name: string): string {
     return name
       .toLowerCase()
       .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove accents
@@ -232,6 +238,37 @@ export class AgentModel {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .substring(0, 60);
+  }
+
+  /**
+   * Generate a unique slug by checking for collisions in the DB.
+   * If "mon-agent" exists, tries "mon-agent-2", "mon-agent-3", etc.
+   */
+  private async generateUniqueSlug(name: string): Promise<string> {
+    const db = getDb();
+    const base = this.slugify(name);
+    if (!base) return this.slugify(`agent-${Date.now()}`);
+
+    // Check if base slug is available
+    const existing = await db.query.agents.findFirst({ where: eq(agents.slug, base) });
+    if (!existing) return base;
+
+    // Find all slugs that start with this base
+    const similar = await db.select({ slug: agents.slug })
+      .from(agents)
+      .where(like(agents.slug, `${base}-%`));
+
+    const usedNumbers = similar
+      .map(r => r.slug)
+      .filter((s): s is string => !!s)
+      .map(s => {
+        const suffix = s.slice(base.length + 1);
+        return /^\d+$/.test(suffix) ? parseInt(suffix, 10) : 0;
+      })
+      .filter(n => n > 0);
+
+    const next = usedNumbers.length > 0 ? Math.max(...usedNumbers) + 1 : 2;
+    return `${base}-${next}`;
   }
 }
 
