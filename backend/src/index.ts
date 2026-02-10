@@ -41,7 +41,7 @@ async function main() {
   }));
   app.use(express.json());
 
-  // Subdomain routing: {slug}.gilo.com → agent
+  // Subdomain routing: {slug}.gilo.dev → agent
   // Must be before other routes so subdomain requests are caught first
   app.use(subdomainMiddleware);
   app.use(subdomainRouter);

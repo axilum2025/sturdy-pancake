@@ -26,7 +26,7 @@ export default function ApiIntegrationModal({ agentId, agentName, agentSlug, onC
 
   const baseUrl = window.location.origin;
   const endpoint = `${baseUrl}/api/v1/agents/${agentId}/chat`;
-  const giloDomain = import.meta.env.VITE_GILO_DOMAIN || '';
+  const giloDomain = import.meta.env.VITE_GILO_DOMAIN || 'gilo.dev';
   const subdomainUrl = agentSlug && giloDomain ? `https://${agentSlug}.${giloDomain}` : null;
 
   const loadKeys = useCallback(async () => {

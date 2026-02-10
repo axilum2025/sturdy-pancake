@@ -315,6 +315,7 @@ Pas encore implémenté. Objectif : permettre aux agents d'accéder à des docum
   - `NODE_ENV`
   - `GITHUB_TOKEN`
   - `ALLOWED_ORIGINS`
+  - `GILO_DOMAIN` (e.g. `gilo.dev`)
   - `MCP_STORAGE_DIR`
 
 ---

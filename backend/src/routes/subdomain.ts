@@ -1,6 +1,6 @@
 // ============================================================
 // GiLo AI – Subdomain Agent Routes
-// Handles requests routed via {slug}.gilo.com
+// Handles requests routed via {slug}.gilo.dev
 // ============================================================
 
 import { Router, Request, Response } from 'express';

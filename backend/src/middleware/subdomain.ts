@@ -1,6 +1,6 @@
 // ============================================================
 // GiLo AI – Subdomain Middleware
-// Routes requests from {slug}.gilo.com to the correct agent
+// Routes requests from {slug}.gilo.dev to the correct agent
 // ============================================================
 
 import { Request, Response, NextFunction } from 'express';
@@ -8,7 +8,7 @@ import { agentModel } from '../models/agent';
 
 /**
  * Base domain for the application.
- * Set via GILO_DOMAIN env var (e.g. "gilo.com").
+ * Set via GILO_DOMAIN env var (e.g. "gilo.dev").
  * In development, this is not used — subdomain routing is skipped.
  */
 const BASE_DOMAIN = process.env.GILO_DOMAIN || '';
@@ -16,7 +16,7 @@ const BASE_DOMAIN = process.env.GILO_DOMAIN || '';
 /**
  * Middleware that detects subdomain-based agent access.
  * 
- * For a request to `my-agent.gilo.com`:
+ * For a request to `my-agent.gilo.dev`:
  *   - Extracts "my-agent" as the slug
  *   - Looks up the agent by slug
  *   - Attaches `req.agentBySubdomain` with the agent data
@@ -50,7 +50,7 @@ export function subdomainMiddleware(req: Request, res: Response, next: NextFunct
     return next();
   }
 
-  // Extract subdomain: "my-agent.gilo.com" → "my-agent"
+  // Extract subdomain: "my-agent.gilo.dev" → "my-agent"
   const suffix = `.${BASE_DOMAIN}`;
   if (!host.endsWith(suffix)) {
     return next();
@@ -58,7 +58,7 @@ export function subdomainMiddleware(req: Request, res: Response, next: NextFunct
 
   const slug = host.slice(0, -suffix.length);
   if (!slug || slug.includes('.')) {
-    // Empty slug or nested subdomain (e.g. a.b.gilo.com) — skip
+    // Empty slug or nested subdomain (e.g. a.b.gilo.dev) — skip
     return next();
   }
 

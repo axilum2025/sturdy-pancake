@@ -162,7 +162,7 @@ Ce projet implémente une plateforme de construction d'applications pilotée par
    az webapp create \
      --resource-group <your-rg> \
      --plan <your-plan> \
-     --name lovable-ai-builder \
+     --name gilo-dev \
      --runtime "NODE:20-lts"
    ```
 
@@ -181,7 +181,8 @@ Configurez ces variables dans Azure Web App :
 PORT=8080
 NODE_ENV=production
 GITHUB_TOKEN=<votre-token>
-ALLOWED_ORIGINS=https://lovable-ai-builder.azurewebsites.net
+ALLOWED_ORIGINS=https://gilo.dev
+GILO_DOMAIN=gilo.dev
 MCP_STORAGE_DIR=/home/data
 ```
 

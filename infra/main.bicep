@@ -193,6 +193,8 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             { name: 'NODE_ENV', value: 'production' }
             { name: 'PORT', value: '3001' }
+            { name: 'GILO_DOMAIN', value: 'gilo.dev' }
+            { name: 'ALLOWED_ORIGINS', value: 'https://gilo.dev,https://www.gilo.dev' }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
             { name: 'GITHUB_TOKEN', secretRef: 'github-token' }
