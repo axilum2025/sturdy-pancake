@@ -4,7 +4,7 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import { initDb, closeDb } from './db';
+import { initDb, closeDb, getPool } from './db';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
 import { mcpRouter } from './routes/mcp';
@@ -80,6 +80,35 @@ async function main() {
       timestamp: new Date().toISOString(),
       version: '3.0.0'
     });
+  });
+
+  // Diagnostic endpoint — check DB tables and columns directly
+  app.get('/api/debug/db', async (req: Request, res: Response) => {
+    const p = getPool();
+    if (!p) return res.status(500).json({ error: 'No pool' });
+    const client = await p.connect();
+    try {
+      const tables = await client.query(`SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY table_name`);
+      const agentsCols = await client.query(`SELECT column_name, data_type FROM information_schema.columns WHERE table_schema='public' AND table_name='agents' ORDER BY ordinal_position`);
+      let testSelect = null;
+      let testError = null;
+      try {
+        const r = await client.query(`SELECT id, slug FROM agents LIMIT 1`);
+        testSelect = { rowCount: r.rowCount, rows: r.rows };
+      } catch (e: any) {
+        testError = { message: e.message, code: e.code, detail: e.detail };
+      }
+      res.json({
+        tables: tables.rows.map((r: any) => r.table_name),
+        agentsColumns: agentsCols.rows,
+        testSelect,
+        testError,
+      });
+    } catch (e: any) {
+      res.status(500).json({ error: e.message });
+    } finally {
+      client.release();
+    }
   });
 
   // API documentation endpoint

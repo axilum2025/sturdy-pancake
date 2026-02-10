@@ -61,6 +61,10 @@ export function getDb(): Database {
 /**
  * Close the database connection gracefully.
  */
+export function getPool(): pg.Pool | null {
+  return pool;
+}
+
 export async function closeDb(): Promise<void> {
   if (pool) {
     await pool.end();

@@ -41,8 +41,9 @@ agentsRouter.get('/', async (req: Request, res: Response) => {
       total: agents.length,
     });
   } catch (error: any) {
-    console.error('List agents error:', error.message);
-    res.status(500).json({ error: 'Failed to list agents' });
+    const pgErr = error?.cause || error;
+    console.error('List agents error:', { message: error.message, cause: pgErr?.message, code: pgErr?.code, detail: pgErr?.detail });
+    res.status(500).json({ error: 'Failed to list agents', pgError: pgErr?.message, code: pgErr?.code });
   }
 });
 
@@ -68,12 +69,13 @@ agentsRouter.post('/', async (req: Request, res: Response) => {
     console.log('[Agents] Agent created successfully:', agent.id);
     res.status(201).json(agentModel.toResponse(agent));
   } catch (error: any) {
-    console.error('Create agent error detailed:', error);
+    const pgErr = error?.cause || error;
+    console.error('Create agent error detailed:', { message: error.message, cause: pgErr?.message, code: pgErr?.code, detail: pgErr?.detail, stack: error.stack });
     const message = error?.message || 'Failed to create agent';
     if (typeof message === 'string' && message.toLowerCase().includes('agent limit reached')) {
       return res.status(403).json({ error: message });
     }
-    res.status(500).json({ error: message, details: process.env.NODE_ENV === 'development' ? error.stack : undefined });
+    res.status(500).json({ error: message, pgError: pgErr?.message, code: pgErr?.code });
   }
 });
 
