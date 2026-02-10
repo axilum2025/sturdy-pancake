@@ -50,6 +50,7 @@ agentsRouter.get('/', async (req: Request, res: Response) => {
 // POST /api/agents  –  Create a new agent
 // ----------------------------------------------------------
 agentsRouter.post('/', async (req: Request, res: Response) => {
+  console.log('[Agents] Create request received:', { body: req.body, userId: (req as AuthenticatedRequest).userId });
   try {
     const userId = (req as AuthenticatedRequest).userId;
     if (!userId) return res.status(401).json({ error: 'Authentication required' });
@@ -57,19 +58,22 @@ agentsRouter.post('/', async (req: Request, res: Response) => {
     const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
     const { name, description, config } = req.body as AgentCreateDTO & { config?: any };
 
+    console.log('[Agents] Processing creation:', { name, userTier });
+
     if (!name || !name.trim()) {
       return res.status(400).json({ error: 'Agent name is required' });
     }
 
     const agent = await agentModel.create(userId, { name, description, config }, userTier);
+    console.log('[Agents] Agent created successfully:', agent.id);
     res.status(201).json(agentModel.toResponse(agent));
   } catch (error: any) {
-    console.error('Create agent error:', error.message);
+    console.error('Create agent error detailed:', error);
     const message = error?.message || 'Failed to create agent';
     if (typeof message === 'string' && message.toLowerCase().includes('agent limit reached')) {
       return res.status(403).json({ error: message });
     }
-    res.status(500).json({ error: message });
+    res.status(500).json({ error: message, details: process.env.NODE_ENV === 'development' ? error.stack : undefined });
   }
 });
 

@@ -85,14 +85,21 @@ export class AgentModel {
     const db = getDb();
 
     // Check agent limit
-    const userAgents = await db.select({ count: sql<number>`count(*)::int` })
-      .from(agents)
-      .where(eq(agents.userId, userId));
-    const count = userAgents[0]?.count || 0;
-    const maxAgents = userTier === 'pro' ? 20 : 5;
+    try {
+      const userAgents = await db.select({ count: sql<number>`count(*)::int` })
+        .from(agents)
+        .where(eq(agents.userId, userId));
+      const count = userAgents[0]?.count || 0;
+      const maxAgents = userTier === 'pro' ? 20 : 5;
 
-    if (count >= maxAgents) {
-      throw new Error(`Agent limit reached. Maximum ${maxAgents} agents for ${userTier} tier.`);
+      console.log(`[AgentModel] Count check: ${count}/${maxAgents} for tier ${userTier}`);
+
+      if (count >= maxAgents) {
+        throw new Error(`Agent limit reached. Maximum ${maxAgents} agents for ${userTier} tier.`);
+      }
+    } catch (err: any) {
+      console.error('[AgentModel] Quota check failed:', err);
+      throw err; // Re-throw to handle upstream
     }
 
     const config: AgentConfig = {
