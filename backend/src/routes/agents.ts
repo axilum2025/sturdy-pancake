@@ -3,6 +3,11 @@ import { agentModel, AgentCreateDTO } from '../models/agent';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
+import {
+  toOpenAITools,
+  executeToolCalls,
+  AgentToolDefinition,
+} from '../services/toolExecutor';
 import { AuthenticatedRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 
@@ -202,6 +207,7 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       }
     }
 
+    // Build OpenAI messages
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...(messages as CopilotMessage[]).map((m) => ({
@@ -210,14 +216,12 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       })),
     ];
 
-    const stream = await client.chat.completions.create({
-      model: agent.config.model,
-      messages: openaiMessages,
-      temperature: agent.config.temperature,
-      max_tokens: agent.config.maxTokens,
-      stream: true,
-    });
+    // Prepare OpenAI tools from agent config
+    const agentTools = (agent.config.tools || []) as AgentToolDefinition[];
+    const enabledTools = agentTools.filter((t) => t.enabled);
+    const openaiTools = enabledTools.length > 0 ? toOpenAITools(agentTools) : undefined;
 
+    // SSE headers
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
@@ -229,15 +233,127 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       res.write(`data: ${JSON.stringify({ type: 'citations', citations: ragCitations })}\n\n`);
     }
 
-    for await (const chunk of stream) {
-      const content = chunk.choices?.[0]?.delta?.content;
-      const finishReason = chunk.choices?.[0]?.finish_reason;
-      if (content) {
-        res.write(`data: ${JSON.stringify({ type: 'content', content })}\n\n`);
+    // ================================================================
+    // Function calling loop
+    // The LLM may request tool calls instead of generating text.
+    // We execute them, feed results back, and repeat until the LLM
+    // produces a final text response (max 10 iterations as safety).
+    // ================================================================
+    const MAX_TOOL_ROUNDS = 10;
+    let round = 0;
+
+    while (round < MAX_TOOL_ROUNDS) {
+      round++;
+
+      // Non-streaming call first to detect tool_calls
+      // (streaming + tool_calls is complex — we do non-streaming for tool rounds,
+      //  then stream the final text response)
+      if (enabledTools.length > 0) {
+        const response = await client.chat.completions.create({
+          model: agent.config.model,
+          messages: openaiMessages,
+          temperature: agent.config.temperature,
+          max_tokens: agent.config.maxTokens,
+          tools: openaiTools,
+          stream: false,
+        });
+
+        const choice = response.choices[0];
+
+        if (choice.finish_reason === 'tool_calls' && choice.message.tool_calls?.length) {
+          // Filter for function tool calls only
+          const fnToolCalls = choice.message.tool_calls.filter(
+            (tc): tc is import('openai/resources/chat/completions').ChatCompletionMessageFunctionToolCall =>
+              tc.type === 'function'
+          );
+
+          if (fnToolCalls.length > 0) {
+            // Notify frontend about tool execution
+            res.write(`data: ${JSON.stringify({
+              type: 'tool_calls',
+              tools: fnToolCalls.map((tc) => ({
+                id: tc.id,
+                name: tc.function.name,
+                arguments: tc.function.arguments,
+              })),
+            })}\n\n`);
+
+            // Execute all tool calls in parallel
+            const results = await executeToolCalls(fnToolCalls, agentTools);
+
+            // Add assistant message with tool_calls
+            openaiMessages.push({
+              role: 'assistant',
+              content: choice.message.content || null,
+              tool_calls: choice.message.tool_calls,
+            } as OpenAI.ChatCompletionMessageParam);
+
+            // Add tool results
+            for (const tc of fnToolCalls) {
+              const result = results.get(tc.id);
+              const toolContent = result?.success
+                ? result.result
+                : `Error: ${result?.error || 'Unknown error'}`;
+
+              openaiMessages.push({
+                role: 'tool',
+                tool_call_id: tc.id,
+                content: toolContent,
+              } as OpenAI.ChatCompletionMessageParam);
+
+              // Notify frontend about tool result
+              res.write(`data: ${JSON.stringify({
+                type: 'tool_result',
+                toolCallId: tc.id,
+                name: tc.function.name,
+                success: result?.success ?? false,
+                result: toolContent,
+                durationMs: result?.durationMs,
+              })}\n\n`);
+            }
+
+            // Continue the loop — LLM will process tool results
+            continue;
+          }
+        }
+
+        // No tool calls — LLM produced text. Stream the final response for better UX.
+        if (choice.message.content) {
+          // We already have the full response, send it as a single chunk
+          res.write(`data: ${JSON.stringify({ type: 'content', content: choice.message.content })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'done', finishReason: choice.finish_reason })}\n\n`);
+          break;
+        }
+
+        // Edge case: empty content
+        res.write(`data: ${JSON.stringify({ type: 'done', finishReason: choice.finish_reason })}\n\n`);
+        break;
       }
-      if (finishReason) {
-        res.write(`data: ${JSON.stringify({ type: 'done', finishReason })}\n\n`);
+
+      // No tools configured — use streaming for best UX
+      const stream = await client.chat.completions.create({
+        model: agent.config.model,
+        messages: openaiMessages,
+        temperature: agent.config.temperature,
+        max_tokens: agent.config.maxTokens,
+        stream: true,
+      });
+
+      for await (const chunk of stream) {
+        const content = chunk.choices?.[0]?.delta?.content;
+        const finishReason = chunk.choices?.[0]?.finish_reason;
+        if (content) {
+          res.write(`data: ${JSON.stringify({ type: 'content', content })}\n\n`);
+        }
+        if (finishReason) {
+          res.write(`data: ${JSON.stringify({ type: 'done', finishReason })}\n\n`);
+        }
       }
+      break; // streaming mode always finishes in one pass
+    }
+
+    if (round >= MAX_TOOL_ROUNDS) {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: 'Tool call loop limit reached' })}\n\n`);
     }
 
     await agentModel.update(agent.id, {

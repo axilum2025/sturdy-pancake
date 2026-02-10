@@ -37,7 +37,7 @@ mcpRouter.post('/servers', async (req: Request, res: Response) => {
     const userId = getUserId(req, res);
     if (!userId) return;
 
-    const { name, command, args, env, enabled, description } = req.body;
+    const { name, command, args, env, enabled, description, transport, url } = req.body;
 
     if (!name || !command || !args) {
       return res.status(400).json({ 
@@ -52,6 +52,8 @@ mcpRouter.post('/servers', async (req: Request, res: Response) => {
       env,
       enabled: enabled ?? false,
       description,
+      transport: transport || 'stdio',
+      url,
     });
 
     res.status(201).json(config);

@@ -291,50 +291,50 @@
 
 ---
 
-## Phase 6 — Outils & MCP (Model Context Protocol)
+## Phase 6 — Outils & MCP (Model Context Protocol) ✅
 
 **Objectif** : Permettre aux agents d'exécuter des actions réelles via des outils MCP et des function calls.
 
 **Durée estimée** : 1-2 semaines
 
 ### 6.1 Function Calling natif
-- [ ] Implémenter le support `tools` dans l'appel OpenAI :
+- [x] Implémenter le support `tools` dans l'appel OpenAI :
   ```typescript
   tools: agent.config.tools.map(t => ({
     type: 'function',
     function: { name: t.name, description: t.description, parameters: t.schema }
   }))
   ```
-- [ ] Gérer la boucle tool_call → exécution → retour au LLM
-- [ ] Définition de tools via JSON Schema dans AgentConfig :
-  - [ ] Éditeur de schema visuel (nom, description, paramètres, type)
-  - [ ] Preview du JSON généré
-  - [ ] Test d'exécution dans le Playground
+- [x] Gérer la boucle tool_call → exécution → retour au LLM
+- [x] Définition de tools via JSON Schema dans AgentConfig :
+  - [x] Éditeur de schema visuel (nom, description, paramètres, type)
+  - [x] Preview du JSON généré
+  - [x] Test d'exécution dans le Playground
 
 ### 6.2 Serveurs MCP intégrés
-- [ ] Remplacer les placeholders `mcpService.ts` par de vrais clients MCP
-- [ ] Serveurs MCP built-in :
+- [x] Remplacer les placeholders `mcpService.ts` par de vrais clients MCP
+- [x] Serveurs MCP built-in :
   - [ ] **Filesystem** : lecture/écriture de fichiers dans le sandbox de l'agent
-  - [ ] **HTTP/API** : appel d'APIs REST externes (GET/POST avec auth)
+  - [x] **HTTP/API** : appel d'APIs REST externes (GET/POST avec auth)
   - [ ] **Database** : requêtes SQL sur une DB configurée par l'utilisateur
   - [ ] **Email** : envoi d'emails via SMTP/SendGrid
   - [ ] **Calendar** : lecture/création d'événements (Google Calendar API)
-- [ ] Chaque serveur MCP configurable dans AgentConfig > Outils
+- [x] Chaque serveur MCP configurable dans AgentConfig > Outils
 
 ### 6.3 Marketplace d'outils
-- [ ] Catalogue public d'outils MCP préfabriqués
-- [ ] Route `GET /api/marketplace/tools` — lister les outils disponibles
-- [ ] Installation en 1 clic dans un agent
-- [ ] Catégories : Productivité, Support, E-commerce, Marketing, Dev
+- [x] Catalogue public d'outils MCP préfabriqués
+- [x] Route `GET /api/tools/catalogue` — lister les outils disponibles
+- [x] Installation en 1 clic dans un agent
+- [x] Catégories : utilities, developer, data, web, productivity, communication
 - [ ] Outils communautaires : permettre aux users de publier leurs outils
 
 ### 6.4 Actions HTTP (API Connector)
-- [ ] Configurer des appels API comme outils d'agent :
-  - [ ] URL, méthode, headers, body template
-  - [ ] Auth : API key, Bearer token, OAuth2
-  - [ ] Mapping des paramètres LLM → paramètres HTTP
-- [ ] Import depuis OpenAPI/Swagger spec
-- [ ] Test dans le Playground avec logs détaillés
+- [x] Configurer des appels API comme outils d'agent :
+  - [x] URL, méthode, headers, body template
+  - [x] Auth : API key, Bearer token
+  - [x] Mapping des paramètres LLM → paramètres HTTP
+- [x] Import depuis OpenAPI/Swagger spec
+- [x] Test dans le Playground avec logs détaillés
 
 ---
 

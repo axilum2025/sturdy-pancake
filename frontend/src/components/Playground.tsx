@@ -120,6 +120,28 @@ export default function Playground({ agentId, onClose }: PlaygroundProps) {
                       : m
                   )
                 );
+              } else if (parsed.type === 'tool_calls' && parsed.tools) {
+                const toolInfo = parsed.tools
+                  .map((tc: any) => `🔧 Calling **${tc.name}**...\n`)
+                  .join('');
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsg.id
+                      ? { ...m, content: m.content + toolInfo }
+                      : m
+                  )
+                );
+              } else if (parsed.type === 'tool_result') {
+                const icon = parsed.success ? '✅' : '❌';
+                const preview = parsed.result?.slice(0, 300) || '';
+                const info = `${icon} **${parsed.name}** (${parsed.durationMs || 0}ms)\n\`\`\`\n${preview}\n\`\`\`\n\n`;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsg.id
+                      ? { ...m, content: m.content + info }
+                      : m
+                  )
+                );
               }
             } catch {
               // skip malformed chunks

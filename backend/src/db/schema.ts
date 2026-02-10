@@ -66,6 +66,7 @@ export const agents = pgTable('agents', {
       description?: string;
       config?: Record<string, unknown>;
       enabled: boolean;
+      parameters?: Record<string, unknown>;
     }>;
     knowledgeBase?: string[];
   }>().notNull(),

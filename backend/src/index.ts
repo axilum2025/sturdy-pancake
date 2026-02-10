@@ -19,6 +19,7 @@ import { apiKeysRouter } from './routes/apiKeys';
 import { webhooksRouter } from './routes/webhooks';
 import { publicApiRouter } from './routes/publicApi';
 import { knowledgeRouter } from './routes/knowledge';
+import { toolsRouter } from './routes/tools';
 import { subdomainRouter } from './routes/subdomain';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
@@ -65,6 +66,8 @@ async function main() {
   app.use('/api/agents', authMiddleware, apiKeysRouter);
   app.use('/api/agents', authMiddleware, webhooksRouter);
   app.use('/api/agents', authMiddleware, knowledgeRouter);
+  app.use('/api/agents', authMiddleware, toolsRouter);
+  app.use('/api/tools', authMiddleware, toolsRouter);
 
   // Health check
   app.get('/health', (req: Request, res: Response) => {
@@ -96,6 +99,8 @@ async function main() {
         apiKeys: '/api/agents/:id/api-keys',
         webhooks: '/api/agents/:id/webhooks',
         knowledge: '/api/agents/:id/knowledge',
+        tools: '/api/agents/:id/tools',
+        toolCatalogue: '/api/tools/catalogue',
         publicApi: '/api/v1/agents/:id/chat',
         store: '/api/store',
         sessions: '/api/sessions',
@@ -113,6 +118,8 @@ async function main() {
   // Graceful shutdown
   const shutdown = async () => {
     console.log('\n🛑 Shutting down...');
+    const { mcpService } = await import('./services/mcpService');
+    await mcpService.shutdown();
     await closeDb();
     process.exit(0);
   };

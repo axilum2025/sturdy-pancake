@@ -567,3 +567,88 @@ export const scrapeKnowledgeUrl = async (agentId: string, url: string): Promise<
   const response = await api.post(`/agents/${agentId}/knowledge/url`, { url });
   return response.data;
 };
+
+// ============ Tools & Marketplace ============
+
+export interface CatalogueTool {
+  id: string;
+  name: string;
+  type: 'builtin' | 'http' | 'mcp';
+  description?: string;
+  enabled: boolean;
+  parameters?: Record<string, unknown>;
+  config?: Record<string, unknown>;
+  category: string;
+  icon: string;
+  premium: boolean;
+}
+
+export interface CatalogueCategory {
+  name: string;
+  count: number;
+}
+
+export const getToolCatalogue = async (category?: string): Promise<{
+  tools: CatalogueTool[];
+  categories: CatalogueCategory[];
+  total: number;
+}> => {
+  const params = category ? `?category=${category}` : '';
+  const response = await api.get(`/tools/catalogue${params}`);
+  return response.data;
+};
+
+export const addToolToAgent = async (
+  agentId: string,
+  tool: Record<string, unknown>
+): Promise<{ tool: Record<string, unknown>; agent: Agent }> => {
+  const response = await api.post(`/agents/${agentId}/tools`, tool);
+  return response.data;
+};
+
+export const addBuiltinTool = async (
+  agentId: string,
+  toolId: string
+): Promise<{ tool: Record<string, unknown>; agent: Agent }> => {
+  const response = await api.post(`/agents/${agentId}/tools/add-builtin`, { toolId });
+  return response.data;
+};
+
+export const removeToolFromAgent = async (agentId: string, toolId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/tools/${toolId}`);
+};
+
+export const updateAgentTool = async (
+  agentId: string,
+  toolId: string,
+  updates: Record<string, unknown>
+): Promise<{ tool: Record<string, unknown>; agent: Agent }> => {
+  const response = await api.patch(`/agents/${agentId}/tools/${toolId}`, updates);
+  return response.data;
+};
+
+export const importOpenAPISpec = async (
+  agentId: string,
+  spec: Record<string, unknown>
+): Promise<{
+  message: string;
+  imported: Array<{ id: string; name: string; description: string }>;
+  agent: Agent;
+}> => {
+  const response = await api.post(`/agents/${agentId}/tools/import-openapi`, { spec });
+  return response.data;
+};
+
+export const testHttpAction = async (
+  config: { url: string; method: string; headers?: Record<string, string>; bodyTemplate?: string; auth?: Record<string, unknown> },
+  args: Record<string, unknown>
+): Promise<{
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  body: string;
+  durationMs: number;
+}> => {
+  const response = await api.post('/tools/test-http', { config, args });
+  return response.data;
+};

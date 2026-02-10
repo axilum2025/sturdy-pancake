@@ -343,6 +343,41 @@ export default function ChatPanel() {
                       : m,
                   ),
                 );
+              } else if (chunk.type === 'tool_calls' && chunk.tools) {
+                // Show tool calls in the assistant message
+                const toolInfo = chunk.tools
+                  .map((tc: any) => `🔧 Calling **${tc.name}**...`)
+                  .join('\n');
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsgId
+                      ? { ...m, content: m.content + toolInfo + '\n\n' }
+                      : m,
+                  ),
+                );
+              } else if (chunk.type === 'tool_result') {
+                const statusIcon = chunk.success ? '✅' : '❌';
+                const resultPreview = chunk.result?.slice(0, 200) || '';
+                const toolResult = `${statusIcon} **${chunk.name}** (${chunk.durationMs || 0}ms)\n\`\`\`\n${resultPreview}\n\`\`\`\n\n`;
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsgId
+                      ? { ...m, content: m.content + toolResult }
+                      : m,
+                  ),
+                );
+              } else if (chunk.type === 'citations' && chunk.citations) {
+                // Store citations for display
+                const citationText = chunk.citations
+                  .map((c: any) => `📄 ${c.filename} (chunk ${c.chunkIndex})`)
+                  .join('\n');
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === assistantMsgId
+                      ? { ...m, content: m.content + citationText + '\n\n' }
+                      : m,
+                  ),
+                );
               } else if (chunk.type === 'error') {
                 setMessages((prev) =>
                   prev.map((m) =>
