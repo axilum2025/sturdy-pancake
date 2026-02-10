@@ -30,6 +30,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    const onAuthExpired = () => {
+      setUser(null);
+      setError('Session expired. Please sign in again.');
+    };
+
+    window.addEventListener('auth:expired', onAuthExpired);
+    return () => window.removeEventListener('auth:expired', onAuthExpired);
+  }, []);
+
   const fetchUser = async () => {
     try {
       const userData = await getCurrentUser();

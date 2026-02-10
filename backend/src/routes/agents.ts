@@ -65,7 +65,11 @@ agentsRouter.post('/', async (req: Request, res: Response) => {
     res.status(201).json(agentModel.toResponse(agent));
   } catch (error: any) {
     console.error('Create agent error:', error.message);
-    res.status(500).json({ error: 'Failed to create agent' });
+    const message = error?.message || 'Failed to create agent';
+    if (typeof message === 'string' && message.toLowerCase().includes('agent limit reached')) {
+      return res.status(403).json({ error: message });
+    }
+    res.status(500).json({ error: message });
   }
 });
 
