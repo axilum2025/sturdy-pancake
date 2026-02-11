@@ -6,7 +6,7 @@
 services:
   # --- Reverse Proxy (wildcard subdomain routing + TLS) ---
   caddy:
-    image: caddy:2-alpine
+    build: ./caddy
     container_name: gilo-caddy
     restart: unless-stopped
     ports:
@@ -20,8 +20,7 @@ services:
     environment:
       GILO_DOMAIN: ${GILO_DOMAIN:-localhost}
       TLS_EMAIL: ${TLS_EMAIL:-}
-      DNS_PROVIDER: ${DNS_PROVIDER:-}
-      DNS_API_TOKEN: ${DNS_API_TOKEN:-}
+      GODADDY_API_KEY: ${GODADDY_API_KEY:-}
     depends_on:
       backend:
         condition: service_healthy

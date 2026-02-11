@@ -3,22 +3,37 @@
 # Handles wildcard subdomain routing for deployed agents
 # ============================================
 
-# Main domain: serves the frontend
+# Main domain: serves the frontend + API
 {$GILO_DOMAIN:gilo.dev} {
-	reverse_proxy frontend:5173
+	tls {$TLS_EMAIL:admin@gilo.dev} {
+		dns godaddy {$GODADDY_API_KEY:}
+	}
+
+	# API routes → backend
+	handle /api/* {
+		reverse_proxy backend:3001
+	}
+
+	handle /health {
+		reverse_proxy backend:3001
+	}
+
+	# Everything else → frontend
+	handle {
+		reverse_proxy frontend:5173
+	}
 }
 
 # Wildcard subdomains: route {slug}.gilo.dev to the backend
 *.{$GILO_DOMAIN:gilo.dev} {
-	# TLS with wildcard cert (uses Let's Encrypt DNS challenge or self-signed in dev)
 	tls {$TLS_EMAIL:admin@gilo.dev} {
-		dns {$DNS_PROVIDER:cloudflare} {$DNS_API_TOKEN:}
+		dns godaddy {$GODADDY_API_KEY:}
 	}
 
 	reverse_proxy backend:3001
 }
 
-# Local development fallback (when GILO_DOMAIN is not set or for localhost)
+# Local development fallback (port 80, when no domain configured)
 :80 {
 	# Health check
 	handle /health {
