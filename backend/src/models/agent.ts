@@ -25,6 +25,7 @@ export interface AgentConfig {
   topP?: number;
   systemPrompt: string;
   welcomeMessage?: string;
+  language?: 'fr' | 'en';
   tools: AgentTool[];
   knowledgeBase?: string[];
 }

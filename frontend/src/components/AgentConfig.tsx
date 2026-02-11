@@ -25,6 +25,7 @@ interface AgentConfigData {
   maxTokens: number;
   systemPrompt: string;
   welcomeMessage: string;
+  language: 'fr' | 'en';
   tools: AgentTool[];
 }
 
@@ -42,6 +43,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     maxTokens: 2048,
     systemPrompt: 'Tu es un assistant IA utile et concis.',
     welcomeMessage: 'Bonjour ! Comment puis-je vous aider ?',
+    language: 'fr',
     tools: [],
   });
   const [isLoading, setIsLoading] = useState(true);
@@ -78,6 +80,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             maxTokens: typeof agent.config.maxTokens === 'number' ? agent.config.maxTokens : 2048,
             systemPrompt: agent.config.systemPrompt || '',
             welcomeMessage: agent.config.welcomeMessage || '',
+            language: agent.config.language || 'fr',
             tools: Array.isArray(agent.config.tools) ? agent.config.tools : [],
           });
         }
@@ -282,6 +285,35 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                 className="w-full bg-t-overlay/[0.04] text-t-text/90 px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
                 placeholder={t('agentConfig.welcomePlaceholder')}
               />
+            </div>
+
+            {/* Agent Language */}
+            <div>
+              <label className="block text-sm font-medium text-t-text/60 mb-2">
+                <Globe className="w-3.5 h-3.5 inline mr-1.5" />
+                {t('agentConfig.language')}
+              </label>
+              <p className="text-xs text-t-text/35 mb-2">
+                {t('agentConfig.languageDesc')}
+              </p>
+              <div className="flex gap-2">
+                {[
+                  { id: 'fr' as const, label: '🇫🇷 Français' },
+                  { id: 'en' as const, label: '🇬🇧 English' },
+                ].map((lang) => (
+                  <button
+                    key={lang.id}
+                    onClick={() => setConfig({ ...config, language: lang.id })}
+                    className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all border ${
+                      config.language === lang.id
+                        ? 'bg-blue-500/20 border-blue-500/40 text-blue-400'
+                        : 'bg-t-overlay/[0.04] border-t-overlay/10 text-t-text/50 hover:text-t-text/70'
+                    }`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </>
         )}

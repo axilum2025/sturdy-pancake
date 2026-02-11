@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="{{AGENT_LANG}}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -289,15 +289,15 @@
   <div class="header">
     <div class="header-left">
       <h1 id="agentName">{{AGENT_NAME}}</h1>
-      <div class="header-status"><span class="status-dot"></span> Agent Actif</div>
+      <div class="header-status"><span class="status-dot"></span> <span id="statusText">Agent Actif</span></div>
     </div>
-    <a class="header-powered" href="https://www.gilo.dev/" target="_blank">Propulsé par GiLo AI</a>
+    <a class="header-powered" href="https://www.gilo.dev/" target="_blank" id="poweredText">Propulsé par GiLo AI</a>
   </div>
 
   <div class="messages" id="messages"></div>
 
   <div class="input-area">
-    <button class="stop-btn" id="stopBtn" onclick="handleStop()">■ Arrêter la génération</button>
+    <button class="stop-btn" id="stopBtn" onclick="handleStop()">■ <span id="stopText">Arrêter la génération</span></button>
     <div class="input-wrapper">
       <textarea id="userInput" placeholder="Écrivez votre message..." rows="1" autofocus></textarea>
       <button class="send-btn" id="sendBtn" title="Envoyer">
@@ -314,6 +314,35 @@
     let chatHistory = [];
     let isStreaming = false;
     let abortController = null;
+
+    // i18n
+    const I18N = {
+      fr: {
+        status: 'Agent Actif',
+        powered: 'Propulsé par GiLo AI',
+        placeholder: 'Écrivez votre message...',
+        send: 'Envoyer',
+        stop: 'Arrêter la génération',
+        error: 'Une erreur est survenue.',
+      },
+      en: {
+        status: 'Agent Active',
+        powered: 'Powered by GiLo AI',
+        placeholder: 'Type your message...',
+        send: 'Send',
+        stop: 'Stop generating',
+        error: 'An error occurred.',
+      }
+    };
+    const lang = AGENT.language || 'fr';
+    const t = I18N[lang] || I18N.fr;
+
+    // Apply translations
+    document.getElementById('statusText').textContent = t.status;
+    document.getElementById('poweredText').textContent = t.powered;
+    document.getElementById('userInput').placeholder = t.placeholder;
+    document.getElementById('sendBtn').title = t.send;
+    document.getElementById('stopText').textContent = t.stop;
 
     const messagesEl = document.getElementById('messages');
     const inputEl = document.getElementById('userInput');
@@ -438,7 +467,7 @@
       } catch (err) {
         removeTypingIndicator();
         if (err.name !== 'AbortError') {
-          addBotMessage('⚠️ ' + (err.message || 'Une erreur est survenue.'));
+          addBotMessage('⚠️ ' + (err.message || t.error));
         }
       } finally {
         isStreaming = false;

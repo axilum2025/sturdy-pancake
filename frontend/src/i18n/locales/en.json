@@ -209,7 +209,9 @@
     "noToolsDesc": "Add APIs, MCP servers, or functions",
     "newTool": "New tool",
     "toolName": "Tool name",
-    "toolDesc": "Description (optional)"
+    "toolDesc": "Description (optional)",
+    "language": "Agent language",
+    "languageDesc": "The language displayed on the deployed chat page."
   },
 
   "publish": {

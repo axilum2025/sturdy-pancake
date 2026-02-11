@@ -52,16 +52,19 @@ subdomainRouter.get('/', (req: Request, res: Response) => {
   }
 
   // Serve HTML chat interface
+  const lang = agent.config.language || 'fr';
   const agentJson = JSON.stringify({
     name: agent.name,
     description: agent.description || '',
     slug: agent.slug,
-    welcomeMessage: agent.config.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
+    language: lang,
+    welcomeMessage: agent.config.welcomeMessage || (lang === 'en' ? 'Hello! How can I help you?' : 'Bonjour ! Comment puis-je vous aider ?'),
   });
 
   const html = chatTemplate
     .replace(/\{\{AGENT_NAME\}\}/g, agent.name)
     .replace(/\{\{AGENT_DESCRIPTION\}\}/g, agent.description || '')
+    .replace(/\{\{AGENT_LANG\}\}/g, lang)
     .replace('{{AGENT_JSON}}', agentJson);
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');

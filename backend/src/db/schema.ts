@@ -59,6 +59,7 @@ export const agents = pgTable('agents', {
     topP?: number;
     systemPrompt: string;
     welcomeMessage?: string;
+    language?: 'fr' | 'en';
     tools: Array<{
       id: string;
       name: string;
