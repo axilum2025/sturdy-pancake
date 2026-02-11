@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package } from 'lucide-react';
+import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
 import KnowledgePanel from './KnowledgePanel';
+import IntegrationsPanel from './IntegrationsPanel';
 
 interface AgentConfigProps {
   agentId: string;
@@ -48,7 +49,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge'>('prompt');
+  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge' | 'integrations'>('prompt');
   const [showAddTool, setShowAddTool] = useState(false);
   const [catalogue, setCatalogue] = useState<CatalogueTool[]>([]);
   const [catalogueCategories, setCatalogueCategories] = useState<CatalogueCategory[]>([]);
@@ -197,6 +198,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     { id: 'model' as const, label: t('agentConfig.model'), icon: Cpu },
     { id: 'tools' as const, label: t('agentConfig.tools'), icon: Wrench },
     { id: 'knowledge' as const, label: 'Knowledge', icon: BookOpen },
+    { id: 'integrations' as const, label: t('agentConfig.integrations'), icon: Link2 },
   ];
 
   if (isLoading) {
@@ -638,6 +640,10 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
 
         {activeTab === 'knowledge' && (
           <KnowledgePanel agentId={agentId} />
+        )}
+
+        {activeTab === 'integrations' && (
+          <IntegrationsPanel agentId={agentId} />
         )}
       </div>
     </div>

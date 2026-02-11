@@ -23,6 +23,7 @@ import { toolsRouter } from './routes/tools';
 import { analyticsRouter } from './routes/analytics';
 import { alertsRouter } from './routes/alerts';
 import { subdomainRouter } from './routes/subdomain';
+import { integrationsRouter } from './routes/integrations';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { rateLimiter } from './middleware/rateLimiter';
@@ -94,6 +95,9 @@ async function main() {
   app.use('/api/auth', authRouter);
   app.use('/api/store', optionalAuth, storeRouter);
 
+  // OAuth callbacks (public — provider redirects back without JWT)
+  app.get('/api/integrations/:provider/callback', integrationsRouter);
+
   // Public API v1 (API key auth + rate limiting)
   app.use('/api/v1', apiKeyAuth, rateLimiter, publicApiRouter);
 
@@ -114,6 +118,7 @@ async function main() {
   app.use('/api/analytics', authMiddleware, analyticsRouter);
   app.use('/api', authMiddleware, analyticsRouter);
   app.use('/api/agents', authMiddleware, alertsRouter);
+  app.use('/api/integrations', authMiddleware, integrationsRouter);
 
   // API documentation endpoint
   app.get('/api', (req: Request, res: Response) => {
@@ -138,6 +143,7 @@ async function main() {
         agentLogs: '/api/agents/:id/logs',
         communityTools: '/api/tools/community',
         alerts: '/api/agents/:id/alerts',
+        integrations: '/api/integrations',
         sessions: '/api/sessions',
         agent: '/api/agent',
         mcp: '/api/mcp',

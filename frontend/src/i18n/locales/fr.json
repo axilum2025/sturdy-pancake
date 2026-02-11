@@ -211,7 +211,21 @@
     "toolName": "Nom de l'outil",
     "toolDesc": "Description (optionnel)",
     "language": "Langue de l'agent",
-    "languageDesc": "La langue affichée sur la page de chat déployée."
+    "languageDesc": "La langue affichée sur la page de chat déployée.",
+    "integrations": "Intégrations"
+  },
+
+  "integrations": {
+    "title": "Intégrations",
+    "subtitle": "Connectez vos services pour que votre agent puisse y accéder.",
+    "connected": "Connectés",
+    "available": "Services disponibles",
+    "connect": "Connecter",
+    "disconnect": "Déconnecter",
+    "notConfigured": "Non configuré",
+    "alreadyConnected": "Connecté",
+    "apiKeyTitle": "Clé API (mode avancé)",
+    "addApiKey": "Ajouter une clé API"
   },
 
   "publish": {

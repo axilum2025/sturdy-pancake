@@ -322,6 +322,38 @@ export const agentAlerts = pgTable('agent_alerts', {
 });
 
 // ============================================================
+// Integrations (OAuth / API Key connections per agent)
+// ============================================================
+
+export type IntegrationProvider = 'google' | 'slack' | 'notion' | 'github' | 'stripe' | 'airtable' | 'hubspot' | 'custom';
+export type IntegrationStatus = 'active' | 'expired' | 'revoked' | 'error';
+
+export const integrations = pgTable('integrations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  provider: varchar('provider', { length: 50 }).notNull(), // google, slack, notion, etc.
+  label: varchar('label', { length: 255 }), // user-friendly display name
+  accessToken: text('access_token'), // encrypted
+  refreshToken: text('refresh_token'), // encrypted
+  scopes: jsonb('scopes').$type<string[]>().notNull().default([]),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  status: varchar('status', { length: 20 }).notNull().default('active'), // active | expired | revoked | error
+  metadata: jsonb('metadata').$type<{
+    email?: string;
+    accountName?: string;
+    avatarUrl?: string;
+    apiKey?: string; // for API key type integrations
+    baseUrl?: string; // for custom integrations
+    [key: string]: unknown;
+  }>(),
+  lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  errorMessage: text('error_message'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
 // Relations
 // ============================================================
 
@@ -335,6 +367,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   knowledgeDocuments: many(knowledgeDocuments),
   communityTools: many(communityTools),
   agentAlerts: many(agentAlerts),
+  integrations: many(integrations),
 }));
 
 export const agentsRelations = relations(agents, ({ one, many }) => ({
@@ -347,6 +380,7 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   metrics: many(agentMetrics),
   logs: many(agentLogs),
   alerts: many(agentAlerts),
+  integrations: many(integrations),
 }));
 
 export const storeAgentsRelations = relations(storeAgents, ({ one }) => ({
@@ -399,4 +433,9 @@ export const agentLogsRelations = relations(agentLogs, ({ one }) => ({
 export const agentAlertsRelations = relations(agentAlerts, ({ one }) => ({
   agent: one(agents, { fields: [agentAlerts.agentId], references: [agents.id] }),
   user: one(users, { fields: [agentAlerts.userId], references: [users.id] }),
+}));
+
+export const integrationsRelations = relations(integrations, ({ one }) => ({
+  agent: one(agents, { fields: [integrations.agentId], references: [agents.id] }),
+  user: one(users, { fields: [integrations.userId], references: [users.id] }),
 }));

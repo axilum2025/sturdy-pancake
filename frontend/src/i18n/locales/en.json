@@ -211,7 +211,21 @@
     "toolName": "Tool name",
     "toolDesc": "Description (optional)",
     "language": "Agent language",
-    "languageDesc": "The language displayed on the deployed chat page."
+    "languageDesc": "The language displayed on the deployed chat page.",
+    "integrations": "Integrations"
+  },
+
+  "integrations": {
+    "title": "Integrations",
+    "subtitle": "Connect your services so your agent can access them.",
+    "connected": "Connected",
+    "available": "Available services",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "notConfigured": "Not configured",
+    "alreadyConnected": "Connected",
+    "apiKeyTitle": "API Key (advanced)",
+    "addApiKey": "Add an API key"
   },
 
   "publish": {
