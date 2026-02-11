@@ -48,10 +48,12 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
   const [category, setCategory] = useState('other');
   const [iconColor, setIconColor] = useState(ICON_COLORS[0]);
   const [customIcon, setCustomIcon] = useState<string | null>(null);
+  const [chatBackground, setChatBackground] = useState<string | null>(null);
   const [features, setFeatures] = useState<string[]>(['']);
   const [tags, setTags] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'private'>('public');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bgFileInputRef = useRef<HTMLInputElement>(null);
 
   const handleIconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -68,6 +70,23 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
   const removeCustomIcon = () => {
     setCustomIcon(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleBgUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) return;
+    if (file.size > 2 * 1024 * 1024) return; // max 2MB
+    const reader = new FileReader();
+    reader.onload = () => {
+      setChatBackground(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeChatBackground = () => {
+    setChatBackground(null);
+    if (bgFileInputRef.current) bgFileInputRef.current.value = '';
   };
 
   const addFeature = () => setFeatures([...features, '']);
@@ -95,6 +114,17 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
         visibility,
       };
+
+      // Save chat background to agent appearance config
+      if (chatBackground) {
+        try {
+          await api.patch(`/agents/${agentId}/config`, {
+            appearance: { chatBackground },
+          });
+        } catch (bgErr) {
+          console.warn('Could not save chat background:', bgErr);
+        }
+      }
 
       // Auto-deploy the agent to make it accessible via subdomain URL
       try {
@@ -312,6 +342,55 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                     <Upload className="w-4 h-4" />
                     {t('publish.uploadIcon')}
                     <span className="ml-auto text-xs text-t-text/25">PNG, JPG, SVG · max 512KB</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Chat background image upload */}
+              <div>
+                <label className="block text-sm font-medium text-t-text/60 mb-2">
+                  <Image className="w-4 h-4 inline mr-1" />
+                  {t('publish.chatBackground')}
+                </label>
+                <input
+                  ref={bgFileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleBgUpload}
+                  className="hidden"
+                />
+                {chatBackground ? (
+                  <div className="relative rounded-xl overflow-hidden border border-t-overlay/10">
+                    <img
+                      src={chatBackground}
+                      alt="Chat background"
+                      className="w-full h-32 object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2 flex gap-2">
+                      <button
+                        onClick={() => bgFileInputRef.current?.click()}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur text-white text-xs font-medium hover:bg-white/30 transition-colors"
+                      >
+                        <Upload className="w-3 h-3" />
+                        {t('publish.changeBg')}
+                      </button>
+                      <button
+                        onClick={removeChatBackground}
+                        className="px-3 py-1.5 rounded-lg bg-red-500/30 backdrop-blur text-white text-xs font-medium hover:bg-red-500/50 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => bgFileInputRef.current?.click()}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl border border-dashed border-t-overlay/20 hover:border-blue-500/40 bg-t-overlay/[0.02] hover:bg-t-overlay/[0.04] transition-all text-sm text-t-text/40 hover:text-t-text/60 w-full"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {t('publish.uploadBg')}
+                    <span className="ml-auto text-xs text-t-text/25">PNG, JPG, WebP · max 2MB</span>
                   </button>
                 )}
               </div>
