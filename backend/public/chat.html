@@ -16,8 +16,8 @@
       --text-muted: rgba(241,245,249,0.4);
       --text-90: rgba(241,245,249,0.9);
       --primary: #3b82f6;
-      --user-bg: rgba(59,130,246,0.1);
-      --user-border: rgba(59,130,246,0.2);
+      --user-bg: rgba(180,83,9,0.1);
+      --user-border: rgba(180,83,9,0.2);
       --purple: #c084fc;
       --overlay: rgba(255,255,255,0.04);
     }
@@ -179,28 +179,29 @@
       51%, 100% { opacity: 0; }
     }
 
-    /* Thinking indicator — Copilot-style shimmer */
+    /* Thinking indicator — GiLo AI style purple dots */
     .thinking {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 4px 0;
-      width: 260px;
-      max-width: 80%;
+      display: inline-flex;
+      gap: 4px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(168,85,247,0.1);
+      border: 1px solid rgba(168,85,247,0.2);
+      backdrop-filter: blur(10px);
     }
-    .thinking-line {
-      height: 12px;
-      border-radius: 6px;
-      background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(139,92,246,0.15) 40%, rgba(59,130,246,0.15) 60%, rgba(255,255,255,0.04) 100%);
-      background-size: 300% 100%;
-      animation: shimmer 2s ease-in-out infinite;
+    .thinking-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--purple);
+      animation: dotBounce 1.4s ease-in-out infinite;
     }
-    .thinking-line:nth-child(1) { width: 90%; animation-delay: 0s; }
-    .thinking-line:nth-child(2) { width: 70%; animation-delay: 0.15s; }
-    .thinking-line:nth-child(3) { width: 50%; animation-delay: 0.3s; }
-    @keyframes shimmer {
-      0% { background-position: 100% 0; }
-      100% { background-position: -100% 0; }
+    .thinking-dot:nth-child(1) { animation-delay: 0ms; }
+    .thinking-dot:nth-child(2) { animation-delay: 150ms; }
+    .thinking-dot:nth-child(3) { animation-delay: 300ms; }
+    @keyframes dotBounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-6px); opacity: 1; }
     }
 
     /* Input area — modern chat style */
@@ -358,7 +359,7 @@
       var d = document.createElement('div');
       d.className = 'msg bot';
       d.id = 'typing';
-      d.innerHTML = '<div class="thinking"><div class="thinking-line"></div><div class="thinking-line"></div><div class="thinking-line"></div></div>';
+      d.innerHTML = '<div class="thinking"><div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div></div>';
       messagesEl.appendChild(d);
       scrollToBottom();
     }
