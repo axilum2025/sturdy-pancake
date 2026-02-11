@@ -75,22 +75,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .header-info .model-label {
-      font-size: 12px;
-      color: var(--text-30);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .header-powered {
-      font-size: 11px;
-      color: var(--text-30);
-      text-decoration: none;
-      opacity: 0.8;
-      transition: opacity 0.2s;
-      flex-shrink: 0;
-    }
-    .header-powered:hover { opacity: 1; }
+
 
     /* ── Messages ── */
     .messages {
@@ -190,8 +175,8 @@
       word-break: break-word;
     }
     .msg.user .msg-bubble {
-      background: rgba(59,130,246,0.12);
-      border: 1px solid rgba(59,130,246,0.15);
+      background: rgba(59,130,246,0.2);
+      border: 1px solid rgba(59,130,246,0.2);
       border-radius: 16px;
       border-top-right-radius: 6px;
     }
@@ -336,7 +321,7 @@
       resize: none;
       outline: none;
       max-height: 200px;
-      min-height: 48px;
+      min-height: 100px;
       line-height: 1.5;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
@@ -365,13 +350,7 @@
     .send-btn:hover { background: var(--overlay-10); }
     .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .send-btn svg { width: 18px; height: 18px; }
-    .footer-text {
-      text-align: center;
-      font-size: 10px;
-      color: var(--text-20);
-      margin-top: 8px;
-      padding-bottom: env(safe-area-inset-bottom, 4px);
-    }
+
 
     @media (min-width: 640px) {
       .header { padding: 10px 24px; }
@@ -389,9 +368,7 @@
     </div>
     <div class="header-info">
       <h1 id="agentName">{{AGENT_NAME}}</h1>
-      <div class="model-label" id="modelLabel"></div>
     </div>
-    <a class="header-powered" href="https://www.gilo.dev/" target="_blank" id="poweredText"></a>
   </div>
 
   <!-- Messages -->
@@ -410,14 +387,14 @@
     <div class="input-inner">
       <button class="stop-btn" id="stopBtn" onclick="handleStop()">■ <span id="stopText"></span></button>
       <div class="input-wrapper">
-        <textarea id="userInput" rows="1" autofocus></textarea>
+        <textarea id="userInput" rows="4" autofocus></textarea>
         <button class="send-btn" id="sendBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
           </svg>
         </button>
       </div>
-      <div class="footer-text" id="footerText"></div>
+
     </div>
   </div>
 
@@ -442,8 +419,7 @@
         send: 'Envoyer',
         stop: 'Arrêter la génération',
         error: 'Une erreur est survenue.',
-        startConversation: 'Comment puis-je vous aider ?',
-        footerText: 'Propulsé par GiLo AI'
+        startConversation: 'Comment puis-je vous aider ?'
       },
       en: {
         powered: 'Powered by GiLo AI',
@@ -451,28 +427,24 @@
         send: 'Send',
         stop: 'Stop generating',
         error: 'An error occurred.',
-        startConversation: 'How can I help you?',
-        footerText: 'Powered by GiLo AI'
+        startConversation: 'How can I help you?'
       }
     };
     var lang = AGENT.language || 'fr';
     var t = I18N[lang] || I18N.fr;
 
     var initial = (AGENT.name || 'A').charAt(0).toUpperCase();
-    var model = (AGENT.model || '').split('/').pop() || '';
-
     // Apply content
     document.getElementById('agentName').textContent = AGENT.name;
     document.getElementById('avatarLetter').textContent = initial;
-    document.getElementById('modelLabel').textContent = model;
-    document.getElementById('poweredText').textContent = t.powered;
+
     document.getElementById('userInput').placeholder = t.placeholder;
     document.getElementById('sendBtn').title = t.send;
     document.getElementById('stopText').textContent = t.stop;
     document.getElementById('emptyLetter').textContent = initial;
     document.getElementById('emptyName').textContent = AGENT.name;
     document.getElementById('emptyHint').textContent = t.startConversation;
-    document.getElementById('footerText').textContent = t.footerText;
+
     document.title = AGENT.name + ' — GiLo AI';
 
     var messagesEl = document.getElementById('messages');
