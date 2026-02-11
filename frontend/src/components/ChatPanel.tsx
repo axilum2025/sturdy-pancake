@@ -589,7 +589,7 @@ export default function ChatPanel() {
                 ? 'bg-green-400 shadow-[0_0_6px_rgba(74,222,128,0.6)]'
                 : copilotAvailable === false
                 ? 'bg-red-400'
-                : 'bg-yellow-400 animate-pulse'
+                : 'bg-amber-400 animate-pulse'
             }`}
           />
           <span className="text-xs text-t-text/40">
@@ -620,7 +620,7 @@ export default function ChatPanel() {
                   onClick={() => setMessage(action.prompt)}
                   className="glass-card bg-t-overlay/5 hover:bg-t-overlay/10 border border-t-overlay/10 hover:border-t-overlay/20 rounded-lg px-3 py-2 text-xs text-t-text/70 hover:text-t-text transition-all duration-200 text-left"
                 >
-                  <Zap className="w-3 h-3 inline mr-1 text-yellow-400" />
+                  <Zap className="w-3 h-3 inline mr-1 text-amber-400" />
                   {action.label}
                 </button>
               ))}
@@ -648,12 +648,12 @@ export default function ChatPanel() {
                   }`}
                 >
                   {msg.role === 'assistant' ? (
-                    <div className="chat-markdown text-t-text/90 text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-pre:bg-black/40 prose-pre:border prose-pre:border-t-overlay/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-purple-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
+                    <div className="chat-markdown text-t-text/90 text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-pre:bg-black/40 prose-pre:border prose-pre:border-t-overlay/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-indigo-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.content || (msg.isStreaming ? '...' : '')}
                       </ReactMarkdown>
                       {msg.isStreaming && (
-                        <span className="inline-block w-2 h-4 bg-purple-400 animate-pulse ml-1" />
+                        <span className="inline-block w-2 h-4 bg-indigo-400 animate-pulse ml-1" />
                       )}
                     </div>
                   ) : (
@@ -698,18 +698,18 @@ export default function ChatPanel() {
 
         {isTyping && messages[messages.length - 1]?.content === '' && (
           <div className="flex animate-fade-in-up justify-start">
-            <div className="glass-card bg-purple-500/10 border-purple-500/20 px-4 py-3 rounded-lg">
+            <div className="glass-card bg-indigo-500/10 border-indigo-500/20 px-4 py-3 rounded-lg">
               <div className="flex gap-1">
                 <div
-                  className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
                   style={{ animationDelay: '0ms' }}
                 />
                 <div
-                  className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
                   style={{ animationDelay: '150ms' }}
                 />
                 <div
-                  className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
                   style={{ animationDelay: '300ms' }}
                 />
               </div>

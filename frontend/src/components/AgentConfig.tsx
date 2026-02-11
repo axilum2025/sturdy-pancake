@@ -417,7 +417,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                           <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${
                             tool.type === 'builtin' ? 'bg-blue-500/20 text-blue-300' :
                             tool.type === 'http' ? 'bg-green-500/20 text-green-300' :
-                            'bg-purple-500/20 text-purple-300'
+                            'bg-indigo-500/20 text-indigo-300'
                           }`}>{tool.type}</span>
                         </div>
                         {tool.description && (
@@ -498,7 +498,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                                   <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase ${
                                     tool.type === 'builtin' ? 'bg-blue-500/20 text-blue-300' :
                                     tool.type === 'http' ? 'bg-green-500/20 text-green-300' :
-                                    'bg-purple-500/20 text-purple-300'
+                                    'bg-indigo-500/20 text-indigo-300'
                                   }`}>{tool.type}</span>
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-t-overlay/10 text-t-text/30 capitalize">{tool.category}</span>
                                 </div>

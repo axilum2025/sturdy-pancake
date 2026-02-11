@@ -171,19 +171,19 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
         return <FileCode className="w-4 h-4 text-blue-400 glow-icon" />;
       case 'ts':
       case 'js':
-        return <FileCode className="w-4 h-4 text-yellow-400 glow-icon" />;
+        return <FileCode className="w-4 h-4 text-amber-400 glow-icon" />;
       case 'json':
         return <FileJson className="w-4 h-4 text-green-400 glow-icon" />;
       case 'css':
-        return <FileText className="w-4 h-4 text-purple-400 glow-icon" />;
+        return <FileText className="w-4 h-4 text-indigo-400 glow-icon" />;
       case 'html':
-        return <FileText className="w-4 h-4 text-orange-400 glow-icon" />;
+        return <FileText className="w-4 h-4 text-amber-400 glow-icon" />;
       case 'png':
       case 'jpg':
       case 'jpeg':
       case 'gif':
       case 'svg':
-        return <FileImage className="w-4 h-4 text-pink-400 glow-icon" />;
+        return <FileImage className="w-4 h-4 text-red-400 glow-icon" />;
       default:
         return <File className="w-4 h-4 text-gray-400" />;
     }
@@ -215,7 +215,7 @@ export default function FileEditor({ projectId, onClose }: FileEditorProps) {
           )}
           {!hasChildren && <span className="w-4" />}
           {item.type === 'directory' ? (
-            <Folder className="w-4 h-4 text-yellow-400 glow-icon" />
+            <Folder className="w-4 h-4 text-amber-400 glow-icon" />
           ) : (
             getFileIcon(item.name)
           )}

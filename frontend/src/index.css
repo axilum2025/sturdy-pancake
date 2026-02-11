@@ -25,9 +25,7 @@
   background-color: rgb(var(--c-page));
 
   --neon-blue: #3b82f6;
-  --neon-purple: #8b5cf6;
-  --neon-cyan: #06b6d4;
-  --neon-pink: #ec4899;
+  --neon-purple: #6366f1;
   --glass-bg: rgba(255, 255, 255, 0.70);
   --glass-border: rgba(0, 0, 0, 0.06);
   --glass-bg-hover: rgba(255, 255, 255, 0.85);
@@ -75,14 +73,14 @@ body {
 
 /* ===== GRADIENT TEXT ===== */
 .gradient-text {
-  background: linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .gradient-text-warm {
-  background: linear-gradient(135deg, #818cf8, #6366f1, #3b82f6);
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -94,11 +92,7 @@ body {
 }
 
 .glow-purple {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3), 0 0 60px rgba(139, 92, 246, 0.1);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 60px rgba(6, 182, 212, 0.1);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.1);
 }
 
 .glow-text {
@@ -144,7 +138,7 @@ body {
 
 /* ===== GRADIENT BUTTON ===== */
 .btn-gradient {
-  background: linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
   background-size: 200% 200%;
   animation: gradient-shift 3s ease infinite;
   transition: all 0.3s ease;
@@ -362,7 +356,7 @@ body {
   background: 
     radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(99, 102, 241, 0.07) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse at 40% 80%, rgba(99, 102, 241, 0.05) 0%, transparent 50%);
 }
 
 /* ===== GRADIENT BORDER ===== */
@@ -376,7 +370,7 @@ body {
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.2));
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.3));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -413,8 +407,7 @@ body {
 
 /* ===== LIGHT MODE OVERRIDES ===== */
 :root:not(.dark) .glow-blue,
-:root:not(.dark) .glow-purple,
-:root:not(.dark) .glow-cyan {
+:root:not(.dark) .glow-purple {
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
@@ -432,14 +425,14 @@ body {
 }
 
 :root:not(.dark) .border-gradient::before {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.1));
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
 }
 
 :root:not(.dark) .bg-gradient-mesh {
   background: 
     radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.04) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse at 40% 80%, rgba(139, 92, 246, 0.02) 0%, transparent 50%);
+    radial-gradient(ellipse at 40% 80%, rgba(99, 102, 241, 0.02) 0%, transparent 50%);
 }
 
 :root:not(.dark) ::selection {

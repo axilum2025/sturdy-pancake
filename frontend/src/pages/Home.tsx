@@ -68,8 +68,8 @@ export default function Home() {
       icon: Terminal,
       titleKey: 'home.featureTools',
       descKey: 'home.featureToolsDesc',
-      color: 'from-violet-500/20 to-violet-600/20',
-      iconColor: 'text-violet-400',
+      color: 'from-indigo-500/20 to-indigo-600/20',
+      iconColor: 'text-indigo-400',
     },
     {
       icon: Globe,
@@ -89,8 +89,8 @@ export default function Home() {
       icon: Shield,
       titleKey: 'home.featureSecurity',
       descKey: 'home.featureSecurityDesc',
-      color: 'from-emerald-500/20 to-emerald-600/20',
-      iconColor: 'text-emerald-400',
+      color: 'from-green-500/20 to-green-600/20',
+      iconColor: 'text-green-400',
     },
   ];
 
@@ -162,12 +162,12 @@ export default function Home() {
       <section className="relative pt-20 pb-32 sm:pt-32 sm:pb-40">
         {/* Decorative orbs */}
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-40 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-40 right-1/4 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-t-overlay/5 border border-t-overlay/10 text-xs font-medium text-t-text/60 mb-8 animate-fade-in-up">
-            <Zap className="w-3 h-3 text-yellow-400" />
+            <Zap className="w-3 h-3 text-amber-400" />
             <span>{t('home.badge')}</span>
             <ChevronRight className="w-3 h-3" />
           </div>
@@ -205,14 +205,14 @@ export default function Home() {
           <div className="mt-20 animate-fade-in-up delay-500">
             <div className="relative max-w-3xl mx-auto">
               {/* Glow behind */}
-              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 rounded-3xl blur-2xl" />
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-blue-500/10 rounded-3xl blur-2xl" />
               
               <div className="relative glass-strong rounded-2xl overflow-hidden border-gradient">
                 {/* Window bar */}
                 <div className="flex items-center gap-2 px-4 py-3">
                   <div className="flex gap-1.5">
                     <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
+                    <div className="w-3 h-3 rounded-full bg-amber-500/60" />
                     <div className="w-3 h-3 rounded-full bg-green-500/60" />
                   </div>
                   <div className="flex-1 text-center">
@@ -234,17 +234,17 @@ export default function Home() {
                     <span className="text-blue-400">"</span>
                   </div>
                   <div className="pt-2 flex items-center gap-2">
-                    <span className="text-purple-400">⚡</span>
+                    <span className="text-indigo-400">⚡</span>
                     <span className="text-t-text/40">{t('home.terminalStep1')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-purple-400">⚡</span>
+                    <span className="text-indigo-400">⚡</span>
                     <span className="text-t-text/40">{t('home.terminalStep2')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-purple-400">⚡</span>
+                    <span className="text-indigo-400">⚡</span>
                     <span className="text-t-text/40">{t('home.terminalStep3')}</span>
                     <span className="text-green-400">✓</span>
                   </div>
@@ -402,12 +402,12 @@ export default function Home() {
                 {/* Stars */}
                 <div className="flex gap-1 mb-4">
                   {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-yellow-500/70 fill-yellow-500/70" />
+                    <Star key={j} className="w-4 h-4 text-amber-500/70 fill-amber-500/70" />
                   ))}
                 </div>
                 <p className="text-sm text-t-text/50 leading-relaxed mb-6">"{t(testimonial.quoteKey)}"</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/30 to-purple-500/30 border border-t-overlay/10 flex items-center justify-center text-xs font-bold text-t-text/60">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/30 to-indigo-500/30 border border-t-overlay/10 flex items-center justify-center text-xs font-bold text-t-text/60">
                     {testimonial.avatar}
                   </div>
                   <div>

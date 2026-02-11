@@ -52,7 +52,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       {/* Modal */}
       <div className="relative w-full max-w-md mx-4 animate-fade-in-scale">
         {/* Glow effect behind modal */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-2xl blur-xl opacity-60" />
+        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 via-indigo-500/20 to-blue-500/20 rounded-2xl blur-xl opacity-60" />
         
         <div className="relative glass-strong rounded-2xl p-8 shadow-2xl border-gradient overflow-hidden">
           {/* Subtle grid background */}

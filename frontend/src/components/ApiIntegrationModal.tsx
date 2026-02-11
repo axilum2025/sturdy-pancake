@@ -195,7 +195,7 @@ chat("Hello!").then(console.log);`;
           {/* Header */}
           <div className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-t-overlay/10">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                 <Code2 className="w-5 h-5 text-white" />
               </div>
               <div>
@@ -231,9 +231,9 @@ chat("Hello!").then(console.log);`;
               {subdomainUrl && (
                 <div className="mt-2">
                   <label className="text-xs font-medium text-t-text/50 mb-1 block">{t('apiIntegration.subdomainUrl')}</label>
-                  <div className="flex items-center gap-2 p-3 rounded-xl bg-purple-500/5 border border-purple-500/15">
-                    <Globe className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                    <code className="text-sm text-purple-400 font-mono flex-1 break-all">{subdomainUrl}</code>
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15">
+                    <Globe className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                    <code className="text-sm text-indigo-400 font-mono flex-1 break-all">{subdomainUrl}</code>
                     <button
                       onClick={() => copyToClipboard(subdomainUrl, 'snippet')}
                       className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors flex-shrink-0"
@@ -249,22 +249,22 @@ chat("Hello!").then(console.log);`;
             {/* API Keys Section */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Key className="w-4 h-4 text-yellow-400" />
+                <Key className="w-4 h-4 text-amber-400" />
                 <label className="text-sm font-medium text-t-text/70">{t('apiIntegration.apiKeys')}</label>
               </div>
 
               {/* Created key banner */}
               {createdKey && (
-                <div className="mb-3 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
+                <div className="mb-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
                   <div className="flex items-start gap-2 mb-2">
-                    <AlertTriangle className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-yellow-300">{t('apiIntegration.keyCopyWarning')}</p>
+                    <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-amber-300">{t('apiIntegration.keyCopyWarning')}</p>
                   </div>
                   <div className="flex items-center gap-2 p-2 rounded-lg bg-black/30">
-                    <code className="text-xs text-yellow-300 font-mono flex-1 break-all">{createdKey}</code>
+                    <code className="text-xs text-amber-300 font-mono flex-1 break-all">{createdKey}</code>
                     <button
                       onClick={() => copyToClipboard(createdKey, 'key')}
-                      className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-yellow-400 hover:text-yellow-300 transition-colors flex-shrink-0"
+                      className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-amber-400 hover:text-amber-300 transition-colors flex-shrink-0"
                     >
                       {copiedKey ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     </button>
@@ -337,7 +337,7 @@ chat("Hello!").then(console.log);`;
             {/* Code Snippets */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Code2 className="w-4 h-4 text-purple-400" />
+                <Code2 className="w-4 h-4 text-indigo-400" />
                 <label className="text-sm font-medium text-t-text/70">{t('apiIntegration.codeExamples')}</label>
               </div>
 
@@ -349,7 +349,7 @@ chat("Hello!").then(console.log);`;
                     onClick={() => setActiveTab(tab.id)}
                     className={`px-3 md:px-4 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 flex items-center gap-1.5 md:gap-2 whitespace-nowrap flex-shrink-0 ${
                       activeTab === tab.id
-                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg'
                         : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'
                     }`}
                   >

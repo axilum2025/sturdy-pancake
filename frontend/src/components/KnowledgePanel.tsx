@@ -38,7 +38,7 @@ function statusBadge(status: KnowledgeDocument['status']) {
   switch (status) {
     case 'processing':
       return (
-        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300">
+        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
           <Loader2 className="w-2.5 h-2.5 animate-spin" /> Traitement…
         </span>
       );
@@ -179,7 +179,7 @@ export default function KnowledgePanel({ agentId }: KnowledgePanelProps) {
             <div className="text-[10px] text-t-text/40">Documents</div>
           </div>
           <div className="bg-t-overlay/[0.04] rounded-xl border border-t-overlay/10 p-3 text-center">
-            <Hash className="w-5 h-5 mx-auto mb-1 text-purple-400" />
+            <Hash className="w-5 h-5 mx-auto mb-1 text-indigo-400" />
             <div className="text-lg font-bold text-t-text/90">{stats.chunks}</div>
             <div className="text-[10px] text-t-text/40">Chunks</div>
           </div>

@@ -44,14 +44,14 @@ interface StoreAgentDetail {
 
 const CATEGORY_COLORS: Record<string, string> = {
   productivity: 'from-blue-500 to-blue-600',
-  support: 'from-green-500 to-emerald-600',
-  education: 'from-amber-500 to-orange-600',
-  creative: 'from-pink-500 to-rose-600',
-  'dev-tools': 'from-purple-500 to-violet-600',
-  marketing: 'from-emerald-500 to-teal-600',
-  data: 'from-cyan-500 to-blue-600',
-  entertainment: 'from-red-500 to-pink-600',
-  other: 'from-gray-500 to-gray-600',
+  support: 'from-green-500 to-green-600',
+  education: 'from-amber-500 to-amber-600',
+  creative: 'from-indigo-500 to-indigo-600',
+  'dev-tools': 'from-indigo-400 to-blue-600',
+  marketing: 'from-green-400 to-green-600',
+  data: 'from-blue-400 to-blue-600',
+  entertainment: 'from-red-500 to-red-600',
+  other: 'from-blue-400 to-indigo-500',
 };
 
 export default function AgentStorePage() {
@@ -229,7 +229,7 @@ export default function AgentStorePage() {
             {/* Stats row */}
             <div className="flex items-center gap-5 justify-center sm:justify-start text-sm">
               <div className="flex items-center gap-1.5">
-                <Star className="w-4 h-4 text-yellow-400" />
+                <Star className="w-4 h-4 text-amber-400" />
                 <span className="text-t-text/80 font-medium">{(agent.rating ?? 0).toFixed(1)}</span>
                 {(agent.ratingCount ?? 0) > 0 && (
                   <span className="text-t-text/30">({agent.ratingCount})</span>

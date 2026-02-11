@@ -77,7 +77,7 @@ export default function Dashboard() {
 
   const getTierColor = (tier: string) => {
     switch (tier) {
-      case 'pro': return 'from-indigo-500 to-violet-500';
+      case 'pro': return 'from-indigo-500 to-indigo-500';
       case 'team': return 'from-blue-500 to-indigo-500';
       default: return 'from-blue-500 to-indigo-500';
     }
@@ -156,10 +156,10 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={() => navigate('/analytics')}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all duration-200 group"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-green-500/10 border border-green-500/20 hover:border-green-500/40 hover:bg-green-500/15 transition-all duration-200 group"
               >
-                <BarChart3 className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium text-emerald-300 hidden sm:inline">Analytics</span>
+                <BarChart3 className="w-4 h-4 text-green-400 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-green-300 hidden sm:inline">Analytics</span>
               </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
@@ -207,7 +207,7 @@ export default function Dashboard() {
               </p>
               <div className="w-full h-1.5 bg-t-overlay/5 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-blue-500 to-blue-500 rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(agentsProgress, 100)}%` }}
                 />
               </div>
@@ -230,8 +230,8 @@ export default function Dashboard() {
             {/* Deployed Stat */}
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-200">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <div className="p-1.5 sm:p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 glow-icon" />
+                <div className="p-1.5 sm:p-2.5 rounded-xl bg-green-500/10 border border-green-500/20">
+                  <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-green-400 glow-icon" />
                 </div>
                 <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.deployed')}</span>
               </div>
@@ -240,7 +240,7 @@ export default function Dashboard() {
               </p>
               <div className="w-full h-1.5 bg-t-overlay/5 rounded-full overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-emerald-500 to-blue-500 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full transition-all duration-500"
                   style={{ width: `${projects.length > 0 ? (deployedCount / projects.length) * 100 : 0}%` }}
                 />
               </div>
@@ -298,7 +298,7 @@ export default function Dashboard() {
             </div>
           ) : projects.length === 0 ? (
             <div className="glass-card rounded-2xl p-6 sm:p-12 text-center animate-fade-in-up">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-t-overlay/5 flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/10 to-indigo-500/10 border border-t-overlay/5 flex items-center justify-center mx-auto mb-6">
                 <Cloud className="w-10 h-10 text-t-text/30" />
               </div>
               <h3 className="text-xl font-semibold text-t-text mb-2">{t('dashboard.noAgents')}</h3>
@@ -338,7 +338,7 @@ export default function Dashboard() {
           />
           <div className="relative glass-strong rounded-2xl w-full max-w-lg p-5 sm:p-8 border-gradient animate-fade-in-scale">
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                 <Plus className="w-5 h-5 text-white" />
               </div>
               <div>

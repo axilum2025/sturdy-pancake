@@ -26,14 +26,14 @@ interface Category {
 
 const CATEGORY_COLORS: Record<string, string> = {
   productivity: 'from-blue-500 to-blue-600',
-  support: 'from-green-500 to-emerald-600',
-  education: 'from-amber-500 to-orange-600',
-  creative: 'from-pink-500 to-rose-600',
-  'dev-tools': 'from-purple-500 to-violet-600',
-  marketing: 'from-emerald-500 to-teal-600',
-  data: 'from-cyan-500 to-blue-600',
-  entertainment: 'from-red-500 to-pink-600',
-  other: 'from-gray-500 to-gray-600',
+  support: 'from-green-500 to-green-600',
+  education: 'from-amber-500 to-amber-600',
+  creative: 'from-indigo-500 to-indigo-600',
+  'dev-tools': 'from-indigo-400 to-blue-600',
+  marketing: 'from-green-400 to-green-600',
+  data: 'from-blue-400 to-blue-600',
+  entertainment: 'from-red-500 to-red-600',
+  other: 'from-blue-400 to-indigo-500',
 };
 
 export default function AgentStore() {
@@ -171,7 +171,7 @@ export default function AgentStore() {
             {selectedCategory === 'all' && !searchQuery && (
               <section className="mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                 <div className="flex items-center gap-2 mb-4">
-                  <Star className="w-5 h-5 text-yellow-400 glow-icon" />
+                  <Star className="w-5 h-5 text-amber-400 glow-icon" />
                   <h2 className="text-lg font-semibold text-t-text/90">{t('store.topRated')}</h2>
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">

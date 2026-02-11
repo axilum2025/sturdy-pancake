@@ -25,14 +25,14 @@ interface AgentInfo {
 
 const CATEGORY_COLORS: Record<string, string> = {
   productivity: 'from-blue-500 to-blue-600',
-  support: 'from-green-500 to-emerald-600',
-  education: 'from-amber-500 to-orange-600',
-  creative: 'from-pink-500 to-rose-600',
-  'dev-tools': 'from-purple-500 to-violet-600',
-  marketing: 'from-emerald-500 to-teal-600',
-  data: 'from-cyan-500 to-blue-600',
-  entertainment: 'from-red-500 to-pink-600',
-  other: 'from-gray-500 to-gray-600',
+  support: 'from-green-500 to-green-600',
+  education: 'from-amber-500 to-amber-600',
+  creative: 'from-indigo-500 to-indigo-600',
+  'dev-tools': 'from-indigo-400 to-blue-600',
+  marketing: 'from-green-400 to-green-600',
+  data: 'from-blue-400 to-blue-600',
+  entertainment: 'from-red-500 to-red-600',
+  other: 'from-blue-400 to-indigo-500',
 };
 
 export default function AgentChat() {

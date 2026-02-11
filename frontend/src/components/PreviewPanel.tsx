@@ -54,7 +54,7 @@ export default function PreviewPanel({ onClose }: PreviewPanelProps) {
       return (
         <div className="h-full flex items-center justify-center animate-fade-in-up">
           <div className="w-full max-w-2xl mx-auto p-8 glass-card rounded-xl border-2 border-dashed border-t-overlay/10">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center animate-pulse-glow">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-indigo-500/20 flex items-center justify-center animate-pulse-glow">
               <Eye className="w-8 h-8 text-blue-400 glow-icon" />
             </div>
             <h2 className="text-2xl font-bold gradient-text mb-4">Prévisualisation</h2>

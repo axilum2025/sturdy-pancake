@@ -78,7 +78,7 @@ export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
         ) : (
           <div className="relative">
             {/* Timeline line */}
-            <div className="absolute left-[19px] top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-purple-500/50 to-transparent"></div>
+            <div className="absolute left-[19px] top-0 bottom-0 w-px bg-gradient-to-b from-blue-500/50 via-indigo-500/50 to-transparent"></div>
             
             <div className="space-y-4">
               {events.map((event, idx) => (
