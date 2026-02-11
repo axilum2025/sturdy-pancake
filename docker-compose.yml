@@ -4,9 +4,77 @@
 # ============================================
 
 services:
+  # --- Reverse Proxy (wildcard subdomain routing + TLS) ---
+  caddy:
+    image: caddy:2-alpine
+    container_name: gilo-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"  # HTTP/3
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      GILO_DOMAIN: ${GILO_DOMAIN:-localhost}
+      TLS_EMAIL: ${TLS_EMAIL:-}
+      DNS_PROVIDER: ${DNS_PROVIDER:-}
+      DNS_API_TOKEN: ${DNS_API_TOKEN:-}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - gilo
+
+  # --- Backend API ---
+  backend:
+    build: ./backend
+    container_name: gilo-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: ${NODE_ENV:-development}
+      DATABASE_URL: postgresql://gilo:gilo_dev_password@db:5432/gilo_ai
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GILO_DOMAIN: ${GILO_DOMAIN:-localhost}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80}
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-3600000}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gilo
+
+  # --- Frontend ---
+  frontend:
+    build: ./frontend
+    container_name: gilo-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
+      VITE_GILO_DOMAIN: ${GILO_DOMAIN:-localhost}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - gilo
+
+  # --- Database ---
   db:
     image: postgres:16-alpine
     container_name: gilo-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: gilo_ai
       POSTGRES_USER: gilo
@@ -20,6 +88,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - gilo
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  gilo:
+    driver: bridge

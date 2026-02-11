@@ -8,6 +8,7 @@ import { Agent } from '../models/agent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
+import { publicRateLimiter } from '../middleware/publicRateLimiter';
 import OpenAI from 'openai';
 
 export const subdomainRouter = Router();
@@ -41,7 +42,7 @@ subdomainRouter.get('/', (req: Request, res: Response) => {
 // POST /chat — Chat with the agent (public, rate-limited)
 // Supports SSE streaming and JSON mode
 // ----------------------------------------------------------
-subdomainRouter.post('/chat', async (req: Request, res: Response) => {
+subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Response) => {
   const agent = getSubdomainAgent(req);
   if (!agent) return res.status(404).json({ error: 'Agent not found' });
 

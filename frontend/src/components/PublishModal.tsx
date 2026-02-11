@@ -1,10 +1,10 @@
 import { useState, useRef } from 'react';
 import {
   Rocket, X, Globe, Lock, Tag, Sparkles, Plus, Trash2, Check, Loader2, Upload, Image,
-  Copy, RefreshCw, Shield, Key
+  Copy, RefreshCw, Shield, Key, ExternalLink
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { api } from '../services/api';
+import { api, deployAgent } from '../services/api';
 
 interface PublishModalProps {
   agentId: string;
@@ -39,6 +39,8 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
   const [storeListingId, setStoreListingId] = useState<string | null>(null);
   const [tokenCopied, setTokenCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [deployedUrl, setDeployedUrl] = useState<string | null>(null);
+  const [urlCopied, setUrlCopied] = useState(false);
 
   const [name, setName] = useState(agentName);
   const [shortDescription, setShortDescription] = useState('');
@@ -94,6 +96,16 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         visibility,
       };
 
+      // Auto-deploy the agent to make it accessible via subdomain URL
+      try {
+        const deployResult = await deployAgent(agentId);
+        if (deployResult.subdomainUrl) {
+          setDeployedUrl(deployResult.subdomainUrl);
+        }
+      } catch (deployErr) {
+        console.warn('Auto-deploy skipped:', deployErr);
+      }
+
       const response = await api.post('/store/publish', body);
       const listing = response.data;
       if (visibility === 'private' && listing.accessToken) {
@@ -101,7 +113,8 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         setStoreListingId(listing.id);
         setStep(4);
       } else {
-        onPublished(listing.id);
+        setStoreListingId(listing.id);
+        setStep(5); // Show success step with deployed URL
       }
     } catch (err: any) {
       setError(err.response?.data?.error || err.message || t('publish.publishError'));
@@ -131,6 +144,13 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
     }
   };
 
+  const handleCopyUrl = () => {
+    if (!deployedUrl) return;
+    navigator.clipboard.writeText(deployedUrl);
+    setUrlCopied(true);
+    setTimeout(() => setUrlCopied(false), 2000);
+  };
+
   const canAdvance = () => {
     if (step === 1) return name.trim() && shortDescription.trim() && description.trim();
     if (step === 2) return features.some((f) => f.trim());
@@ -157,20 +177,20 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
 
         {/* Steps indicator */}
         <div className="px-6 py-3 border-b border-t-overlay/5 flex items-center gap-2">
-          {(step <= 3 ? [1, 2, 3] : [1, 2, 3, 4]).map((s) => (
+          {(step <= 3 ? [1, 2, 3] : step === 4 ? [1, 2, 3, 4] : [1, 2, 3, 5]).map((s) => (
             <div key={s} className="flex items-center gap-2 flex-1">
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-colors ${
                   step === s
-                    ? s === 4 ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
+                    ? (s >= 4) ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
                     : step > s
                     ? 'bg-green-500/20 text-green-400'
                     : 'bg-t-overlay/10 text-t-text/30'
                 }`}
               >
-                {step > s ? <Check className="w-3.5 h-3.5" /> : s === 4 ? <Key className="w-3.5 h-3.5" /> : s}
+                {step > s ? <Check className="w-3.5 h-3.5" /> : s === 4 ? <Key className="w-3.5 h-3.5" /> : s >= 5 ? <Check className="w-3.5 h-3.5" /> : s}
               </div>
-              {s < (step <= 3 ? 3 : 4) && <div className={`flex-1 h-px ${step > s ? 'bg-green-500/30' : 'bg-t-overlay/10'}`} />}
+              {s < (step <= 3 ? 3 : step === 4 ? 4 : 5) && <div className={`flex-1 h-px ${step > s ? 'bg-green-500/30' : 'bg-t-overlay/10'}`} />}
             </div>
           ))}
         </div>
@@ -432,6 +452,74 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
             </>
           )}
 
+          {/* Step 5: Success with deployed URL */}
+          {step === 5 && (
+            <>
+              <div className="text-center">
+                <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-green-400" />
+                </div>
+                <h3 className="text-lg font-bold text-t-text mb-1">Agent publié avec succès !</h3>
+                <p className="text-sm text-t-text/50">Votre agent est maintenant disponible sur le store et accessible via son URL.</p>
+              </div>
+
+              {/* Deployed URL */}
+              {deployedUrl && (
+                <div className="bg-t-overlay/[0.06] border border-green-500/20 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Globe className="w-4 h-4 text-green-400" />
+                    <span className="text-xs font-semibold text-green-300 uppercase tracking-wider">URL de l'agent</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 bg-black/30 rounded-xl px-4 py-3 text-sm font-mono text-green-300 break-all select-all border border-t-overlay/10">
+                      {deployedUrl}
+                    </code>
+                    <button
+                      onClick={handleCopyUrl}
+                      className={`p-3 rounded-xl transition-all flex-shrink-0 ${
+                        urlCopied
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-t-overlay/10 text-t-text/50 hover:text-t-text hover:bg-t-overlay/20'
+                      }`}
+                      title="Copier l'URL"
+                    >
+                      {urlCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <a
+                      href={deployedUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 text-xs hover:bg-green-500/20 transition-colors"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Ouvrir l'agent
+                    </a>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${deployedUrl}/chat`);
+                        setUrlCopied(true);
+                        setTimeout(() => setUrlCopied(false), 2000);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-t-overlay/10 text-t-text/60 text-xs hover:bg-t-overlay/20 transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      Copier l'endpoint chat
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Integration hint */}
+              <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10">
+                <p className="text-xs text-t-text/50 leading-relaxed">
+                  Intégrez votre agent en utilisant l'URL ci-dessus. Envoyez des requêtes POST à <code className="text-blue-400">{deployedUrl}/chat</code> avec un body JSON contenant <code className="text-blue-400">{'{"messages": [{"role": "user", "content": "..."}]}'}</code>.
+                </p>
+              </div>
+            </>
+          )}
+
           {/* Step 4: Token Display (Telegram style) */}
           {step === 4 && accessToken && (
             <>
@@ -489,7 +577,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
 
         {/* Footer */}
         <div className="px-6 py-4 border-t border-t-overlay/10 flex items-center justify-between flex-shrink-0">
-          {step === 4 ? (
+          {(step === 4 || step === 5) ? (
             <>
               <div />
               <button

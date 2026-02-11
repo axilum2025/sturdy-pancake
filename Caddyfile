@@ -1,0 +1,37 @@
+# ============================================
+# GiLo AI — Caddy Reverse Proxy Configuration
+# Handles wildcard subdomain routing for deployed agents
+# ============================================
+
+# Main domain: serves the frontend
+{$GILO_DOMAIN:gilo.dev} {
+	reverse_proxy frontend:5173
+}
+
+# Wildcard subdomains: route {slug}.gilo.dev to the backend
+*.{$GILO_DOMAIN:gilo.dev} {
+	# TLS with wildcard cert (uses Let's Encrypt DNS challenge or self-signed in dev)
+	tls {$TLS_EMAIL:admin@gilo.dev} {
+		dns {$DNS_PROVIDER:cloudflare} {$DNS_API_TOKEN:}
+	}
+
+	reverse_proxy backend:3001
+}
+
+# Local development fallback (when GILO_DOMAIN is not set or for localhost)
+:80 {
+	# Health check
+	handle /health {
+		reverse_proxy backend:3001
+	}
+
+	# API routes → backend
+	handle /api/* {
+		reverse_proxy backend:3001
+	}
+
+	# Everything else → frontend
+	handle {
+		reverse_proxy frontend:5173
+	}
+}

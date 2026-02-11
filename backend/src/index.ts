@@ -39,10 +39,35 @@ async function main() {
 
   // Middleware
   app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      const allowed = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:5173'];
+      const giloDomain = process.env.GILO_DOMAIN || '';
+
+      // Allow requests with no origin (server-to-server, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      // Allow explicitly listed origins
+      if (allowed.includes(origin)) return callback(null, true);
+
+      // Allow any subdomain of GILO_DOMAIN (e.g. *.gilo.dev)
+      if (giloDomain) {
+        const pattern = new RegExp(`^https?://([a-z0-9-]+\\.)?${giloDomain.replace('.', '\\.')}$`, 'i');
+        if (pattern.test(origin)) return callback(null, true);
+      }
+
+      // Allow localhost variants for dev
+      if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error('CORS not allowed'));
+    },
     credentials: true
   }));
   app.use(express.json());
+
+  // Trust proxy (required behind Caddy/nginx for correct IP detection)
+  app.set('trust proxy', 1);
 
   // Subdomain routing: {slug}.gilo.dev → agent
   // Must be before other routes so subdomain requests are caught first

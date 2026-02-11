@@ -144,10 +144,14 @@ agentsRouter.post('/:id/deploy', async (req: Request, res: Response) => {
     if (!userId) return;
 
     const agent = await agentModel.deploy(req.params.id);
+    const giloDomain = process.env.GILO_DOMAIN || '';
+    const subdomainUrl = agent.slug && giloDomain ? `https://${agent.slug}.${giloDomain}` : undefined;
     res.json({
       message: 'Agent deployed successfully',
       agent: agentModel.toResponse(agent),
       endpoint: agent.endpoint,
+      subdomainUrl,
+      chatUrl: subdomainUrl ? `${subdomainUrl}/chat` : agent.endpoint,
     });
   } catch (error: any) {
     console.error('Deploy agent error:', error.message);

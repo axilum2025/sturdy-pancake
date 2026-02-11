@@ -227,7 +227,7 @@ export const updateAgentConfig = async (agentId: string, config: Partial<AgentCo
   return response.data;
 };
 
-export const deployAgent = async (agentId: string): Promise<{ message: string; agent: Agent; endpoint: string }> => {
+export const deployAgent = async (agentId: string): Promise<{ message: string; agent: Agent; endpoint: string; subdomainUrl?: string; chatUrl?: string }> => {
   const response = await api.post(`/agents/${agentId}/deploy`);
   return response.data;
 };
