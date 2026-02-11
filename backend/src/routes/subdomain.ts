@@ -58,6 +58,7 @@ subdomainRouter.get('/', (req: Request, res: Response) => {
     description: agent.description || '',
     slug: agent.slug,
     language: lang,
+    model: agent.config.model || '',
     welcomeMessage: agent.config.welcomeMessage || (lang === 'en' ? 'Hello! How can I help you?' : 'Bonjour ! Comment puis-je vous aider ?'),
   });
 
