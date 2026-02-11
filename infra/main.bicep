@@ -315,5 +315,5 @@ output customDomain string = customDomain
 @description('Container Apps Environment verification ID (for DNS TXT record)')
 output domainVerificationId string = containerEnv.properties.customDomainConfiguration.customDomainVerificationId
 
-@description('Container Apps static IP (for DNS A record)')
+@description('Container Apps static IP (for DNS A record — use this for GoDaddy wildcard: * → this IP)')
 output containerAppsStaticIp string = containerEnv.properties.staticIp
