@@ -10,8 +10,19 @@ import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
 import { publicRateLimiter } from '../middleware/publicRateLimiter';
 import OpenAI from 'openai';
+import path from 'path';
+import fs from 'fs';
 
 export const subdomainRouter = Router();
+
+// Load chat template once at startup
+const chatTemplatePath = path.join(__dirname, '..', '..', 'public', 'chat.html');
+let chatTemplate = '';
+try {
+  chatTemplate = fs.readFileSync(chatTemplatePath, 'utf-8');
+} catch {
+  console.warn('⚠️ Chat template not found at', chatTemplatePath);
+}
 
 /**
  * Helper: extract agent from subdomain middleware
@@ -21,21 +32,40 @@ function getSubdomainAgent(req: Request): Agent | undefined {
 }
 
 // ----------------------------------------------------------
-// GET / — Agent info / landing page (JSON)
+// GET / — Agent chat interface (HTML)
 // ----------------------------------------------------------
 subdomainRouter.get('/', (req: Request, res: Response) => {
   const agent = getSubdomainAgent(req);
   if (!agent) return res.status(404).json({ error: 'Agent not found' });
 
-  res.json({
+  // If client wants JSON (API call), return JSON
+  if (req.headers.accept?.includes('application/json') && !req.headers.accept?.includes('text/html')) {
+    return res.json({
+      name: agent.name,
+      description: agent.description,
+      slug: agent.slug,
+      model: agent.config.model,
+      welcomeMessage: agent.config.welcomeMessage,
+      status: agent.status,
+      endpoint: `https://${agent.slug}.${process.env.GILO_DOMAIN}/chat`,
+    });
+  }
+
+  // Serve HTML chat interface
+  const agentJson = JSON.stringify({
     name: agent.name,
-    description: agent.description,
+    description: agent.description || '',
     slug: agent.slug,
-    model: agent.config.model,
-    welcomeMessage: agent.config.welcomeMessage,
-    status: agent.status,
-    endpoint: `https://${agent.slug}.${process.env.GILO_DOMAIN}/chat`,
+    welcomeMessage: agent.config.welcomeMessage || 'Bonjour ! Comment puis-je vous aider ?',
   });
+
+  const html = chatTemplate
+    .replace(/\{\{AGENT_NAME\}\}/g, agent.name)
+    .replace(/\{\{AGENT_DESCRIPTION\}\}/g, agent.description || '')
+    .replace('{{AGENT_JSON}}', agentJson);
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
 });
 
 // ----------------------------------------------------------

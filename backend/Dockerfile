@@ -26,6 +26,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy compiled JS
 COPY --from=builder /app/dist ./dist
 
+# Copy public assets (chat widget, etc.)
+COPY public/ ./public/
+
 # Create data directory for runtime storage (MCP configs etc.)
 RUN mkdir -p ./data/projects && echo '[]' > ./data/mcp-servers.json
 
