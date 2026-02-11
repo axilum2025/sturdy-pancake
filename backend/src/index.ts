@@ -74,6 +74,22 @@ async function main() {
   app.use(subdomainMiddleware);
   app.use(subdomainRouter);
 
+  // Health check (MUST be before auth middleware)
+  app.get('/health', (req: Request, res: Response) => {
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      version: '3.0.0'
+    });
+  });
+  app.get('/api/health', (req: Request, res: Response) => {
+    res.json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      version: '3.0.0'
+    });
+  });
+
   // Public routes (no auth required)
   app.use('/api/auth', authRouter);
   app.use('/api/store', optionalAuth, storeRouter);
@@ -98,22 +114,6 @@ async function main() {
   app.use('/api/analytics', authMiddleware, analyticsRouter);
   app.use('/api', authMiddleware, analyticsRouter);
   app.use('/api/agents', authMiddleware, alertsRouter);
-
-  // Health check
-  app.get('/health', (req: Request, res: Response) => {
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      version: '3.0.0'
-    });
-  });
-  app.get('/api/health', (req: Request, res: Response) => {
-    res.json({ 
-      status: 'ok', 
-      timestamp: new Date().toISOString(),
-      version: '3.0.0'
-    });
-  });
 
   // API documentation endpoint
   app.get('/api', (req: Request, res: Response) => {
