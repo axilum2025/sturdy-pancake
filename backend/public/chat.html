@@ -42,27 +42,42 @@
       flex-shrink: 0;
     }
     .header h1 {
-      font-size: 15px;
+      font-size: 18px;
       font-weight: 600;
       background: linear-gradient(135deg, var(--primary), var(--purple));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .header p {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 1px;
-    }
-    .header-badge {
+    .header-right {
       margin-left: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+    .header-powered {
       font-size: 11px;
       color: var(--text-muted);
       text-decoration: none;
-      opacity: 0.6;
+      opacity: 0.7;
       transition: opacity 0.2s;
     }
-    .header-badge:hover { opacity: 1; }
+    .header-powered:hover { opacity: 1; }
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 6px rgba(74,222,128,0.6);
+    }
 
     /* Messages */
     .messages {
@@ -249,16 +264,6 @@
     .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .send-btn svg { width: 18px; height: 18px; }
 
-    .footer {
-      text-align: center;
-      padding: 6px;
-      font-size: 10px;
-      color: var(--text-muted);
-      flex-shrink: 0;
-    }
-    .footer a { color: var(--text-muted); text-decoration: none; }
-    .footer a:hover { text-decoration: underline; }
-
     /* Desktop */
     @media (min-width: 640px) {
       .messages { padding: 16px; gap: 16px; }
@@ -279,9 +284,11 @@
   <div class="header">
     <div>
       <h1 id="agentName">{{AGENT_NAME}}</h1>
-      <p id="agentDesc">{{AGENT_DESCRIPTION}}</p>
     </div>
-    <a class="header-badge" href="https://gilo.dev" target="_blank">GiLo AI</a>
+    <div class="header-right">
+      <a class="header-powered" href="https://www.gilo.dev/" target="_blank">Propulsé par GiLo AI</a>
+      <div class="header-status"><span class="status-dot"></span> Agent Actif</div>
+    </div>
   </div>
 
   <div class="messages" id="messages"></div>
@@ -298,8 +305,6 @@
     </div>
   </div>
 
-  <div class="footer">Propulsé par <a href="https://gilo.dev" target="_blank">GiLo AI</a></div>
-
   <script>
     const AGENT = {{AGENT_JSON}};
     const CHAT_ENDPOINT = '/chat';
@@ -313,7 +318,6 @@
     const stopBtn = document.getElementById('stopBtn');
 
     document.getElementById('agentName').textContent = AGENT.name;
-    document.getElementById('agentDesc').textContent = AGENT.description || '';
     document.title = AGENT.name + ' — GiLo AI';
 
     if (AGENT.welcomeMessage) addBotMessage(AGENT.welcomeMessage);
