@@ -81,6 +81,7 @@ subdomainRouter.get('/', async (req: Request, res: Response) => {
     model: agent.config.model || '',
     icon,
     iconColor,
+    appearance: agent.config.appearance || {},
     welcomeMessage: agent.config.welcomeMessage || (lang === 'en' ? 'Hello! How can I help you?' : 'Bonjour ! Comment puis-je vous aider ?'),
   });
 

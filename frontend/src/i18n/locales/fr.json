@@ -212,7 +212,26 @@
     "toolDesc": "Description (optionnel)",
     "language": "Langue de l'agent",
     "languageDesc": "La langue affichée sur la page de chat déployée.",
-    "integrations": "Intégrations"
+    "integrations": "Intégrations",
+    "appearance": "Apparence"
+  },
+
+  "appearance": {
+    "theme": "Thème du chat",
+    "themeDesc": "Choisissez le mode d'affichage par défaut pour vos visiteurs.",
+    "dark": "Sombre",
+    "light": "Clair",
+    "auto": "Auto",
+    "accentColor": "Couleur d'accent",
+    "accentColorDesc": "La couleur principale utilisée pour les bulles, boutons et liens.",
+    "customColor": "Couleur personnalisée",
+    "backgroundImage": "Image de fond",
+    "backgroundImageDesc": "Ajoutez une image de fond au chat de votre agent. Elle sera affichée en arrière-plan avec un overlay.",
+    "uploadImage": "Télécharger une image",
+    "changeImage": "Changer",
+    "uploading": "Téléchargement...",
+    "imageTooLarge": "L'image ne doit pas dépasser 2 Mo.",
+    "previewHint": "Les changements seront visibles après avoir sauvegardé et rechargé la page de chat de l'agent."
   },
 
   "integrations": {

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2 } from 'lucide-react';
+import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
 import KnowledgePanel from './KnowledgePanel';
 import IntegrationsPanel from './IntegrationsPanel';
+import AppearancePanel from './AppearancePanel';
 
 interface AgentConfigProps {
   agentId: string;
@@ -28,6 +29,11 @@ interface AgentConfigData {
   welcomeMessage: string;
   language: 'fr' | 'en';
   tools: AgentTool[];
+  appearance: {
+    theme: 'dark' | 'light' | 'auto';
+    accentColor: string;
+    chatBackground: string;
+  };
 }
 
 const AVAILABLE_MODELS = [
@@ -46,10 +52,15 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     welcomeMessage: 'Bonjour ! Comment puis-je vous aider ?',
     language: 'fr',
     tools: [],
+    appearance: {
+      theme: 'dark',
+      accentColor: '#3b82f6',
+      chatBackground: '',
+    },
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge' | 'integrations'>('prompt');
+  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge' | 'integrations' | 'appearance'>('prompt');
   const [showAddTool, setShowAddTool] = useState(false);
   const [catalogue, setCatalogue] = useState<CatalogueTool[]>([]);
   const [catalogueCategories, setCatalogueCategories] = useState<CatalogueCategory[]>([]);
@@ -83,6 +94,11 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             welcomeMessage: agent.config.welcomeMessage || '',
             language: agent.config.language || 'fr',
             tools: Array.isArray(agent.config.tools) ? agent.config.tools : [],
+            appearance: {
+              theme: agent.config.appearance?.theme || 'dark',
+              accentColor: agent.config.appearance?.accentColor || '#3b82f6',
+              chatBackground: agent.config.appearance?.chatBackground || '',
+            },
           });
         }
       }
@@ -199,6 +215,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     { id: 'tools' as const, label: t('agentConfig.tools'), icon: Wrench },
     { id: 'knowledge' as const, label: 'Knowledge', icon: BookOpen },
     { id: 'integrations' as const, label: t('agentConfig.integrations'), icon: Link2 },
+    { id: 'appearance' as const, label: t('agentConfig.appearance'), icon: Palette },
   ];
 
   if (isLoading) {
@@ -644,6 +661,13 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
 
         {activeTab === 'integrations' && (
           <IntegrationsPanel agentId={agentId} />
+        )}
+
+        {activeTab === 'appearance' && (
+          <AppearancePanel
+            value={config.appearance}
+            onChange={(appearance) => setConfig({ ...config, appearance })}
+          />
         )}
       </div>
     </div>

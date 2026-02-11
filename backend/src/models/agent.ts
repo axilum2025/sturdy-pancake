@@ -28,6 +28,11 @@ export interface AgentConfig {
   language?: 'fr' | 'en';
   tools: AgentTool[];
   knowledgeBase?: string[];
+  appearance?: {
+    theme?: 'dark' | 'light' | 'auto';
+    accentColor?: string;
+    chatBackground?: string;
+  };
 }
 
 export interface Agent {

@@ -70,6 +70,11 @@ export const agents = pgTable('agents', {
       parameters?: Record<string, unknown>;
     }>;
     knowledgeBase?: string[];
+    appearance?: {
+      theme?: 'dark' | 'light' | 'auto';
+      accentColor?: string;
+      chatBackground?: string;
+    };
   }>().notNull(),
   status: varchar('status', { length: 20 }).notNull().default('draft'),
   endpoint: varchar('endpoint', { length: 255 }),

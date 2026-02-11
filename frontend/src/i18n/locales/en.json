@@ -212,7 +212,26 @@
     "toolDesc": "Description (optional)",
     "language": "Agent language",
     "languageDesc": "The language displayed on the deployed chat page.",
-    "integrations": "Integrations"
+    "integrations": "Integrations",
+    "appearance": "Appearance"
+  },
+
+  "appearance": {
+    "theme": "Chat theme",
+    "themeDesc": "Choose the default display mode for your visitors.",
+    "dark": "Dark",
+    "light": "Light",
+    "auto": "Auto",
+    "accentColor": "Accent color",
+    "accentColorDesc": "The primary color used for bubbles, buttons, and links.",
+    "customColor": "Custom color",
+    "backgroundImage": "Background image",
+    "backgroundImageDesc": "Add a background image to your agent's chat. It will be displayed behind the conversation with an overlay.",
+    "uploadImage": "Upload an image",
+    "changeImage": "Change",
+    "uploading": "Uploading...",
+    "imageTooLarge": "Image must be under 2 MB.",
+    "previewHint": "Changes will be visible after saving and reloading the agent chat page."
   },
 
   "integrations": {
