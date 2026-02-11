@@ -46,7 +46,7 @@ export default function Dashboard() {
       setProjects([agent, ...projects]);
       setShowCreateModal(false);
       setNewProjectName('');
-      navigate(`/builder/${agent.id}`);
+      navigate(`/studio/${agent.id}`);
     } catch (error: any) {
       console.error('Error creating agent:', error);
       // Use the error message from the backend if available (via interceptor)
@@ -319,7 +319,7 @@ export default function Dashboard() {
                 <div key={project.id} style={{ animationDelay: `${index * 100}ms` }}>
                   <ProjectCard
                     project={project}
-                    onClick={() => navigate(`/builder/${project.id}`)}
+                    onClick={() => navigate(`/studio/${project.id}`)}
                     onDelete={(id) => setDeleteTarget(projects.find((p) => p.id === id) || null)}
                   />
                 </div>

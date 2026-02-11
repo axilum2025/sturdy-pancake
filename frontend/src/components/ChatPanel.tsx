@@ -15,7 +15,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
 import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile } from '../services/api';
-import { useBuilderStore } from '../store/builderStore';
+import { useStudioStore } from '../store/studioStore';
 
 // ============================================================
 // Types
@@ -218,7 +218,7 @@ export default function ChatPanel() {
   const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const { projectId, triggerFileRefresh, addTimelineEvent, updateTimelineEvent } = useBuilderStore();
+  const { projectId, triggerFileRefresh, addTimelineEvent, updateTimelineEvent } = useStudioStore();
 
   useEffect(() => {
     getCopilotStatus()

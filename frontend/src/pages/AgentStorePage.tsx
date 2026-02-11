@@ -131,7 +131,7 @@ export default function AgentStorePage() {
       const data = await res.json();
       setRemixSuccess(true);
       setTimeout(() => {
-        navigate(`/builder/${data.agent.id}`);
+        navigate(`/studio/${data.agent.id}`);
       }, 1500);
     } catch (error) {
       console.error('Error remixing agent:', error);

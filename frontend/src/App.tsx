@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Builder from './pages/Builder';
+import Studio from './pages/Studio';
 import Home from './pages/Home';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -33,7 +33,7 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/analytics" element={<Analytics />} />
-              <Route path="/builder/:projectId?" element={<Builder />} />
+              <Route path="/studio/:projectId?" element={<Studio />} />
             </Route>
           </Routes>
         </BrowserRouter>

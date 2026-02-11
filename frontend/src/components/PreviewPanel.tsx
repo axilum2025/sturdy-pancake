@@ -1,4 +1,4 @@
-import { useBuilderStore } from '../store/builderStore';
+import { useStudioStore } from '../store/studioStore';
 import { ExternalLink, RefreshCw, Loader2, CheckCircle, XCircle, Globe, Eye, Code2, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -7,7 +7,7 @@ interface PreviewPanelProps {
 }
 
 export default function PreviewPanel({ onClose }: PreviewPanelProps) {
-  const { selectedFile, selectedFileContent, deployment, isDeploying } = useBuilderStore();
+  const { selectedFile, selectedFileContent, deployment, isDeploying } = useStudioStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = () => {

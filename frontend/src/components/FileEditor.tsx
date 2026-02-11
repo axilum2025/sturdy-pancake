@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Code, Save, X, FileText, Folder, ChevronDown, Plus, Trash2, FileCode, FileJson, FileImage, File, Copy } from 'lucide-react';
 import { listFiles, getFile, saveFile, deleteFile } from '../services/api';
-import { useBuilderStore } from '../store/builderStore';
+import { useStudioStore } from '../store/studioStore';
 
 interface FileEditorProps {
   projectId: string;
@@ -16,8 +16,8 @@ interface FileTreeItem {
 }
 
 export default function FileEditor({ projectId, onClose }: FileEditorProps) {
-  const { setSelectedFile } = useBuilderStore();
-  const fileRefreshCounter = useBuilderStore((s) => s.fileRefreshCounter);
+  const { setSelectedFile } = useStudioStore();
+  const fileRefreshCounter = useStudioStore((s) => s.fileRefreshCounter);
   const [files, setFiles] = useState<Record<string, string>>({});
   const [fileTree, setFileTree] = useState<FileTreeItem[]>([]);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);

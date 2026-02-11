@@ -11,15 +11,15 @@ import AgentConfig from '../components/AgentConfig';
 import PublishModal from '../components/PublishModal';
 import ApiIntegrationModal from '../components/ApiIntegrationModal';
 import { useSessionStore } from '../store/sessionStore';
-import { useBuilderStore } from '../store/builderStore';
+import { useStudioStore } from '../store/studioStore';
 import { getAgent } from '../services/api';
 
-export default function Builder() {
+export default function Studio() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { currentSession, createSession } = useSessionStore();
-  const { setProjectId } = useBuilderStore();
+  const { setProjectId } = useStudioStore();
   const [isLoading, setIsLoading] = useState(true);
   const [showMCPSettings, setShowMCPSettings] = useState(false);
   const [showMCPBrowser, setShowMCPBrowser] = useState(false);

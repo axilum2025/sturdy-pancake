@@ -20,7 +20,7 @@ export interface TimelineEvent {
   detail?: string;
 }
 
-interface BuilderState {
+interface StudioState {
   selectedFile: string | null;
   selectedFileContent: string | null;
   projectId: string | null;
@@ -47,7 +47,7 @@ interface BuilderState {
   clearTimeline: () => void;
 }
 
-export const useBuilderStore = create<BuilderState>((set, get) => ({
+export const useStudioStore = create<StudioState>((set, get) => ({
   selectedFile: null,
   selectedFileContent: null,
   projectId: null,

@@ -1,9 +1,9 @@
 import { Clock, CheckCircle, Circle, Loader2, FileText, Code, Sparkles, AlertCircle, Zap, Trash2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useBuilderStore, TimelineEvent } from '../store/builderStore';
+import { useStudioStore, TimelineEvent } from '../store/studioStore';
 
 export default function TimelinePanel({ onClose }: { onClose?: () => void }) {
-  const { timelineEvents: events, clearTimeline } = useBuilderStore();
+  const { timelineEvents: events, clearTimeline } = useStudioStore();
   const { t } = useTranslation();
 
   const getEventIcon = (type: TimelineEvent['type']) => {
