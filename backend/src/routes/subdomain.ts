@@ -9,6 +9,9 @@ import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
 import { publicRateLimiter } from '../middleware/publicRateLimiter';
+import { getDb } from '../db';
+import { storeAgents } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import OpenAI from 'openai';
 import path from 'path';
 import fs from 'fs';
@@ -34,7 +37,7 @@ function getSubdomainAgent(req: Request): Agent | undefined {
 // ----------------------------------------------------------
 // GET / — Agent chat interface (HTML)
 // ----------------------------------------------------------
-subdomainRouter.get('/', (req: Request, res: Response) => {
+subdomainRouter.get('/', async (req: Request, res: Response) => {
   const agent = getSubdomainAgent(req);
   if (!agent) return res.status(404).json({ error: 'Agent not found' });
 
@@ -51,6 +54,23 @@ subdomainRouter.get('/', (req: Request, res: Response) => {
     });
   }
 
+  // Fetch icon from store_agents if published
+  let icon = '';
+  let iconColor = '#3b82f6';
+  try {
+    const db = getDb();
+    const rows = await db.select({ icon: storeAgents.icon, iconColor: storeAgents.iconColor })
+      .from(storeAgents)
+      .where(eq(storeAgents.agentId, agent.id))
+      .limit(1);
+    if (rows.length > 0) {
+      icon = rows[0].icon || '';
+      iconColor = rows[0].iconColor || '#3b82f6';
+    }
+  } catch (e) {
+    // Ignore — will fallback to letter avatar
+  }
+
   // Serve HTML chat interface
   const lang = agent.config.language || 'fr';
   const agentJson = JSON.stringify({
@@ -59,6 +79,8 @@ subdomainRouter.get('/', (req: Request, res: Response) => {
     slug: agent.slug,
     language: lang,
     model: agent.config.model || '',
+    icon,
+    iconColor,
     welcomeMessage: agent.config.welcomeMessage || (lang === 'en' ? 'Hello! How can I help you?' : 'Bonjour ! Comment puis-je vous aider ?'),
   });
 

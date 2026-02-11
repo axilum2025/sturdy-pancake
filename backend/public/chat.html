@@ -60,11 +60,18 @@
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
     }
     .agent-avatar span {
       font-size: 14px;
       font-weight: 700;
       color: var(--text-90);
+    }
+    .agent-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 22%;
     }
     .header-info { flex: 1; min-width: 0; }
     .header-info h1 {
@@ -111,11 +118,18 @@
       justify-content: center;
       margin-bottom: 16px;
       box-shadow: 0 8px 40px var(--blue-glow);
+      overflow: hidden;
     }
     .empty-avatar span {
       font-size: 30px;
       font-weight: 700;
       color: var(--text-90);
+    }
+    .empty-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 26%;
     }
     .empty-name {
       font-size: 20px;
@@ -156,8 +170,10 @@
     .msg-avatar.bot-av {
       border-radius: 22%;
       background: linear-gradient(135deg, var(--blue), #6366f1);
+      overflow: hidden;
     }
     .msg-avatar.bot-av svg { width: 16px; height: 16px; color: var(--text-80); }
+    .msg-avatar.bot-av img { width: 100%; height: 100%; object-fit: cover; border-radius: 22%; }
     .msg-avatar.user-av {
       border-radius: 50%;
       background: var(--overlay-10);
@@ -253,8 +269,10 @@
       justify-content: center;
       flex-shrink: 0;
       margin-top: 2px;
+      overflow: hidden;
     }
     .thinking-avatar svg { width: 16px; height: 16px; color: var(--text-80); }
+    .thinking-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 22%; }
     .thinking-bubble {
       display: inline-flex;
       gap: 4px;
@@ -350,7 +368,17 @@
     .send-btn:hover { background: var(--overlay-10); }
     .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .send-btn svg { width: 18px; height: 18px; }
-
+    .footer-link {
+      display: block;
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-20);
+      text-decoration: none;
+      margin-top: 8px;
+      padding-bottom: env(safe-area-inset-bottom, 4px);
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: var(--text-40); }
 
     @media (min-width: 640px) {
       .header { padding: 10px 24px; }
@@ -363,7 +391,7 @@
 <body>
   <!-- Header -->
   <div class="header">
-    <div class="agent-avatar">
+    <div class="agent-avatar" id="headerAvatar">
       <span id="avatarLetter"></span>
     </div>
     <div class="header-info">
@@ -375,7 +403,7 @@
   <div class="messages">
     <div class="messages-inner" id="messages">
       <div class="empty-state" id="emptyState">
-        <div class="empty-avatar"><span id="emptyLetter"></span></div>
+        <div class="empty-avatar" id="emptyAvatar"><span id="emptyLetter"></span></div>
         <div class="empty-name" id="emptyName"></div>
         <div class="empty-hint" id="emptyHint"></div>
       </div>
@@ -394,7 +422,7 @@
           </svg>
         </button>
       </div>
-
+      <a class="footer-link" href="https://www.gilo.dev/" target="_blank" rel="noopener" id="footerLink"></a>
     </div>
   </div>
 
@@ -434,16 +462,33 @@
     var t = I18N[lang] || I18N.fr;
 
     var initial = (AGENT.name || 'A').charAt(0).toUpperCase();
+    var agentIcon = AGENT.icon || '';
+
+    // Helper: build bot avatar inner HTML
+    function botAvatarHTML() {
+      if (agentIcon) return '<img src="' + agentIcon + '" alt="">';
+      return BOT_SVG;
+    }
+
     // Apply content
     document.getElementById('agentName').textContent = AGENT.name;
-    document.getElementById('avatarLetter').textContent = initial;
+    if (agentIcon) {
+      document.getElementById('headerAvatar').innerHTML = '<img src="' + agentIcon + '" alt="">';
+    } else {
+      document.getElementById('avatarLetter').textContent = initial;
+    }
+    if (agentIcon) {
+      document.getElementById('emptyAvatar').innerHTML = '<img src="' + agentIcon + '" alt="">';
+    } else {
+      document.getElementById('emptyLetter').textContent = initial;
+    }
 
     document.getElementById('userInput').placeholder = t.placeholder;
     document.getElementById('sendBtn').title = t.send;
     document.getElementById('stopText').textContent = t.stop;
-    document.getElementById('emptyLetter').textContent = initial;
     document.getElementById('emptyName').textContent = AGENT.name;
     document.getElementById('emptyHint').textContent = t.startConversation;
+    document.getElementById('footerLink').textContent = t.powered;
 
     document.title = AGENT.name + ' — GiLo AI';
 
@@ -491,7 +536,7 @@
       var bubble = document.createElement('div');
       bubble.className = 'msg-bubble';
       bubble.innerHTML = renderMarkdown(text);
-      row.innerHTML = '<div class="msg-avatar bot-av">' + BOT_SVG + '</div>';
+      row.innerHTML = '<div class="msg-avatar bot-av">' + botAvatarHTML() + '</div>';
       row.appendChild(bubble);
       messagesEl.appendChild(row);
       scrollToBottom();
@@ -504,7 +549,7 @@
       el.className = 'thinking-wrapper';
       el.id = 'typing';
       el.innerHTML =
-        '<div class="thinking-avatar">' + BOT_SVG + '</div>' +
+        '<div class="thinking-avatar">' + botAvatarHTML() + '</div>' +
         '<div class="thinking-bubble">' +
           '<div class="thinking-dot"></div>' +
           '<div class="thinking-dot"></div>' +
