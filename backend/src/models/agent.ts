@@ -205,7 +205,7 @@ export class AgentModel {
     const slug = existing.slug || await this.generateUniqueSlug(existing.name || id);
     const giloDomain = process.env.GILO_DOMAIN || '';
     const subdomainUrl = giloDomain ? `https://${slug}.${giloDomain}` : undefined;
-    const endpoint = subdomainUrl ? `${subdomainUrl}/chat` : `/api/agents/${id}/chat`;
+    const endpoint = subdomainUrl || `/api/agents/${id}/chat`;
 
     const [row] = await db.update(agents)
       .set({

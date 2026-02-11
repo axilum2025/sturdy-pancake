@@ -50,7 +50,7 @@ subdomainRouter.get('/', async (req: Request, res: Response) => {
       model: agent.config.model,
       welcomeMessage: agent.config.welcomeMessage,
       status: agent.status,
-      endpoint: `https://${agent.slug}.${process.env.GILO_DOMAIN}/chat`,
+      endpoint: `https://${agent.slug}.${process.env.GILO_DOMAIN}`,
     });
   }
 

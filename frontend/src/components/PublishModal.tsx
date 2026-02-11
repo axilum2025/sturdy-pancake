@@ -577,7 +577,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
                     </a>
                     <button
                       onClick={() => {
-                        navigator.clipboard.writeText(`${deployedUrl}/chat`);
+                        navigator.clipboard.writeText(deployedUrl);
                         setUrlCopied(true);
                         setTimeout(() => setUrlCopied(false), 2000);
                       }}

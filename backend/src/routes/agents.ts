@@ -151,7 +151,7 @@ agentsRouter.post('/:id/deploy', async (req: Request, res: Response) => {
       agent: agentModel.toResponse(agent),
       endpoint: agent.endpoint,
       subdomainUrl,
-      chatUrl: subdomainUrl ? `${subdomainUrl}/chat` : agent.endpoint,
+      chatUrl: subdomainUrl ? `${subdomainUrl}/chat` : `${agent.endpoint}/chat`,
     });
   } catch (error: any) {
     console.error('Deploy agent error:', error.message);
