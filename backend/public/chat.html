@@ -201,11 +201,11 @@
       40% { transform: scale(1); opacity: 1; }
     }
 
-    /* Input area — same style as GiLo AI main chat */
+    /* Input area — modern chat style */
     .input-area {
       flex-shrink: 0;
-      padding: 0 16px;
-      padding-bottom: env(safe-area-inset-bottom, 8px);
+      padding: 8px 12px;
+      padding-bottom: env(safe-area-inset-bottom, 12px);
     }
     .stop-btn {
       display: none;
@@ -226,56 +226,58 @@
 
     .input-wrapper {
       position: relative;
-      border-radius: 16px 16px 0 0;
-      background: var(--overlay);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-wrapper:focus-within {
+      border-color: rgba(139,92,246,0.3);
+      box-shadow: 0 0 0 3px rgba(139,92,246,0.08), 0 4px 20px rgba(0,0,0,0.3);
     }
     .input-wrapper textarea {
       width: 100%;
       background: transparent;
       border: none;
-      padding: 14px 50px 14px 16px;
+      padding: 16px 56px 16px 20px;
       color: var(--text);
-      font-size: 14px;
+      font-size: 15px;
       font-family: inherit;
       resize: none;
       outline: none;
-      max-height: 120px;
-      min-height: 48px;
-      line-height: 1.5;
+      max-height: 180px;
+      min-height: 64px;
+      line-height: 1.6;
     }
     .input-wrapper textarea::placeholder { color: var(--text-muted); }
     .send-btn {
       position: absolute;
-      right: 8px;
-      bottom: 8px;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
+      right: 10px;
+      bottom: 12px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       border: none;
-      background: transparent;
-      color: var(--text);
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: #fff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
+      transition: opacity 0.2s, transform 0.15s;
+      opacity: 0.9;
     }
-    .send-btn:hover { background: rgba(255,255,255,0.06); }
-    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .send-btn:hover { opacity: 1; transform: scale(1.05); }
+    .send-btn:active { transform: scale(0.95); }
+    .send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
     .send-btn svg { width: 18px; height: 18px; }
 
     /* Desktop */
     @media (min-width: 640px) {
       .messages { padding: 16px; gap: 16px; }
-      .input-area { padding: 16px; }
+      .input-area { padding: 12px 20px 16px; }
       .input-wrapper {
-        border-radius: 12px;
-        border: 1px solid var(--border);
-        background: transparent;
-      }
-      .input-wrapper:focus-within {
-        border-color: rgba(59,130,246,0.3);
-        box-shadow: 0 0 0 2px rgba(59,130,246,0.08);
+        border-radius: 18px;
       }
     }
   </style>
