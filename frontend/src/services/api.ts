@@ -181,9 +181,11 @@ export const deleteFile = async (projectId: string, path: string): Promise<void>
 export interface AgentTool {
   id: string;
   name: string;
-  type: 'mcp' | 'api' | 'function';
+  type: 'builtin' | 'http' | 'mcp';
   description?: string;
   enabled: boolean;
+  parameters?: Record<string, unknown>;
+  config?: Record<string, unknown>;
 }
 
 export interface AgentConfig {

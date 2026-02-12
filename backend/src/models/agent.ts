@@ -12,10 +12,11 @@ export type AgentTier = 'free' | 'pro';
 export interface AgentTool {
   id: string;
   name: string;
-  type: 'mcp' | 'api' | 'function';
+  type: 'builtin' | 'http' | 'mcp';
   description?: string;
-  config?: Record<string, unknown>;
   enabled: boolean;
+  parameters?: Record<string, unknown>;
+  config?: Record<string, unknown>;
 }
 
 export interface AgentConfig {

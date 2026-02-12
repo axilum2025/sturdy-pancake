@@ -1,9 +1,18 @@
 import { Router, Request, Response } from 'express';
 import { MCPService } from '../services/mcpService';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export const mcpRouter = Router();
 const mcpService = new MCPService();
+
+// Load MCP server templates (presets)
+let mcpServerTemplates: any[] = [];
+try {
+  const raw = readFileSync(join(process.cwd(), 'data', 'mcp-server-templates.json'), 'utf-8');
+  mcpServerTemplates = JSON.parse(raw);
+} catch { /* templates file not found — ok */ }
 
 // Initialiser les serveurs par défaut au démarrage
 mcpService.initializeDefaultServers().catch(console.error);
@@ -17,6 +26,48 @@ function getUserId(req: Request, res: Response): string | null {
   }
   return userId;
 }
+
+// Serve MCP server templates (presets catalogue)
+mcpRouter.get('/templates', (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    if (!userId) return;
+    res.json(mcpServerTemplates);
+  } catch (error: any) {
+    console.error('Error listing MCP templates:', error.message);
+    res.status(500).json({ error: 'Failed to list MCP templates' });
+  }
+});
+
+// Install an MCP server from a template
+mcpRouter.post('/templates/:templateId/install', async (req: Request, res: Response) => {
+  try {
+    const userId = getUserId(req, res);
+    if (!userId) return;
+
+    const tpl = mcpServerTemplates.find((t: any) => t.id === req.params.templateId);
+    if (!tpl) return res.status(404).json({ error: 'Template not found' });
+
+    // Merge user-supplied env overrides
+    const envOverrides = req.body.env || {};
+
+    const config = await mcpService.addServerConfig({
+      name: tpl.name,
+      transport: tpl.transport || 'stdio',
+      command: tpl.command,
+      args: [...tpl.args],
+      env: { ...tpl.env, ...envOverrides },
+      enabled: false,
+      description: tpl.description,
+      url: tpl.url,
+    });
+
+    res.status(201).json(config);
+  } catch (error: any) {
+    console.error('Error installing MCP template:', error.message);
+    res.status(500).json({ error: 'Failed to install MCP template' });
+  }
+});
 
 // Liste toutes les configurations de serveurs MCP
 mcpRouter.get('/servers', (req: Request, res: Response) => {

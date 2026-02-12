@@ -1,6 +1,6 @@
 # GiLo AI — Agent Builder : Roadmap des Prochaines Phases
 
-> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → Phase 3 ✅ → Phase 4 ✅ → **Phase 5** ✅
+> **État actuel** : Phase 1 ✅ → Phase 2 ✅ → Phase 2.5 ✅ (partiel) → Phase 3 ✅ → Phase 4 ✅ → Phase 5 ✅ → **Phase 6** ✅
 > **Dernière mise à jour** : Juin 2025
 
 ---
@@ -15,7 +15,7 @@
 | 3 | Persistance & Auth réelle | ✅ Terminé | — |
 | 4 | Déploiement réel des agents | ✅ Terminé | — |
 | **5** | **Knowledge Base & RAG** | ✅ **Terminé** | **—** |
-| 6 | Outils & MCP fonctionnel | ⏳ Planifié | Haute |
+| **6** | **Outils & MCP fonctionnel** | ✅ **Terminé** | **—** |
 | 7 | Analytics & Monitoring | ⏳ Planifié | Moyenne |
 | 8 | Versioning & Collaboration | ⏳ Planifié | Basse |
 | 9 | Billing Stripe | ⏳ Planifié | Haute |
@@ -61,7 +61,7 @@
 ### ⚠️ Partiellement implémenté (stubs/placeholders)
 | Composant | État |
 |-----------|------|
-| **MCP Service** | Interfaces définies, toutes les méthodes retournent des placeholders |
+| **MCP Service** | ✅ Client MCP complet (JSON-RPC 2.0, stdio + HTTP) + 12 templates + catalogue |
 | **Storage Service** | Filesystem local seulement, pas de cloud storage |
 | **Agent Deploy** | Remplacé par PublishModal → Store (l'ancien deploy est retiré) |
 | **Auth** | ✅ JWT réel avec bcrypt + jsonwebtoken (OAuth GitHub reporté Phase 4) |
@@ -296,45 +296,58 @@
 **Objectif** : Permettre aux agents d'exécuter des actions réelles via des outils MCP et des function calls.
 
 **Durée estimée** : 1-2 semaines
+**Statut** : ✅ Terminé — Juin 2025
 
 ### 6.1 Function Calling natif
-- [x] Implémenter le support `tools` dans l'appel OpenAI :
-  ```typescript
-  tools: agent.config.tools.map(t => ({
-    type: 'function',
-    function: { name: t.name, description: t.description, parameters: t.schema }
-  }))
-  ```
-- [x] Gérer la boucle tool_call → exécution → retour au LLM
-- [x] Définition de tools via JSON Schema dans AgentConfig :
-  - [x] Éditeur de schema visuel (nom, description, paramètres, type)
-  - [x] Preview du JSON généré
-  - [x] Test d'exécution dans le Playground
+- [x] Support `tools` dans l'appel OpenAI + boucle tool_call → exécution → retour LLM (max 10 rounds)
+- [x] Types alignés : `AgentTool.type` = `'builtin' | 'http' | 'mcp'` (partout)
+- [x] `toOpenAITools()` convertit les tools agent en format OpenAI function calling
+- [x] `executeToolCalls()` exécute en parallèle, dispatch par type → builtin/http/mcp
+- [x] SSE events : `tool_calls`, `tool_result` envoyés au frontend pendant l'exécution
 
-### 6.2 Serveurs MCP intégrés
-- [x] Remplacer les placeholders `mcpService.ts` par de vrais clients MCP
-- [x] Serveurs MCP built-in :
-  - [x] **Filesystem** : lecture/écriture de fichiers dans le sandbox de l'agent
-  - [x] **HTTP/API** : appel d'APIs REST externes (GET/POST avec auth)
-  - [x] **Database** : requêtes SQL sur une DB configurée par l'utilisateur
-  - [x] **Email** : envoi d'emails via SMTP/SendGrid
-  - [x] **Calendar** : lecture/création d'événements (Google Calendar API)
-- [x] Chaque serveur MCP configurable dans AgentConfig > Outils
+### 6.2 MCP Service complet (JSON-RPC 2.0)
+- [x] `mcpService.ts` — client MCP réel : stdio + HTTP transports
+- [x] `connectServer()` — spawn process (stdio) ou fetch (HTTP), initialize + discover
+- [x] `executeTool()`, `readResource()`, `getPrompt()` — appels JSON-RPC complets
+- [x] Découverte automatique des tools/resources/prompts à la connexion
+- [x] Nettoyage propre des child processes à la déconnexion
 
-### 6.3 Marketplace d'outils
-- [x] Catalogue public d'outils MCP préfabriqués
-- [x] Route `GET /api/tools/catalogue` — lister les outils disponibles
-- [x] Installation en 1 clic dans un agent
-- [x] Catégories : utilities, developer, data, web, productivity, communication
-- [x] Outils communautaires : permettre aux users de publier leurs outils
+### 6.3 Catalogue d'outils built-in (16 outils, 6 catégories)
+- [x] `toolCatalogue.ts` — 16 outils prêts à l'emploi :
+  - Utilities : get_current_time, calculator, generate_uuid, base64, json_extract, string_utils
+  - Data : fs_read, fs_write, fs_list, db_query (read-only SQL)
+  - Communication : send_email (SendGrid)
+  - Productivity : calendar_list_events, calendar_create_event (Google Calendar)
+- [x] Route `GET /api/tools/catalogue` + `POST /api/agents/:id/tools/add-builtin`
+- [x] UI catalogue dans AgentConfig > Outils avec filtrage par catégorie
 
-### 6.4 Actions HTTP (API Connector)
-- [x] Configurer des appels API comme outils d'agent :
-  - [x] URL, méthode, headers, body template
-  - [x] Auth : API key, Bearer token
-  - [x] Mapping des paramètres LLM → paramètres HTTP
-- [x] Import depuis OpenAPI/Swagger spec
-- [x] Test dans le Playground avec logs détaillés
+### 6.4 Serveurs MCP — Templates & Installation
+- [x] Fichier `data/mcp-server-templates.json` — 12 serveurs MCP populaires pré-configurés
+  - filesystem, github, memory, postgres, brave-search, fetch, puppeteer, sqlite, slack, google-drive, google-maps, everything
+- [x] Route `GET /api/mcp/templates` + `POST /api/mcp/templates/:id/install`
+- [x] MCPSettings UI complète :
+  - Sélecteur de transport (stdio / HTTP)
+  - Champ URL pour HTTP transport
+  - Variables d'environnement (KEY=value textarea)
+  - Catalogue de templates avec installation en 1 clic
+  - Configuration des clés API avant/après installation
+  - Affichage du type de transport dans la liste
+
+### 6.5 MCPBrowser — Navigation & ajout aux agents
+- [x] 3 onglets : Outils, Ressources, Prompts
+- [x] Bouton "Ajouter à l'agent" pour chaque outil MCP (crée un tool type `mcp` avec serverId + toolName)
+- [x] Panneau de test intégré : saisie des paramètres + exécution directe + affichage résultat
+- [x] Expansion/collapse par outil avec schéma des paramètres
+
+### 6.6 Actions HTTP (API Connector)
+- [x] Configurer des appels API comme outils : URL, méthode, headers, body template, auth
+- [x] Import depuis OpenAPI/Swagger spec (`parseOpenAPISpec()`)
+- [x] Test HTTP action endpoint (`POST /api/tools/test-http`)
+
+### 6.7 Community Tools Marketplace
+- [x] Table `communityTools` dans PostgreSQL
+- [x] Routes : `GET /api/tools/community`, `POST /api/tools/publish`, `POST /api/tools/community/:id/install`
+- [x] Rating, install count, catégories, recherche
 
 ---
 
@@ -578,7 +591,7 @@ Phase 10 (Production)               ← Go-live
 | Phase 3 — Persistance & Auth | ~1 semaine | 🎯 Prochaine | ⭐⭐⭐⭐⭐ |
 | Phase 4 — Déploiement Agents | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐⭐ |
 | Phase 5 — Knowledge Base / RAG | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐ |
-| Phase 6 — Outils & MCP | ~1-2 semaines | ⏳ Planifié | ⭐⭐⭐⭐ |
+| Phase 6 — Outils & MCP | ~1-2 semaines | ✅ Terminé | ⭐⭐⭐⭐ |
 | Phase 7 — Analytics | ~1 semaine | ⏳ Planifié | ⭐⭐⭐ |
 | Phase 8 — Versioning & Collab | ~1 semaine | ⏳ Planifié | ⭐⭐⭐ |
 | Phase 9 — Billing Stripe | ~1 semaine | ⏳ Planifié | ⭐⭐⭐⭐⭐ |

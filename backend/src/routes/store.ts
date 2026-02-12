@@ -338,7 +338,7 @@ storeRouter.post('/:id/remix', async (req: Request, res: Response) => {
         tools: listing.configSnapshot.tools.map((t) => ({
           id: t.name,
           name: t.name,
-          type: t.type as 'mcp' | 'api' | 'function',
+          type: (t.type === 'api' ? 'http' : t.type === 'function' ? 'builtin' : t.type) as 'builtin' | 'http' | 'mcp',
           enabled: true,
         })),
       },
