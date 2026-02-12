@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield, Globe } from 'lucide-react';
+import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield, Globe, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createApiKey, listApiKeys, revokeApiKey, ApiKeyResponse } from '../services/api';
 
@@ -180,6 +180,18 @@ chat("Hello!").then(console.log);`;
   ];
 
   const snippet = getCodeSnippet(activeTab);
+
+  const widgetSnippet = `<script
+  src="${baseUrl}/widget.js"
+  data-agent-id="${agentId}"
+  data-api-key="${createdKey || apiKeys[0]?.keyPrefix ? apiKeys[0]?.keyPrefix + '...' : 'YOUR_API_KEY'}"
+  data-theme="dark"
+  data-accent="#3b82f6"
+  data-title="${agentName}"
+  data-lang="fr">
+</script>`;
+
+  const [copiedWidget, setCopiedWidget] = useState(false);
 
   return (
     <>
@@ -382,6 +394,45 @@ chat("Hello!").then(console.log);`;
                 </div>
                 <pre className="p-3 md:p-4 overflow-x-auto text-xs md:text-sm font-mono text-gray-200 leading-relaxed max-h-[40vh] md:max-h-[50vh] overflow-y-auto">
                   <code>{snippet}</code>
+                </pre>
+              </div>
+            </div>
+
+            {/* Widget Embed */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <MessageSquare className="w-4 h-4 text-emerald-400" />
+                <label className="text-sm font-medium text-t-text/70">{t('apiIntegration.widgetEmbed', 'Widget Embed')}</label>
+              </div>
+              <p className="text-xs text-t-text/50 mb-3">
+                {t('apiIntegration.widgetHelp', 'Add a chat bubble to any website by pasting this snippet before the closing </body> tag.')}
+              </p>
+              <div className="relative rounded-xl bg-[#0d1117] border border-white/10 overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-white/5">
+                  <span className="text-xs text-gray-400 font-mono">html</span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(widgetSnippet);
+                      setCopiedWidget(true);
+                      setTimeout(() => setCopiedWidget(false), 2000);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg hover:bg-white/10 text-gray-400 hover:text-gray-200 transition-colors text-xs"
+                  >
+                    {copiedWidget ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <span className="text-green-400">{t('apiIntegration.copied')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        {t('common.copy')}
+                      </>
+                    )}
+                  </button>
+                </div>
+                <pre className="p-3 md:p-4 overflow-x-auto text-xs md:text-sm font-mono text-gray-200 leading-relaxed">
+                  <code>{widgetSnippet}</code>
                 </pre>
               </div>
             </div>

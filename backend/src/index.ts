@@ -4,6 +4,7 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import path from 'path';
 import { initDb, closeDb } from './db';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
@@ -89,6 +90,13 @@ async function main() {
       timestamp: new Date().toISOString(),
       version: '3.0.0'
     });
+  });
+
+  // Serve widget.js with permissive CORS (embedded on third-party sites)
+  app.get('/widget.js', (req: Request, res: Response) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.sendFile(path.join(__dirname, '..', 'public', 'widget.js'));
   });
 
   // Public routes (no auth required)
