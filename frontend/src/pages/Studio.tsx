@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Package, Rocket, ArrowLeft, Eye, Clock, Sliders, Store, Code2 } from 'lucide-react';
+import { Settings, Rocket, ArrowLeft, Eye, Clock, Sliders, Store, Code2, Wrench } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
@@ -125,14 +125,14 @@ export default function Studio() {
         </button>
         <button
           onClick={() => setShowMCPBrowser(true)}
-          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${showMCPBrowser ? 'btn-gradient text-white glow-blue' : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20'}`}
           title={t('builder.tools')}
         >
-          <Package className="w-5 h-5 glow-icon" />
+          <Wrench className="w-5 h-5" />
         </button>
         <button
           onClick={() => setShowMCPSettings(true)}
-          className="w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center text-t-text/70 hover:text-t-text hover:bg-t-overlay/5 transition-all duration-300"
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${showMCPSettings ? 'btn-gradient text-white glow-blue' : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20'}`}
           title={t('builder.settings')}
         >
           <Settings className="w-5 h-5" />
@@ -171,6 +171,20 @@ export default function Studio() {
               title="Playground"
             >
               <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowMCPBrowser(true)}
+              className={`p-2 rounded-lg transition-colors ${showMCPBrowser ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
+              title={t('builder.tools')}
+            >
+              <Wrench className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowMCPSettings(true)}
+              className={`p-2 rounded-lg transition-colors ${showMCPSettings ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
+              title={t('builder.settings')}
+            >
+              <Settings className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowPublish(true)}
@@ -219,7 +233,7 @@ export default function Studio() {
               onClick={() => setShowMCPBrowser(false)}
             />
             <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[50%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
-              <MCPBrowser onClose={() => setShowMCPBrowser(false)} />
+              <MCPBrowser agentId={projectId} onClose={() => setShowMCPBrowser(false)} />
             </div>
           </>
         )}
