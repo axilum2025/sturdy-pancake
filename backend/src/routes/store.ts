@@ -97,6 +97,18 @@ storeRouter.get('/:id', async (req: Request, res: Response) => {
       }
     }
 
+    // Enrich configSnapshot with live appearance from source agent (for agents published before appearance was added)
+    if (listing.configSnapshot && !listing.configSnapshot.appearance && listing.agentId) {
+      try {
+        const sourceAgent = await agentModel.findById(listing.agentId);
+        if (sourceAgent?.config?.appearance) {
+          listing.configSnapshot.appearance = sourceAgent.config.appearance;
+        }
+      } catch (e) {
+        // Ignore — will just not have appearance
+      }
+    }
+
     res.json(listing);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
