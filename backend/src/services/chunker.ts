@@ -48,12 +48,16 @@ export function chunkText(text: string, options: ChunkOptions = {}): TextChunk[]
   const maxChars = maxTokens * 4;
   const overlapChars = overlapTokens * 4;
 
+  // Handle empty / whitespace-only text
+  const trimmed = text.trim();
+  if (!trimmed) return [];
+
   // If text is small enough, return as single chunk
-  if (estimateTokens(text) <= maxTokens) {
+  if (estimateTokens(trimmed) <= maxTokens) {
     return [{
-      content: text.trim(),
+      content: trimmed,
       chunkIndex: 0,
-      tokenCount: estimateTokens(text),
+      tokenCount: estimateTokens(trimmed),
     }];
   }
 
