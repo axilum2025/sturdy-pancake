@@ -7,33 +7,18 @@ import { Router, Request, Response } from 'express';
 import { webhookModel, WEBHOOK_EVENTS } from '../models/webhook';
 import { agentModel } from '../models/agent';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { validate, createWebhookSchema } from '../middleware/validation';
 
 export const webhooksRouter = Router();
 
 // ----------------------------------------------------------
 // POST /api/agents/:id/webhooks — Create a new webhook
 // ----------------------------------------------------------
-webhooksRouter.post('/:id/webhooks', async (req: Request, res: Response) => {
+webhooksRouter.post('/:id/webhooks', validate(createWebhookSchema), async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).userId;
     const agentId = req.params.id;
     const { url, events } = req.body;
-
-    if (!url || !url.trim()) {
-      return res.status(400).json({ error: 'Webhook URL is required' });
-    }
-    if (!events || !Array.isArray(events) || events.length === 0) {
-      return res.status(400).json({ error: 'At least one event is required', availableEvents: WEBHOOK_EVENTS });
-    }
-
-    // Validate events
-    const invalidEvents = events.filter((e: string) => !WEBHOOK_EVENTS.includes(e as any));
-    if (invalidEvents.length > 0) {
-      return res.status(400).json({
-        error: `Invalid events: ${invalidEvents.join(', ')}`,
-        availableEvents: WEBHOOK_EVENTS,
-      });
-    }
 
     // Verify agent belongs to user
     const agent = await agentModel.findById(agentId);

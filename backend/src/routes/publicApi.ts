@@ -10,6 +10,7 @@ import { knowledgeService } from '../services/knowledgeService';
 import { conversationService } from '../services/conversationService';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { ApiKeyRequest } from '../middleware/apiKeyAuth';
+import { validate, chatSchema } from '../middleware/validation';
 import OpenAI from 'openai';
 
 export const publicApiRouter = Router();
@@ -50,7 +51,7 @@ publicApiRouter.get('/agents/:id', async (req: Request, res: Response) => {
 // POST /api/v1/agents/:id/chat — Chat with deployed agent
 // Supports SSE streaming (default) and JSON mode (?stream=false)
 // ----------------------------------------------------------
-publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => {
+publicApiRouter.post('/agents/:id/chat', validate(chatSchema), async (req: Request, res: Response) => {
   try {
     const apiReq = req as ApiKeyRequest;
     const agentId = req.params.id;
@@ -66,9 +67,6 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
     }
 
     const { messages, conversationId: incomingConvId } = req.body;
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages array is required' });
-    }
 
     const streamMode = req.query.stream !== 'false';
     const { client } = copilotService.getClientInfo();

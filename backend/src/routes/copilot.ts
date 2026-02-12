@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { conversationService } from '../services/conversationService';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { validate, chatSchema, copilotStreamSchema } from '../middleware/validation';
 import OpenAI from 'openai';
 
 export const copilotRouter = Router();
@@ -9,13 +10,9 @@ export const copilotRouter = Router();
 // ----------------------------------------------------------
 // POST /api/copilot/chat  –  Non-streaming chat
 // ----------------------------------------------------------
-copilotRouter.post('/chat', async (req: Request, res: Response) => {
+copilotRouter.post('/chat', validate(chatSchema), async (req: Request, res: Response) => {
   try {
     const { messages, model, temperature, maxTokens, projectContext } = req.body;
-
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages array is required' });
-    }
 
     const response = await copilotService.chat({
       messages: messages as CopilotMessage[],
@@ -42,10 +39,6 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
   try {
     const { messages, model, temperature, maxTokens, projectContext, conversationId: incomingConvId } = req.body;
 
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      res.status(400).json({ error: 'messages array is required' });
-      return;
-    }
 
     const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext);
     const userId = (req as AuthenticatedRequest).userId;

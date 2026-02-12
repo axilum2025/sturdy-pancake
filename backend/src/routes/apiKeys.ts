@@ -7,21 +7,18 @@ import { Router, Request, Response } from 'express';
 import { apiKeyModel } from '../models/apiKey';
 import { agentModel } from '../models/agent';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { validate, createApiKeySchema } from '../middleware/validation';
 
 export const apiKeysRouter = Router();
 
 // ----------------------------------------------------------
 // POST /api/agents/:id/api-keys — Create a new API key
 // ----------------------------------------------------------
-apiKeysRouter.post('/:id/api-keys', async (req: Request, res: Response) => {
+apiKeysRouter.post('/:id/api-keys', validate(createApiKeySchema), async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).userId;
     const agentId = req.params.id;
     const { name } = req.body;
-
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'API key name is required' });
-    }
 
     // Verify agent belongs to user
     const agent = await agentModel.findById(agentId);

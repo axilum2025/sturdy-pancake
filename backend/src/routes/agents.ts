@@ -11,6 +11,7 @@ import {
 } from '../services/toolExecutor';
 import { logChat, logToolCall, logError, recordConversation } from '../services/analyticsService';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { validate, createAgentSchema, updateAgentSchema, updateAgentConfigSchema, chatSchema } from '../middleware/validation';
 import OpenAI from 'openai';
 
 export const agentsRouter = Router();
@@ -57,7 +58,7 @@ agentsRouter.get('/', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 // POST /api/agents  –  Create a new agent
 // ----------------------------------------------------------
-agentsRouter.post('/', async (req: Request, res: Response) => {
+agentsRouter.post('/', validate(createAgentSchema), async (req: Request, res: Response) => {
   console.log('[Agents] Create request received:', { body: req.body, userId: (req as AuthenticatedRequest).userId });
   try {
     const userId = (req as AuthenticatedRequest).userId;
@@ -67,10 +68,6 @@ agentsRouter.post('/', async (req: Request, res: Response) => {
     const { name, description, config } = req.body as AgentCreateDTO & { config?: any };
 
     console.log('[Agents] Processing creation:', { name, userTier });
-
-    if (!name || !name.trim()) {
-      return res.status(400).json({ error: 'Agent name is required' });
-    }
 
     const agent = await agentModel.create(userId, { name, description, config }, userTier);
     console.log('[Agents] Agent created successfully:', agent.id);
@@ -105,7 +102,7 @@ agentsRouter.get('/:id', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 // PATCH /api/agents/:id  –  Update agent metadata (owner only)
 // ----------------------------------------------------------
-agentsRouter.patch('/:id', async (req: Request, res: Response) => {
+agentsRouter.patch('/:id', validate(updateAgentSchema), async (req: Request, res: Response) => {
   try {
     const userId = await verifyOwnership(req, res);
     if (!userId) return;
@@ -122,7 +119,7 @@ agentsRouter.patch('/:id', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 // PATCH /api/agents/:id/config  –  Update agent config (owner only)
 // ----------------------------------------------------------
-agentsRouter.patch('/:id/config', async (req: Request, res: Response) => {
+agentsRouter.patch('/:id/config', validate(updateAgentConfigSchema), async (req: Request, res: Response) => {
   try {
     const userId = await verifyOwnership(req, res);
     if (!userId) return;
@@ -181,16 +178,13 @@ agentsRouter.delete('/:id', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 // POST /api/agents/:id/chat  –  Chat with agent (owner only)
 // ----------------------------------------------------------
-agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
+agentsRouter.post('/:id/chat', validate(chatSchema), async (req: Request, res: Response) => {
   try {
     const userId = await verifyOwnership(req, res);
     if (!userId) return;
 
     const agent = (await agentModel.findById(req.params.id))!;
     const { messages, conversationId: incomingConvId } = req.body;
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages array is required' });
-    }
 
     const chatStartTime = Date.now();
     const { client } = copilotService.getClientInfo();

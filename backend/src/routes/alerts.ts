@@ -5,6 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { validate, createAlertSchema } from '../middleware/validation';
 import { agentModel } from '../models/agent';
 import { getDb } from '../db';
 import { agentAlerts, agentMetrics } from '../db/schema';
@@ -42,7 +43,7 @@ alertsRouter.get('/:id/alerts', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 // POST /api/agents/:id/alerts  – Create an alert rule
 // ----------------------------------------------------------
-alertsRouter.post('/:id/alerts', async (req: Request, res: Response) => {
+alertsRouter.post('/:id/alerts', validate(createAlertSchema), async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).userId;
     if (!userId) return res.status(401).json({ error: 'Authentication required' });
@@ -53,13 +54,6 @@ alertsRouter.post('/:id/alerts', async (req: Request, res: Response) => {
     }
 
     const { type, config } = req.body;
-    const validTypes = ['error_rate', 'cost_limit', 'inactivity', 'rate_limit'];
-    if (!type || !validTypes.includes(type)) {
-      return res.status(400).json({ error: `type must be one of: ${validTypes.join(', ')}` });
-    }
-    if (!config || typeof config.threshold !== 'number') {
-      return res.status(400).json({ error: 'config.threshold (number) is required' });
-    }
 
     const db = getDb();
     const [alert] = await db

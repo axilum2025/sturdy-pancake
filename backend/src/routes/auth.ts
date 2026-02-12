@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { userModel } from '../models/user';
 import { authMiddleware, generateToken, AuthenticatedRequest } from '../middleware/auth';
+import { validate, registerSchema, loginSchema } from '../middleware/validation';
 
 export const authRouter = Router();
 
@@ -8,17 +9,9 @@ export const authRouter = Router();
  * POST /api/auth/register
  * Register a new user — returns JWT
  */
-authRouter.post('/register', async (req: Request, res: Response) => {
+authRouter.post('/register', validate(registerSchema), async (req: Request, res: Response) => {
   try {
     const { email, password, githubId } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
 
     const user = await userModel.create({ email, password, githubId });
     const token = generateToken(user);
@@ -41,13 +34,9 @@ authRouter.post('/register', async (req: Request, res: Response) => {
  * POST /api/auth/login
  * Login with email/password — returns JWT
  */
-authRouter.post('/login', async (req: Request, res: Response) => {
+authRouter.post('/login', validate(loginSchema), async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
 
     const user = await userModel.findByEmail(email);
     if (!user) {

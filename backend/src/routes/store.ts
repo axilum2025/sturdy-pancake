@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
 import { agentModel } from '../models/agent';
 import { AuthenticatedRequest } from '../middleware/auth';
+import { validate, publishAgentSchema } from '../middleware/validation';
 
 export const storeRouter = Router();
 
@@ -131,15 +132,11 @@ storeRouter.post('/:id/validate-token', async (req: Request, res: Response) => {
 // ============================================================
 // POST /api/store/publish — Publish an agent to the store
 // ============================================================
-storeRouter.post('/publish', async (req: Request, res: Response) => {
+storeRouter.post('/publish', validate(publishAgentSchema), async (req: Request, res: Response) => {
   try {
     const userId = (req as AuthenticatedRequest).userId;
     if (!userId) return res.status(401).json({ error: 'Authentication required' });
     const dto: PublishAgentDTO = req.body;
-
-    if (!dto.agentId || !dto.name || !dto.description) {
-      return res.status(400).json({ error: 'agentId, name, and description are required' });
-    }
 
     // Load agent config snapshot
     const agent = await agentModel.findById(dto.agentId);
