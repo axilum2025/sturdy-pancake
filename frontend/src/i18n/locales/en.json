@@ -311,7 +311,14 @@
     "startConversation": "Start a conversation...",
     "messagePlaceholder": "Message {{name}}...",
     "poweredBy": "{{name}} powered by GiLo AI · Responses may contain errors",
-    "newConversation": "New conversation"
+    "newConversation": "New conversation",
+    "share": "Share",
+    "shareAgent": "Share this agent",
+    "shareLink": "Agent link",
+    "shareLinkCopied": "Link copied!",
+    "shareQR": "QR Code",
+    "shareOn": "Share on",
+    "downloadQR": "Download QR"
   },
 
   "categories": {
