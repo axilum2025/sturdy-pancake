@@ -1,14 +1,16 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Bot, User, Loader2, Sun, Moon } from 'lucide-react';
+import { ArrowLeft, Trash2, Bot, User, Sun, Moon, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
 
+// ─── Types ───────────────────────────────────────────────────
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  isStreaming?: boolean;
 }
 
 interface AgentAppearance {
@@ -30,8 +32,89 @@ interface AgentInfo {
   };
 }
 
+// ─── Markdown renderer (matches chat.html) ───────────────────
+function escapeHtml(s: string): string {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function renderMarkdown(text: string): string {
+  if (!text) return '';
+  let html = escapeHtml(text);
+  // Code blocks
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+  // Inline code
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Bold
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Italic
+  html = html.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>');
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // List items
+  html = html.replace(/^- (.+)/gm, '<li>$1</li>');
+  // Newlines
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
+
+// ─── CSS variables for theme (mirrors chat.html exactly) ─────
+const THEME_VARS = {
+  dark: {
+    '--chat-bg': '#0f172a',
+    '--chat-surface': '#1e293b',
+    '--chat-border': 'rgba(255,255,255,0.06)',
+    '--chat-text': '#f1f5f9',
+    '--chat-text-90': 'rgba(241,245,249,0.9)',
+    '--chat-text-85': 'rgba(241,245,249,0.85)',
+    '--chat-text-80': 'rgba(241,245,249,0.8)',
+    '--chat-text-60': 'rgba(241,245,249,0.6)',
+    '--chat-text-50': 'rgba(241,245,249,0.5)',
+    '--chat-text-40': 'rgba(241,245,249,0.4)',
+    '--chat-text-30': 'rgba(241,245,249,0.3)',
+    '--chat-text-20': 'rgba(241,245,249,0.2)',
+    '--chat-blue': '#3b82f6',
+    '--chat-blue-glow': 'rgba(59,130,246,0.25)',
+    '--chat-overlay-4': 'rgba(255,255,255,0.04)',
+    '--chat-overlay-5': 'rgba(255,255,255,0.05)',
+    '--chat-overlay-10': 'rgba(255,255,255,0.1)',
+    '--chat-header-bg': 'rgba(15,23,42,0.8)',
+    '--chat-user-bubble-bg': 'rgba(59,130,246,0.2)',
+    '--chat-user-bubble-border': 'rgba(59,130,246,0.2)',
+    '--chat-code-bg': 'rgba(0,0,0,0.35)',
+    '--chat-code-color': '#93c5fd',
+    '--chat-link-color': '#60a5fa',
+  },
+  light: {
+    '--chat-bg': '#f8fafc',
+    '--chat-surface': '#ffffff',
+    '--chat-border': 'rgba(0,0,0,0.08)',
+    '--chat-text': '#1e293b',
+    '--chat-text-90': 'rgba(30,41,59,0.9)',
+    '--chat-text-85': 'rgba(30,41,59,0.85)',
+    '--chat-text-80': 'rgba(30,41,59,0.8)',
+    '--chat-text-60': 'rgba(30,41,59,0.6)',
+    '--chat-text-50': 'rgba(30,41,59,0.5)',
+    '--chat-text-40': 'rgba(30,41,59,0.4)',
+    '--chat-text-30': 'rgba(30,41,59,0.3)',
+    '--chat-text-20': 'rgba(30,41,59,0.2)',
+    '--chat-blue': '#3b82f6',
+    '--chat-blue-glow': 'rgba(59,130,246,0.15)',
+    '--chat-overlay-4': 'rgba(0,0,0,0.03)',
+    '--chat-overlay-5': 'rgba(0,0,0,0.05)',
+    '--chat-overlay-10': 'rgba(0,0,0,0.08)',
+    '--chat-header-bg': 'rgba(255,255,255,0.85)',
+    '--chat-user-bubble-bg': 'rgba(59,130,246,0.1)',
+    '--chat-user-bubble-border': 'rgba(59,130,246,0.2)',
+    '--chat-code-bg': 'rgba(0,0,0,0.06)',
+    '--chat-code-color': '#2563eb',
+    '--chat-link-color': '#2563eb',
+  },
+} as const;
+
 const CATEGORY_COLORS: Record<string, string> = {
-  productivity: 'from-blue-500 to-blue-600',
+  productivity: 'from-blue-500 to-indigo-600',
   support: 'from-green-500 to-green-600',
   education: 'from-amber-500 to-amber-600',
   creative: 'from-indigo-500 to-indigo-600',
@@ -42,6 +125,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: 'from-blue-400 to-indigo-500',
 };
 
+// ─── Component ───────────────────────────────────────────────
 export default function AgentChat() {
   const { agentId } = useParams();
   const navigate = useNavigate();
@@ -53,19 +137,29 @@ export default function AgentChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Theme persistence key
+  const themeKey = useMemo(() => `gilo-store-theme-${agentId}`, [agentId]);
+
+  // ── CSS variables for current theme ──
+  const vars = isDark ? THEME_VARS.dark : THEME_VARS.light;
 
   useEffect(() => {
     fetchAgent();
+    return () => { abortControllerRef.current?.abort(); };
   }, [agentId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    scrollToBottom();
+  }, [messages, isThinking]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -75,9 +169,19 @@ export default function AgentChat() {
     }
   }, [input]);
 
-  const toggleTheme = useCallback(() => {
-    setIsDark((prev) => !prev);
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, []);
+
+  const toggleTheme = useCallback(() => {
+    setIsDark((prev) => {
+      const next = !prev;
+      localStorage.setItem(themeKey, next ? 'dark' : 'light');
+      return next;
+    });
+  }, [themeKey]);
 
   const fetchAgent = async () => {
     try {
@@ -87,10 +191,15 @@ export default function AgentChat() {
       const data = await res.json();
       setAgent(data);
 
-      // Set initial theme from agent appearance
-      const theme = data.configSnapshot?.appearance?.theme;
-      if (theme === 'light') setIsDark(false);
-      else if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches) setIsDark(false);
+      // Theme: check localStorage first, then agent appearance, then default dark
+      const stored = localStorage.getItem(`gilo-store-theme-${agentId}`);
+      if (stored) {
+        setIsDark(stored === 'dark');
+      } else {
+        const theme = data.configSnapshot?.appearance?.theme;
+        if (theme === 'light') setIsDark(false);
+        else if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches) setIsDark(false);
+      }
 
       // Track usage
       fetch(`${API_BASE}/api/store/${agentId}/use`, { method: 'POST' });
@@ -113,6 +222,11 @@ export default function AgentChat() {
     }
   };
 
+  const handleStop = useCallback(() => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+  }, []);
+
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return;
 
@@ -127,19 +241,12 @@ export default function AgentChat() {
     setMessages(updatedMessages);
     setInput('');
     setIsStreaming(true);
+    setIsThinking(true);
 
-    // Create assistant placeholder
     const assistantId = `assistant-${Date.now()}`;
-    const assistantMsg: Message = {
-      id: assistantId,
-      role: 'assistant',
-      content: '',
-      timestamp: new Date(),
-    };
-    setMessages([...updatedMessages, assistantMsg]);
+    abortControllerRef.current = new AbortController();
 
     try {
-      // Build conversation history for the API (exclude welcome message if id === 'welcome')
       const apiMessages = updatedMessages
         .filter((m) => m.id !== 'welcome')
         .map((m) => ({ role: m.role, content: m.content }));
@@ -151,11 +258,23 @@ export default function AgentChat() {
         method: 'POST',
         headers,
         body: JSON.stringify({ messages: apiMessages }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
         throw new Error(`Erreur: ${response.statusText}`);
       }
+
+      // Remove thinking, add empty assistant message
+      setIsThinking(false);
+      const assistantMsg: Message = {
+        id: assistantId,
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+        isStreaming: true,
+      };
+      setMessages((prev) => [...prev, assistantMsg]);
 
       const reader = response.body?.getReader();
       if (!reader) throw new Error('Stream non disponible');
@@ -179,7 +298,7 @@ export default function AgentChat() {
               if (data.content) {
                 fullContent += data.content;
                 setMessages((prev) =>
-                  prev.map((m) => (m.id === assistantId ? { ...m, content: fullContent } : m))
+                  prev.map((m) => (m.id === assistantId ? { ...m, content: fullContent, isStreaming: true } : m))
                 );
               }
               if (data.done) break;
@@ -189,16 +308,31 @@ export default function AgentChat() {
           }
         }
       }
-    } catch (error: any) {
+
+      // Mark streaming done
       setMessages((prev) =>
-        prev.map((m) =>
-          m.id === assistantId
-            ? { ...m, content: `Désolé, une erreur est survenue : ${error.message}` }
-            : m
-        )
+        prev.map((m) => (m.id === assistantId ? { ...m, isStreaming: false } : m))
       );
+    } catch (error: any) {
+      setIsThinking(false);
+      if (error.name !== 'AbortError') {
+        const assistantMsg: Message = {
+          id: assistantId,
+          role: 'assistant',
+          content: `⚠️ ${error.message}`,
+          timestamp: new Date(),
+        };
+        setMessages((prev) =>
+          prev.some((m) => m.id === assistantId)
+            ? prev.map((m) => (m.id === assistantId ? assistantMsg : m))
+            : [...prev, assistantMsg]
+        );
+      }
     } finally {
       setIsStreaming(false);
+      setIsThinking(false);
+      abortControllerRef.current = null;
+      inputRef.current?.focus();
     }
   };
 
@@ -222,7 +356,7 @@ export default function AgentChat() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-t-page flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center" style={{ background: vars['--chat-bg'] }}>
         <div className="animate-spin w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -231,228 +365,422 @@ export default function AgentChat() {
   const chatBg = agent?.configSnapshot?.appearance?.chatBackground;
   const accentColor = agent?.configSnapshot?.appearance?.accentColor || '#3b82f6';
 
+  // Build avatar HTML for bot
+  const BotAvatar = () => (
+    <div
+      className={`w-8 h-8 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden`}
+    >
+      {agent?.icon ? (
+        <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
+      ) : (
+        <Bot className="w-4 h-4" style={{ color: vars['--chat-text-80'] }} />
+      )}
+    </div>
+  );
+
   return (
     <div
-      className={`h-screen flex flex-col transition-colors duration-300 ${
-        isDark ? 'bg-[#0f172a] text-[#f1f5f9]' : 'bg-[#f8fafc] text-[#1e293b]'
-      }`}
-      style={chatBg ? {
-        backgroundImage: `url(${chatBg})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      } : undefined}
+      className="agent-chat-root"
+      style={{
+        height: '100vh',
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        background: vars['--chat-bg'],
+        color: vars['--chat-text'],
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif",
+        WebkitTapHighlightColor: 'transparent',
+        transition: 'background 0.3s, color 0.3s',
+      }}
     >
-      {/* Background overlay when image is set */}
+      {/* Background image (identical to chat.html .chat-bg) */}
       {chatBg && (
-        <div className="fixed inset-0 z-0" style={{
-          background: isDark ? 'rgba(15,23,42,0.85)' : 'rgba(248,250,252,0.88)',
-        }} />
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 0,
+            backgroundImage: `url(${chatBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: vars['--chat-bg'],
+            opacity: 0.85,
+          }} />
+        </div>
       )}
 
-      {/* Header */}
+      {/* ── Header (matches chat.html .header) ── */}
       <header
-        className="flex-shrink-0 relative z-10"
         style={{
-          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
-          background: isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          padding: '10px 16px',
+          flexShrink: 0,
+          borderBottom: `1px solid ${vars['--chat-border']}`,
+          background: vars['--chat-header-bg'],
           backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          position: 'relative',
+          zIndex: 10,
         }}
       >
-        <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          {/* Theme toggle */}
-          <button
-            onClick={toggleTheme}
-            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
-            style={{
-              border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
-              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-              color: isDark ? 'rgba(241,245,249,0.5)' : 'rgba(30,41,59,0.5)',
-            }}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
-
-          {/* Agent avatar mini */}
-          <div
-            className={`w-9 h-9 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center flex-shrink-0`}
-          >
-            {agent?.icon ? (
-              <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
-            ) : (
-              <span className="text-sm font-bold" style={{ color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)' }}>
-                {agent?.name?.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-semibold truncate" style={{ color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)' }}>
-              {agent?.name}
-            </h1>
-          </div>
-
-          <button
-            onClick={() => navigate(`/store/${agentId}`)}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: isDark ? 'rgba(241,245,249,0.5)' : 'rgba(30,41,59,0.5)' }}
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={handleClear}
-            className="p-2 rounded-lg transition-colors"
-            style={{ color: isDark ? 'rgba(241,245,249,0.3)' : 'rgba(30,41,59,0.3)' }}
-            title={t('store.newConversation')}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+        {/* Agent avatar */}
+        <div
+          className={`w-9 h-9 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center flex-shrink-0 overflow-hidden`}
+        >
+          {agent?.icon ? (
+            <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
+          ) : (
+            <span style={{ fontSize: 14, fontWeight: 700, color: vars['--chat-text-90'] }}>
+              {agent?.name?.charAt(0).toUpperCase()}
+            </span>
+          )}
         </div>
+
+        {/* Agent name */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h1 style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: vars['--chat-text-90'],
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            margin: 0,
+          }}>
+            {agent?.name}
+          </h1>
+        </div>
+
+        {/* Back button (store-specific) */}
+        <button
+          onClick={() => navigate(`/store/${agentId}`)}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: `1px solid ${vars['--chat-border']}`,
+            background: vars['--chat-overlay-4'],
+            color: vars['--chat-text-50'],
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'all 0.2s',
+          }}
+          title={t('store.backToStore')}
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+
+        {/* Clear conversation */}
+        <button
+          onClick={handleClear}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: `1px solid ${vars['--chat-border']}`,
+            background: vars['--chat-overlay-4'],
+            color: vars['--chat-text-30'],
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'all 0.2s',
+          }}
+          title={t('store.newConversation')}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+
+        {/* Theme toggle */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: `1px solid ${vars['--chat-border']}`,
+            background: vars['--chat-overlay-4'],
+            color: vars['--chat-text-50'],
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            transition: 'all 0.2s',
+          }}
+          title="Toggle theme"
+        >
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
       </header>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto relative z-10">
-        <div className="max-w-3xl mx-auto px-4 py-6">
+      {/* ── Messages area (matches chat.html .messages) ── */}
+      <div
+        ref={messagesContainerRef}
+        className="agent-chat-messages"
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          scrollBehavior: 'smooth',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
+        <div style={{ maxWidth: '48rem', margin: '0 auto', padding: '24px 16px' }}>
+          {/* Empty state */}
           {messages.length === 0 && (
-            <div className="text-center py-20 animate-fade-in-up">
+            <div className="agent-chat-fade-in" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '80px 20px',
+            }}>
               <div
-                className={`w-20 h-20 rounded-[26%] bg-gradient-to-br ${catColor} flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden`}
-                style={{ boxShadow: `0 8px 40px ${accentColor}40` }}
+                className={`w-20 h-20 rounded-[26%] bg-gradient-to-br ${catColor} flex items-center justify-center overflow-hidden`}
+                style={{
+                  marginBottom: 16,
+                  boxShadow: `0 8px 40px ${accentColor}40`,
+                }}
               >
                 {agent?.icon ? (
                   <img src={agent.icon} alt="" className="w-full h-full object-cover rounded-[26%]" />
                 ) : (
-                  <span className="text-3xl font-bold" style={{ color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)' }}>
+                  <span style={{ fontSize: 30, fontWeight: 700, color: vars['--chat-text-90'] }}>
                     {agent?.name?.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
-              <h2 className="text-xl font-semibold mb-2" style={{ color: isDark ? 'rgba(241,245,249,0.8)' : 'rgba(30,41,59,0.8)' }}>
+              <div style={{ fontSize: 20, fontWeight: 600, color: vars['--chat-text-80'], marginBottom: 8 }}>
                 {agent?.name}
-              </h2>
-              <p className="text-sm" style={{ color: isDark ? 'rgba(241,245,249,0.4)' : 'rgba(30,41,59,0.4)' }}>
+              </div>
+              <div style={{ fontSize: 14, color: vars['--chat-text-40'] }}>
                 {t('store.startConversation')}
-              </p>
+              </div>
             </div>
           )}
 
+          {/* Messages */}
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex gap-3 mb-6 animate-fade-in-up ${
-                msg.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              className="agent-chat-fade-in"
+              style={{
+                display: 'flex',
+                gap: 12,
+                marginBottom: 24,
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+              }}
             >
-              {msg.role === 'assistant' && (
-                <div
-                  className={`w-8 h-8 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden`}
-                >
-                  {agent?.icon ? (
-                    <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
-                  ) : (
-                    <Bot className="w-4 h-4" style={{ color: isDark ? 'rgba(241,245,249,0.8)' : 'rgba(30,41,59,0.8)' }} />
-                  )}
-                </div>
-              )}
+              {msg.role === 'assistant' && <BotAvatar />}
 
               <div
-                className="max-w-[80%] sm:max-w-[70%] px-4 py-3"
+                className={msg.role === 'assistant' ? 'agent-chat-bot-bubble' : ''}
                 style={{
-                  borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
-                  background: msg.role === 'user'
-                    ? (isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)')
-                    : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
-                  border: `1px solid ${msg.role === 'user'
-                    ? 'rgba(59,130,246,0.2)'
-                    : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')
-                  }`,
+                  maxWidth: '80%',
+                  padding: '12px 16px',
+                  fontSize: 14,
+                  lineHeight: 1.6,
+                  color: vars['--chat-text-85'],
+                  wordBreak: 'break-word' as const,
+                  ...(msg.role === 'user'
+                    ? {
+                        background: vars['--chat-user-bubble-bg'],
+                        border: `1px solid ${vars['--chat-user-bubble-border']}`,
+                        borderRadius: '16px',
+                        borderTopRightRadius: '6px',
+                        whiteSpace: 'pre-wrap' as const,
+                      }
+                    : {
+                        background: vars['--chat-overlay-4'],
+                        border: `1px solid ${vars['--chat-overlay-5']}`,
+                        borderRadius: '16px',
+                        borderTopLeftRadius: '6px',
+                      }),
                 }}
-              >
-                <div
-                  className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-                  style={{ color: isDark ? 'rgba(241,245,249,0.85)' : 'rgba(30,41,59,0.85)' }}
-                >
-                  {msg.content}
-                  {msg.role === 'assistant' && msg.content === '' && isStreaming && (
-                    <span className="inline-flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '150ms' }} />
-                      <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" style={{ animationDelay: '300ms' }} />
-                    </span>
-                  )}
-                </div>
-              </div>
+                {...(msg.role === 'assistant'
+                  ? {
+                      dangerouslySetInnerHTML: {
+                        __html:
+                          renderMarkdown(msg.content) +
+                          (msg.isStreaming ? '<span class="agent-chat-cursor"></span>' : ''),
+                      },
+                    }
+                  : { children: msg.content })}
+              />
 
               {msg.role === 'user' && (
                 <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                  style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: vars['--chat-overlay-10'],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    marginTop: 2,
+                  }}
                 >
-                  <User className="w-4 h-4" style={{ color: isDark ? 'rgba(241,245,249,0.6)' : 'rgba(30,41,59,0.6)' }} />
+                  <User className="w-4 h-4" style={{ color: vars['--chat-text-60'] }} />
                 </div>
               )}
             </div>
           ))}
 
+          {/* Thinking indicator (matches chat.html .thinking-wrapper) */}
+          {isThinking && (
+            <div className="agent-chat-fade-in" style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+              <BotAvatar />
+              <div style={{
+                display: 'inline-flex',
+                gap: 4,
+                padding: '12px 16px',
+                borderRadius: 16,
+                borderTopLeftRadius: 6,
+                background: vars['--chat-overlay-4'],
+                border: `1px solid ${vars['--chat-overlay-5']}`,
+              }}>
+                <span className="agent-chat-dot" style={{ animationDelay: '0ms' }} />
+                <span className="agent-chat-dot" style={{ animationDelay: '150ms' }} />
+                <span className="agent-chat-dot" style={{ animationDelay: '300ms' }} />
+              </div>
+            </div>
+          )}
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input Area */}
+      {/* ── Input area (matches chat.html .input-area) ── */}
       <div
-        className="flex-shrink-0 relative z-10"
         style={{
-          background: isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.85)',
+          flexShrink: 0,
+          background: vars['--chat-header-bg'],
           backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          position: 'relative',
+          zIndex: 10,
         }}
       >
-        <div className="max-w-3xl mx-auto px-4 py-3">
-          <div className="relative">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
-                rows={4}
-                className="w-full rounded-2xl px-4 py-3 pr-12 text-sm focus:outline-none resize-none max-h-[200px]"
-                style={{
-                  background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
-                  color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)',
-                }}
-                disabled={isStreaming}
-              />
-              <button
-                onClick={handleSend}
-                disabled={!input.trim() || isStreaming}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg flex items-center justify-center disabled:opacity-50 transition-colors"
-                style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
-              >
-                {isStreaming ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="w-5 h-5"
-                  >
-                    <line x1="22" y1="2" x2="11" y2="13" />
-                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                  </svg>
-                )}
-              </button>
+        <div style={{ maxWidth: '48rem', margin: '0 auto', padding: '12px 16px' }}>
+          {/* Stop button */}
+          {isStreaming && (
+            <button
+              onClick={handleStop}
+              className="agent-chat-fade-in"
+              style={{
+                width: '100%',
+                padding: 6,
+                marginBottom: 8,
+                borderRadius: 8,
+                border: `1px solid ${vars['--chat-border']}`,
+                background: vars['--chat-overlay-4'],
+                color: vars['--chat-text-40'],
+                fontSize: 12,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                transition: 'all 0.2s',
+              }}
+            >
+              <Square className="w-3 h-3" />
+              {t('store.stopGenerating')}
+            </button>
+          )}
+
+          {/* Textarea wrapper */}
+          <div style={{ position: 'relative' }}>
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
+              rows={4}
+              className="agent-chat-textarea"
+              style={{
+                width: '100%',
+                background: vars['--chat-overlay-4'],
+                border: `1px solid ${vars['--chat-overlay-10']}`,
+                borderRadius: 16,
+                padding: '12px 48px 12px 16px',
+                color: vars['--chat-text-90'],
+                fontSize: 14,
+                fontFamily: 'inherit',
+                resize: 'none',
+                outline: 'none',
+                maxHeight: 200,
+                minHeight: 100,
+                lineHeight: 1.5,
+                transition: 'border-color 0.2s, box-shadow 0.2s',
+              }}
+              disabled={isStreaming}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isStreaming}
+              style={{
+                position: 'absolute',
+                right: 8,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                border: 'none',
+                background: 'transparent',
+                color: vars['--chat-text'],
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: !input.trim() || isStreaming ? 0.4 : 1,
+                transition: 'background 0.2s',
+              }}
+              title={t('store.send')}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 18, height: 18 }}>
+                <line x1="22" y1="2" x2="11" y2="13" />
+                <polygon points="22 2 15 22 11 13 2 9 22 2" />
+              </svg>
+            </button>
           </div>
-          <p className="text-center text-[10px] mt-2" style={{ color: isDark ? 'rgba(241,245,249,0.2)' : 'rgba(30,41,59,0.2)' }}>
+
+          {/* Footer link (matches chat.html) */}
+          <a
+            href="https://www.gilo.dev/"
+            target="_blank"
+            rel="noopener"
+            style={{
+              display: 'block',
+              textAlign: 'center',
+              fontSize: 10,
+              color: vars['--chat-text-20'],
+              textDecoration: 'none',
+              marginTop: 8,
+              paddingBottom: 'env(safe-area-inset-bottom, 4px)',
+              transition: 'color 0.2s',
+            }}
+          >
             {t('store.poweredBy', { name: agent?.name })}
-          </p>
+          </a>
         </div>
       </div>
     </div>
