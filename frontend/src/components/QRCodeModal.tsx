@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { X, QrCode } from 'lucide-react';
 
 interface QRCodeModalProps {
@@ -12,13 +13,17 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
 
   const agentUrl = `https://${agentSlug}.gilo.dev`;
   const qrSize = 250;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(agentUrl)}&bgcolor=0f0f23&color=ffffff&format=png`;
 
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+  const isDark = document.documentElement.classList.contains('dark');
+  const qrBg = isDark ? '0f0f23' : 'f8fafc';
+  const qrFg = isDark ? 'ffffff' : '0f172a';
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(agentUrl)}&bgcolor=${qrBg}&color=${qrFg}&format=png`;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-md" />
       <div
-        className="relative rounded-2xl p-6 w-full max-w-sm border border-t-overlay/20 animate-fade-in-up bg-[#13132b] shadow-2xl"
+        className="relative rounded-2xl p-6 w-full max-w-sm border border-t-overlay/20 animate-fade-in-up bg-t-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -42,7 +47,7 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
 
         {/* QR Code */}
         <div className="flex flex-col items-center gap-3">
-          <div className="p-4 rounded-2xl bg-[#0f0f23] border border-t-overlay/10">
+          <div className="p-4 rounded-2xl bg-t-page border border-t-overlay/10">
             <img
               src={qrUrl}
               alt={`QR Code - ${agentName}`}
@@ -54,6 +59,7 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
           <p className="text-xs text-t-text/40">{agentUrl}</p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
