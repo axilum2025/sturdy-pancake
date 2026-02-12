@@ -403,6 +403,33 @@ export default function Documentation() {
                 ))}
               </div>
 
+              {/* Toolbar buttons guide */}
+              <div className="mt-8">
+                <h2 className="text-xl font-bold text-t-text mb-2">{t('docs.builderToolbarTitle')}</h2>
+                <p className="text-t-text/70 mb-4 text-sm leading-relaxed">{t('docs.builderToolbarDesc')}</p>
+                <div className="space-y-3">
+                  {[
+                    { key: 'playground', icon: '👁️' },
+                    { key: 'history', icon: '🕐' },
+                    { key: 'config', icon: '⚙️' },
+                    { key: 'publish', icon: '🚀' },
+                    { key: 'api', icon: '🔗' },
+                    { key: 'store', icon: '🏪' },
+                    { key: 'mcpBrowser', icon: '🔧' },
+                    { key: 'mcpSettings', icon: '⚡' },
+                    { key: 'back', icon: '←' },
+                  ].map((btn) => (
+                    <div key={btn.key} className="flex items-start gap-3 p-4 rounded-xl bg-t-surface/40 border border-t-border/20">
+                      <span className="text-xl flex-shrink-0 w-7 text-center">{btn.icon}</span>
+                      <div>
+                        <h4 className="font-semibold text-t-text text-sm">{t(`docs.btn${btn.key.charAt(0).toUpperCase() + btn.key.slice(1)}Title`)}</h4>
+                        <p className="text-sm text-t-text/70 leading-relaxed mt-0.5">{t(`docs.btn${btn.key.charAt(0).toUpperCase() + btn.key.slice(1)}Desc`)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
                 <p className="text-sm text-t-text/70 leading-relaxed">
                   <strong className="text-primary">{t('docs.builderTip')}</strong> {t('docs.builderTipDesc')}

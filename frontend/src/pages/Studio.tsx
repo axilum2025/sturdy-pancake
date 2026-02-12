@@ -124,15 +124,15 @@ export default function Studio() {
           <Store className="w-5 h-5" />
         </button>
         <button
-          onClick={() => setShowMCPBrowser(true)}
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${showMCPBrowser ? 'btn-gradient text-white glow-blue' : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20'}`}
+          onClick={() => setShowMCPBrowser(!showMCPBrowser)}
+          className={`w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center transition-all duration-300 ${showMCPBrowser ? 'text-primary bg-primary/10' : 'text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'}`}
           title={t('builder.tools')}
         >
           <Wrench className="w-5 h-5" />
         </button>
         <button
-          onClick={() => setShowMCPSettings(true)}
-          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 ${showMCPSettings ? 'btn-gradient text-white glow-blue' : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/20'}`}
+          onClick={() => setShowMCPSettings(!showMCPSettings)}
+          className={`w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center transition-all duration-300 ${showMCPSettings ? 'text-primary bg-primary/10' : 'text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'}`}
           title={t('builder.settings')}
         >
           <Settings className="w-5 h-5" />
@@ -173,15 +173,15 @@ export default function Studio() {
               <Eye className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setShowMCPBrowser(true)}
-              className={`p-2 rounded-lg transition-colors ${showMCPBrowser ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
+              onClick={() => setShowMCPBrowser(!showMCPBrowser)}
+              className={`p-2 rounded-lg transition-colors ${showMCPBrowser ? 'bg-primary/20 text-primary' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title={t('builder.tools')}
             >
               <Wrench className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setShowMCPSettings(true)}
-              className={`p-2 rounded-lg transition-colors ${showMCPSettings ? 'bg-blue-500/20 text-blue-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
+              onClick={() => setShowMCPSettings(!showMCPSettings)}
+              className={`p-2 rounded-lg transition-colors ${showMCPSettings ? 'bg-primary/20 text-primary' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title={t('builder.settings')}
             >
               <Settings className="w-4 h-4" />
