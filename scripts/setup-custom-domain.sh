@@ -23,6 +23,9 @@ echo "📋 Gathering Azure resource information..."
 SWA_HOSTNAME=$(az staticwebapp show --name "$SWA_NAME" --resource-group "$RG" \
   --query "defaultHostname" -o tsv)
 
+# Resolve an IPv4 for apex A record (GoDaddy doesn't support ALIAS/ANAME everywhere)
+SWA_IP=$(dig +short "$SWA_HOSTNAME" A 2>/dev/null | head -1)
+
 CA_FQDN=$(az containerapp show --name "$CA_NAME" --resource-group "$RG" \
   --query "properties.configuration.ingress.fqdn" -o tsv)
 
@@ -34,6 +37,7 @@ CA_VERIFICATION_ID=$(az containerapp env show --name "$CA_ENV_NAME" --resource-g
 
 echo ""
 echo "  SWA Default Hostname : ${SWA_HOSTNAME}"
+echo "  SWA IPv4 (A record)  : ${SWA_IP:-<resolve failed>}"
 echo "  Container App FQDN   : ${CA_FQDN}"
 echo "  Container App IP     : ${CA_STATIC_IP}"
 echo "  Verification ID      : ${CA_VERIFICATION_ID}"
@@ -50,17 +54,17 @@ echo ""
 echo "  ┌──────────┬───────────────────┬──────────────────────────────────────────────────────┬──────┐"
 echo "  │ Type     │ Name              │ Data                                                 │ TTL  │"
 echo "  ├──────────┼───────────────────┼──────────────────────────────────────────────────────┼──────┤"
-echo "  │ A        │ @                 │ ${CA_STATIC_IP}                                       │ 1h   │"
+echo "  │ A        │ @                 │ ${SWA_IP:-<SWA IPv4>}                                  │ 1h   │"
 echo "  │ A        │ *                 │ ${CA_STATIC_IP}                                       │ 1h   │"
 echo "  │ CNAME    │ www               │ ${SWA_HOSTNAME}                                       │ 1h   │"
 echo "  │ CNAME    │ api               │ ${CA_FQDN}                                            │ 1h   │"
-echo "  │ TXT      │ asuid             │ ${CA_VERIFICATION_ID}                                 │ 1h   │"
+echo "  │ TXT      │ asuid             │ ${SWA_HOSTNAME}                                       │ 1h   │"
 echo "  │ TXT      │ asuid.api         │ ${CA_VERIFICATION_ID}                                 │ 1h   │"
 echo "  │ TXT      │ asuid.www         │ ${SWA_HOSTNAME}                                       │ 1h   │"
 echo "  └──────────┴───────────────────┴──────────────────────────────────────────────────────┴──────┘"
 echo ""
-echo "  💡 The A record '@' and A record '*' (wildcard) both point to the"
-echo "     Container Apps static IP. This enables {slug}.gilo.dev agent URLs."
+echo "  💡 The A record '@' points to Static Web Apps (frontend)."
+echo "     The A record '*' (wildcard) points to Container Apps IP to enable {slug}.gilo.dev agent URLs."
 echo ""
 echo "  Keep existing records:"
 echo "    ✅ NS records (ns33/ns34.domaincontrol.com)"
@@ -82,6 +86,26 @@ read -r -p "  Press Enter when DNS records are configured on GoDaddy..."
 
 echo ""
 echo "⏳ Checking DNS propagation (this may take a few minutes)..."
+
+# Check apex A
+if [[ -n "${SWA_IP:-}" ]]; then
+  echo -n "  Checking ${DOMAIN} A record... "
+  for i in $(seq 1 12); do
+    RESULT=$(dig +short ${DOMAIN} A 2>/dev/null | head -1)
+    if [[ -n "$RESULT" && "$RESULT" == "$SWA_IP" ]]; then
+      echo "✅ OK → ${RESULT}"
+      break
+    fi
+    if [[ $i -eq 12 ]]; then
+      echo "⚠️  Not yet propagated (${RESULT:-empty}). You may need to wait longer."
+    else
+      echo -n "."
+      sleep 10
+    fi
+  done
+else
+  echo "  ⚠️  Could not resolve SWA IPv4. If GoDaddy doesn't support ALIAS/ANAME, use Domain Forwarding (apex → https://www.${DOMAIN})."
+fi
 
 # Check www CNAME
 echo -n "  Checking www.${DOMAIN}... "
@@ -122,6 +146,14 @@ echo "  STEP 3: Configuring Azure custom domains"
 echo "══════════════════════════════════════════════════════════"
 
 # 4a. SWA – www.gilo.dev
+echo ""
+echo "📌 Adding ${DOMAIN} to Static Web App..."
+az staticwebapp hostname set \
+  --name "$SWA_NAME" \
+  --resource-group "$RG" \
+  --hostname "${DOMAIN}" \
+  2>&1 && echo "  ✅ ${DOMAIN} added to SWA" || echo "  ⚠️  Failed (DNS may not be propagated yet)"
+
 echo ""
 echo "📌 Adding www.${DOMAIN} to Static Web App..."
 az staticwebapp hostname set \
