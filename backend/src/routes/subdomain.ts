@@ -96,6 +96,100 @@ subdomainRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------
+// GET /manifest.json — Dynamic PWA manifest per agent
+// ----------------------------------------------------------
+subdomainRouter.get('/manifest.json', async (req: Request, res: Response) => {
+  const agent = getSubdomainAgent(req);
+  if (!agent) return res.status(404).json({ error: 'Agent not found' });
+
+  const giloDomain = process.env.GILO_DOMAIN || 'gilo.dev';
+  const startUrl = `https://${agent.slug}.${giloDomain}/`;
+
+  // Fetch accent color from store
+  let themeColor = '#0f172a';
+  let bgColor = '#0f172a';
+  try {
+    const db = getDb();
+    const rows = await db.select({ iconColor: storeAgents.iconColor })
+      .from(storeAgents)
+      .where(eq(storeAgents.agentId, agent.id))
+      .limit(1);
+    if (rows.length > 0 && rows[0].iconColor) {
+      themeColor = rows[0].iconColor;
+    }
+  } catch (e) { /* ignore */ }
+
+  if (agent.config.appearance?.accentColor) {
+    themeColor = agent.config.appearance.accentColor;
+  }
+
+  const manifest = {
+    name: agent.name,
+    short_name: agent.name.substring(0, 12),
+    description: agent.description || `Chat with ${agent.name}`,
+    start_url: startUrl,
+    scope: startUrl,
+    display: 'standalone',
+    orientation: 'portrait',
+    theme_color: themeColor,
+    background_color: bgColor,
+    icons: [
+      { src: '/icon.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    ],
+  };
+
+  res.setHeader('Content-Type', 'application/manifest+json');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.json(manifest);
+});
+
+// ----------------------------------------------------------
+// GET /icon.png — Serve agent icon as PNG for PWA
+// ----------------------------------------------------------
+subdomainRouter.get('/icon.png', async (req: Request, res: Response) => {
+  const agent = getSubdomainAgent(req);
+  if (!agent) return res.status(404).send('Not found');
+
+  // Fetch icon from store
+  let iconData = '';
+  let iconColor = '#3b82f6';
+  try {
+    const db = getDb();
+    const rows = await db.select({ icon: storeAgents.icon, iconColor: storeAgents.iconColor })
+      .from(storeAgents)
+      .where(eq(storeAgents.agentId, agent.id))
+      .limit(1);
+    if (rows.length > 0) {
+      iconData = rows[0].icon || '';
+      iconColor = rows[0].iconColor || '#3b82f6';
+    }
+  } catch (e) { /* ignore */ }
+
+  // If we have a base64 icon, serve it as image
+  if (iconData && iconData.startsWith('data:image/')) {
+    const matches = iconData.match(/^data:image\/(\w+);base64,(.+)$/);
+    if (matches) {
+      const mimeType = matches[1] === 'svg+xml' ? 'image/svg+xml' : `image/${matches[1]}`;
+      const buffer = Buffer.from(matches[2], 'base64');
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+      return res.send(buffer);
+    }
+  }
+
+  // Fallback: generate an SVG with the agent's initial letter and color
+  const initial = (agent.name || 'A').charAt(0).toUpperCase();
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <rect width="512" height="512" rx="108" fill="${iconColor}"/>
+    <text x="256" y="340" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-weight="700" font-size="280" fill="white">${initial}</text>
+  </svg>`;
+
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.send(svg);
+});
+
+// ----------------------------------------------------------
 // POST /chat — Chat with the agent (public, rate-limited)
 // Supports SSE streaming and JSON mode
 // ----------------------------------------------------------

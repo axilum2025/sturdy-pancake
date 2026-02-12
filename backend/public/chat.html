@@ -4,7 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>{{AGENT_NAME}} — GiLo AI</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="icon" id="dynamicFavicon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" id="appleTouchIcon" href="/icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="{{AGENT_NAME}}">
+  <meta name="theme-color" content="#0f172a">
+  <meta name="description" content="{{AGENT_DESCRIPTION}}">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -616,6 +624,16 @@
     window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function() {
       if (currentThemePref === 'auto') applyTheme('auto');
     });
+
+    // ── Dynamic favicon & apple-touch-icon ──
+    if (agentIcon) {
+      // Set favicon to agent icon
+      var favicon = document.getElementById('dynamicFavicon');
+      if (favicon) favicon.href = agentIcon;
+      // Set apple-touch-icon to agent icon
+      var appleTouchIcon = document.getElementById('appleTouchIcon');
+      if (appleTouchIcon) appleTouchIcon.href = agentIcon;
+    }
 
     // ── Accent color ──
     var accentColor = appearance.accentColor || '#3b82f6';
