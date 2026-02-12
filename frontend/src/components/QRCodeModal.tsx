@@ -17,22 +17,21 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
   if (!isOpen) return null;
 
   const agentUrl = `https://${agentSlug}.gilo.dev`;
-  const chatUrl = `${agentUrl}/chat`;
   const qrSize = 220;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(chatUrl)}&bgcolor=0f0f23&color=ffffff&format=png`;
-  const qrUrlDownload = `https://api.qrserver.com/v1/create-qr-code/?size=1024x1024&data=${encodeURIComponent(chatUrl)}&bgcolor=0f0f23&color=ffffff&format=png`;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(agentUrl)}&bgcolor=0f0f23&color=ffffff&format=png`;
+  const qrUrlDownload = `https://api.qrserver.com/v1/create-qr-code/?size=1024x1024&data=${encodeURIComponent(agentUrl)}&bgcolor=0f0f23&color=ffffff&format=png`;
 
   const embedSnippet = `<!-- ${agentName} QR Code -->
-<a href="${chatUrl}" target="_blank" rel="noopener">
+<a href="${agentUrl}" target="_blank" rel="noopener">
   <img
-    src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(chatUrl)}"
+    src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodeURIComponent(agentUrl)}"
     alt="Chat with ${agentName}"
     width="256" height="256"
   />
 </a>`;
 
   const handleCopyUrl = () => {
-    navigator.clipboard.writeText(chatUrl);
+    navigator.clipboard.writeText(agentUrl);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2000);
   };
@@ -43,18 +42,28 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
     setTimeout(() => setCopiedEmbed(false), 2000);
   };
 
-  const handleDownload = () => {
-    const a = document.createElement('a');
-    a.href = qrUrlDownload;
-    a.download = `${agentSlug}-qr-code.png`;
-    a.click();
+  const handleDownload = async () => {
+    try {
+      const response = await fetch(qrUrlDownload);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${agentSlug}-qr-code.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch {
+      window.open(qrUrlDownload, '_blank');
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />
       <div
-        className="relative glass-card rounded-2xl p-6 w-full max-w-md border border-t-overlay/10 animate-fade-in-up"
+        className="relative rounded-2xl p-6 w-full max-w-md border border-t-overlay/20 animate-fade-in-up bg-[#13132b] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -88,7 +97,7 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
             />
           </div>
           <div className="text-center">
-            <p className="text-sm text-t-text/70 font-medium">{chatUrl}</p>
+            <p className="text-sm text-t-text/70 font-medium">{agentUrl}</p>
             <p className="text-xs text-t-text/40 mt-1">
               {t('qrModal.scanToChat', 'Scannez pour discuter avec cet agent')}
             </p>
@@ -102,7 +111,7 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
             className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-t-overlay/5 border border-t-overlay/10 text-sm text-t-text/70 hover:text-t-text hover:bg-t-overlay/10 transition-all"
           >
             {copiedUrl ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
-            {copiedUrl ? t('qrModal.copied', 'Copié !') : t('qrModal.copyUrl', 'Copier le lien')}
+            {copiedUrl ? t('qrModal.copied', 'Copié !') : t('qrModal.copy', 'Copier')}
           </button>
           <button
             onClick={handleDownload}
@@ -112,7 +121,7 @@ export default function QRCodeModal({ isOpen, onClose, agentName, agentSlug }: Q
             {t('qrModal.download', 'Télécharger')}
           </button>
           <a
-            href={chatUrl}
+            href={agentUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-t-overlay/5 border border-t-overlay/10 text-sm text-t-text/70 hover:text-t-text hover:bg-t-overlay/10 transition-all"
