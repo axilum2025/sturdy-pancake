@@ -25,6 +25,7 @@ import { analyticsRouter } from './routes/analytics';
 import { alertsRouter } from './routes/alerts';
 import { subdomainRouter } from './routes/subdomain';
 import { integrationsRouter } from './routes/integrations';
+import { billingRouter } from './routes/billing';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { rateLimiter } from './middleware/rateLimiter';
@@ -66,6 +67,9 @@ async function main() {
     },
     credentials: true
   }));
+
+  // Stripe webhook needs raw body — must be before express.json()
+  app.use('/api/billing/webhook', express.raw({ type: 'application/json' }));
   app.use(express.json());
 
   // Trust proxy (required behind Caddy/nginx for correct IP detection)
@@ -102,6 +106,7 @@ async function main() {
   // Public routes (no auth required)
   app.use('/api/auth', authRouter);
   app.use('/api/store', optionalAuth, storeRouter);
+  app.use('/api/billing', billingRouter); // plans + webhook are public; checkout/portal require auth inside
 
   // OAuth callbacks (public — provider redirects back without JWT)
   app.get('/api/integrations/:provider/callback', integrationsRouter);
