@@ -148,6 +148,28 @@ export default function AgentChat() {
 
   // Theme persistence key
   const themeKey = useMemo(() => `gilo-store-theme-${agentId}`, [agentId]);
+  const chatKey = useMemo(() => `gilo-store-chat-${agentId}`, [agentId]);
+
+  // ── Chat persistence helpers ──
+  const saveChat = useCallback((msgs: Message[]) => {
+    try {
+      const toSave = msgs
+        .filter((m) => m.id !== 'welcome')
+        .map((m) => ({ role: m.role, content: m.content }));
+      localStorage.setItem(chatKey, JSON.stringify(toSave));
+    } catch (e) { /* quota exceeded */ }
+  }, [chatKey]);
+
+  const loadChat = useCallback((): { role: string; content: string }[] | null => {
+    try {
+      const saved = localStorage.getItem(chatKey);
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
+  }, [chatKey]);
+
+  const clearSavedChat = useCallback(() => {
+    try { localStorage.removeItem(chatKey); } catch (e) {}
+  }, [chatKey]);
 
   // ── CSS variables for current theme ──
   const vars = isDark ? THEME_VARS.dark : THEME_VARS.light;
@@ -204,8 +226,17 @@ export default function AgentChat() {
       // Track usage
       fetch(`${API_BASE}/api/store/${agentId}/use`, { method: 'POST' });
 
-      // Add welcome message
-      if (data.configSnapshot?.welcomeMessage) {
+      // Restore saved chat or show welcome
+      const savedChat = loadChat();
+      if (savedChat && savedChat.length > 0) {
+        const restored: Message[] = savedChat.map((m, i) => ({
+          id: `restored-${i}`,
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          timestamp: new Date(),
+        }));
+        setMessages(restored);
+      } else if (data.configSnapshot?.welcomeMessage) {
         setMessages([
           {
             id: 'welcome',
@@ -239,6 +270,7 @@ export default function AgentChat() {
 
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
+    saveChat(updatedMessages);
     setInput('');
     setIsStreaming(true);
     setIsThinking(true);
@@ -309,10 +341,12 @@ export default function AgentChat() {
         }
       }
 
-      // Mark streaming done
-      setMessages((prev) =>
-        prev.map((m) => (m.id === assistantId ? { ...m, isStreaming: false } : m))
-      );
+      // Mark streaming done & save
+      setMessages((prev) => {
+        const updated = prev.map((m) => (m.id === assistantId ? { ...m, isStreaming: false } : m));
+        saveChat(updated);
+        return updated;
+      });
     } catch (error: any) {
       setIsThinking(false);
       if (error.name !== 'AbortError') {
@@ -344,6 +378,7 @@ export default function AgentChat() {
   };
 
   const handleClear = () => {
+    clearSavedChat();
     const welcome = agent?.configSnapshot?.welcomeMessage;
     setMessages(
       welcome

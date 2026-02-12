@@ -469,6 +469,9 @@
       <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     </button>
+    <button class="theme-toggle" id="clearChatBtn" title="Nouvelle conversation">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    </button>
   </div>
 
   <!-- Messages -->
@@ -501,10 +504,25 @@
   <script>
     var AGENT = {{AGENT_JSON}};
     var CHAT_ENDPOINT = '/chat';
+    var chatHistoryKey = 'gilo-chat-history-' + AGENT.slug;
     var chatHistory = [];
     var isStreaming = false;
     var abortController = null;
     var hasMessages = false;
+
+    // ── Chat persistence ──
+    function saveChat() {
+      try { localStorage.setItem(chatHistoryKey, JSON.stringify(chatHistory)); } catch(e) {}
+    }
+    function loadChat() {
+      try {
+        var saved = localStorage.getItem(chatHistoryKey);
+        return saved ? JSON.parse(saved) : null;
+      } catch(e) { return null; }
+    }
+    function clearChat() {
+      try { localStorage.removeItem(chatHistoryKey); } catch(e) {}
+    }
 
     // Bot icon SVG (lucide Bot)
     var BOT_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>';
@@ -570,6 +588,30 @@
       applyTheme(currentThemePref);
     });
 
+    // ── Clear chat button ──
+    document.getElementById('clearChatBtn').addEventListener('click', function() {
+      chatHistory = [];
+      clearChat();
+      // Remove all messages from DOM
+      messagesEl.innerHTML = '';
+      hasMessages = false;
+      // Re-create empty state
+      var es = document.createElement('div');
+      es.className = 'empty-state';
+      es.id = 'emptyState';
+      es.innerHTML =
+        '<div class="empty-avatar" id="emptyAvatar">' + (agentIcon ? '<img src="' + agentIcon + '" alt="">' : '<span>' + initial + '</span>') + '</div>' +
+        '<div class="empty-name">' + AGENT.name + '</div>' +
+        '<div class="empty-hint">' + t.startConversation + '</div>';
+      messagesEl.appendChild(es);
+      emptyState = es;
+      // Re-show welcome if set
+      if (AGENT.welcomeMessage) {
+        hideEmpty();
+        addBotMessage(AGENT.welcomeMessage);
+      }
+    });
+
     // Listen for system theme changes when set to auto
     window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', function() {
       if (currentThemePref === 'auto') applyTheme('auto');
@@ -629,8 +671,19 @@
     var sendBtn = document.getElementById('sendBtn');
     var stopBtn = document.getElementById('stopBtn');
 
-    // Show welcome message if set
-    if (AGENT.welcomeMessage) {
+    // Restore saved chat or show welcome
+    var savedChat = loadChat();
+    if (savedChat && savedChat.length > 0) {
+      chatHistory = savedChat;
+      hideEmpty();
+      for (var i = 0; i < savedChat.length; i++) {
+        if (savedChat[i].role === 'user') {
+          addUserMessage(savedChat[i].content);
+        } else {
+          addBotMessage(savedChat[i].content);
+        }
+      }
+    } else if (AGENT.welcomeMessage) {
       hideEmpty();
       addBotMessage(AGENT.welcomeMessage);
     }
@@ -709,6 +762,7 @@
 
       addUserMessage(text);
       chatHistory.push({ role: 'user', content: text });
+      saveChat();
       inputEl.value = '';
       inputEl.style.height = 'auto';
 
@@ -763,6 +817,7 @@
 
         contentEl.innerHTML = renderMarkdown(fullContent);
         chatHistory.push({ role: 'assistant', content: fullContent });
+        saveChat();
       } catch (err) {
         removeTypingIndicator();
         if (err.name !== 'AbortError') {
