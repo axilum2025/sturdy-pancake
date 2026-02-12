@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Trash2, Bot, User, Loader2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Bot, User, Loader2, Sun, Moon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
 
@@ -9,6 +9,12 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+}
+
+interface AgentAppearance {
+  theme?: 'dark' | 'light' | 'auto';
+  accentColor?: string;
+  chatBackground?: string;
 }
 
 interface AgentInfo {
@@ -20,6 +26,7 @@ interface AgentInfo {
   configSnapshot: {
     model: string;
     welcomeMessage: string;
+    appearance?: AgentAppearance;
   };
 }
 
@@ -47,6 +54,7 @@ export default function AgentChat() {
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isDark, setIsDark] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -67,6 +75,10 @@ export default function AgentChat() {
     }
   }, [input]);
 
+  const toggleTheme = useCallback(() => {
+    setIsDark((prev) => !prev);
+  }, []);
+
   const fetchAgent = async () => {
     try {
       const headers: Record<string, string> = {};
@@ -74,6 +86,11 @@ export default function AgentChat() {
       const res = await fetch(`${API_BASE}/api/store/${agentId}`, { headers });
       const data = await res.json();
       setAgent(data);
+
+      // Set initial theme from agent appearance
+      const theme = data.configSnapshot?.appearance?.theme;
+      if (theme === 'light') setIsDark(false);
+      else if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: light)').matches) setIsDark(false);
 
       // Track usage
       fetch(`${API_BASE}/api/store/${agentId}/use`, { method: 'POST' });
@@ -211,16 +228,48 @@ export default function AgentChat() {
     );
   }
 
+  const chatBg = agent?.configSnapshot?.appearance?.chatBackground;
+  const accentColor = agent?.configSnapshot?.appearance?.accentColor || '#3b82f6';
+
   return (
-    <div className="h-screen bg-t-page flex flex-col">
+    <div
+      className={`h-screen flex flex-col transition-colors duration-300 ${
+        isDark ? 'bg-[#0f172a] text-[#f1f5f9]' : 'bg-[#f8fafc] text-[#1e293b]'
+      }`}
+      style={chatBg ? {
+        backgroundImage: `url(${chatBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      } : undefined}
+    >
+      {/* Background overlay when image is set */}
+      {chatBg && (
+        <div className="fixed inset-0 z-0" style={{
+          background: isDark ? 'rgba(15,23,42,0.85)' : 'rgba(248,250,252,0.88)',
+        }} />
+      )}
+
       {/* Header */}
-      <header className="glass-strong border-b border-t-overlay/10 flex-shrink-0">
+      <header
+        className="flex-shrink-0 relative z-10"
+        style={{
+          borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
+          background: isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.85)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
         <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3">
+          {/* Theme toggle */}
           <button
-            onClick={() => navigate(`/store/${agentId}`)}
-            className="p-2 rounded-lg text-t-text/50 hover:text-t-text hover:bg-t-overlay/10 transition-colors"
+            onClick={toggleTheme}
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
+            style={{
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.08)'}`,
+              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+              color: isDark ? 'rgba(241,245,249,0.5)' : 'rgba(30,41,59,0.5)',
+            }}
           >
-            <ArrowLeft className="w-5 h-5" />
+            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
           {/* Agent avatar mini */}
@@ -230,22 +279,30 @@ export default function AgentChat() {
             {agent?.icon ? (
               <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
             ) : (
-              <span className="text-sm font-bold text-t-text/90">
+              <span className="text-sm font-bold" style={{ color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)' }}>
                 {agent?.name?.charAt(0).toUpperCase()}
               </span>
             )}
           </div>
 
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-semibold text-t-text/90 truncate">{agent?.name}</h1>
-            <p className="text-xs text-t-text/30 truncate">
-              {agent?.configSnapshot?.model?.split('/').pop()}
-            </p>
+            <h1 className="text-sm font-semibold truncate" style={{ color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)' }}>
+              {agent?.name}
+            </h1>
           </div>
 
           <button
+            onClick={() => navigate(`/store/${agentId}`)}
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: isDark ? 'rgba(241,245,249,0.5)' : 'rgba(30,41,59,0.5)' }}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          <button
             onClick={handleClear}
-            className="p-2 rounded-lg text-t-text/30 hover:text-t-text/60 hover:bg-t-overlay/5 transition-colors"
+            className="p-2 rounded-lg transition-colors"
+            style={{ color: isDark ? 'rgba(241,245,249,0.3)' : 'rgba(30,41,59,0.3)' }}
             title={t('store.newConversation')}
           >
             <Trash2 className="w-4 h-4" />
@@ -254,20 +311,28 @@ export default function AgentChat() {
       </header>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto relative z-10">
         <div className="max-w-3xl mx-auto px-4 py-6">
           {messages.length === 0 && (
             <div className="text-center py-20 animate-fade-in-up">
               <div
-                className={`w-20 h-20 rounded-[26%] bg-gradient-to-br ${catColor} flex items-center justify-center mx-auto mb-4 shadow-lg`}
-                style={{ boxShadow: `0 8px 40px ${agent?.iconColor || '#3b82f6'}40` }}
+                className={`w-20 h-20 rounded-[26%] bg-gradient-to-br ${catColor} flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden`}
+                style={{ boxShadow: `0 8px 40px ${accentColor}40` }}
               >
-                <span className="text-3xl font-bold text-t-text/90">
-                  {agent?.name?.charAt(0).toUpperCase()}
-                </span>
+                {agent?.icon ? (
+                  <img src={agent.icon} alt="" className="w-full h-full object-cover rounded-[26%]" />
+                ) : (
+                  <span className="text-3xl font-bold" style={{ color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)' }}>
+                    {agent?.name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
-              <h2 className="text-xl font-semibold text-t-text/80 mb-2">{agent?.name}</h2>
-              <p className="text-t-text/40 text-sm">{t('store.startConversation')}</p>
+              <h2 className="text-xl font-semibold mb-2" style={{ color: isDark ? 'rgba(241,245,249,0.8)' : 'rgba(30,41,59,0.8)' }}>
+                {agent?.name}
+              </h2>
+              <p className="text-sm" style={{ color: isDark ? 'rgba(241,245,249,0.4)' : 'rgba(30,41,59,0.4)' }}>
+                {t('store.startConversation')}
+              </p>
             </div>
           )}
 
@@ -280,24 +345,33 @@ export default function AgentChat() {
             >
               {msg.role === 'assistant' && (
                 <div
-                  className={`w-8 h-8 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center flex-shrink-0 mt-0.5`}
+                  className={`w-8 h-8 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden`}
                 >
                   {agent?.icon ? (
                     <img src={agent.icon} alt="" className="w-full h-full rounded-[22%] object-cover" />
                   ) : (
-                    <Bot className="w-4 h-4 text-t-text/80" />
+                    <Bot className="w-4 h-4" style={{ color: isDark ? 'rgba(241,245,249,0.8)' : 'rgba(30,41,59,0.8)' }} />
                   )}
                 </div>
               )}
 
               <div
-                className={`max-w-[80%] sm:max-w-[70%] ${
-                  msg.role === 'user'
-                    ? 'bg-blue-500/20 border border-blue-500/20 rounded-2xl rounded-tr-md'
-                    : 'bg-t-overlay/[0.04] border border-t-overlay/5 rounded-2xl rounded-tl-md'
-                } px-4 py-3`}
+                className="max-w-[80%] sm:max-w-[70%] px-4 py-3"
+                style={{
+                  borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
+                  background: msg.role === 'user'
+                    ? (isDark ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)')
+                    : (isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+                  border: `1px solid ${msg.role === 'user'
+                    ? 'rgba(59,130,246,0.2)'
+                    : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)')
+                  }`,
+                }}
               >
-                <div className="text-sm text-t-text/85 leading-relaxed whitespace-pre-wrap break-words">
+                <div
+                  className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                  style={{ color: isDark ? 'rgba(241,245,249,0.85)' : 'rgba(30,41,59,0.85)' }}
+                >
                   {msg.content}
                   {msg.role === 'assistant' && msg.content === '' && isStreaming && (
                     <span className="inline-flex items-center gap-1">
@@ -310,8 +384,11 @@ export default function AgentChat() {
               </div>
 
               {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-t-overlay/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <User className="w-4 h-4 text-t-text/60" />
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
+                >
+                  <User className="w-4 h-4" style={{ color: isDark ? 'rgba(241,245,249,0.6)' : 'rgba(30,41,59,0.6)' }} />
                 </div>
               )}
             </div>
@@ -322,7 +399,13 @@ export default function AgentChat() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 glass-strong">
+      <div
+        className="flex-shrink-0 relative z-10"
+        style={{
+          background: isDark ? 'rgba(15,23,42,0.8)' : 'rgba(255,255,255,0.85)',
+          backdropFilter: 'blur(20px)',
+        }}
+      >
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="relative">
               <textarea
@@ -332,13 +415,19 @@ export default function AgentChat() {
                 onKeyDown={handleKeyDown}
                 placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
                 rows={4}
-                className="w-full bg-t-overlay/[0.04] border border-t-overlay/10 rounded-2xl px-4 py-3 pr-12 text-sm text-t-text/90 placeholder-t-text/30 focus:outline-none focus:ring-1 focus:ring-blue-500/30 resize-none max-h-[200px]"
+                className="w-full rounded-2xl px-4 py-3 pr-12 text-sm focus:outline-none resize-none max-h-[200px]"
+                style={{
+                  background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                  color: isDark ? 'rgba(241,245,249,0.9)' : 'rgba(30,41,59,0.9)',
+                }}
                 disabled={isStreaming}
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || isStreaming}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-t-text flex items-center justify-center disabled:opacity-50 hover:bg-t-overlay/10 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg flex items-center justify-center disabled:opacity-50 transition-colors"
+                style={{ color: isDark ? '#f1f5f9' : '#1e293b' }}
               >
                 {isStreaming ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -361,7 +450,7 @@ export default function AgentChat() {
                 )}
               </button>
           </div>
-          <p className="text-center text-[10px] text-t-text/20 mt-2">
+          <p className="text-center text-[10px] mt-2" style={{ color: isDark ? 'rgba(241,245,249,0.2)' : 'rgba(30,41,59,0.2)' }}>
             {t('store.poweredBy', { name: agent?.name })}
           </p>
         </div>

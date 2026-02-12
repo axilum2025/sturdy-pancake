@@ -139,6 +139,7 @@ storeRouter.post('/publish', async (req: Request, res: Response) => {
           temperature: agent.config.temperature,
           maxTokens: agent.config.maxTokens,
           tools: agent.config.tools.map((t) => ({ name: t.name, type: t.type })),
+          appearance: agent.config.appearance,
         }
       : {
           model: 'openai/gpt-4.1',

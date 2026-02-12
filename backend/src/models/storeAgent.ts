@@ -39,6 +39,11 @@ export interface StoreAgentListing {
     temperature: number;
     maxTokens: number;
     tools: { name: string; type: string }[];
+    appearance?: {
+      theme?: 'dark' | 'light' | 'auto';
+      accentColor?: string;
+      chatBackground?: string;
+    };
   };
   visibility: StoreVisibility;
   accessToken?: string;
