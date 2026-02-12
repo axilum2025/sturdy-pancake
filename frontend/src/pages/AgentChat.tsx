@@ -382,7 +382,6 @@ export default function AgentChat() {
     <div
       className="agent-chat-root"
       style={{
-        height: '100vh',
         height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
