@@ -3,6 +3,7 @@ import { agentModel, AgentCreateDTO } from '../models/agent';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
+import { conversationService } from '../services/conversationService';
 import {
   toOpenAITools,
   executeToolCalls,
@@ -186,13 +187,28 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
     if (!userId) return;
 
     const agent = (await agentModel.findById(req.params.id))!;
-    const { messages } = req.body;
+    const { messages, conversationId: incomingConvId } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required' });
     }
 
     const chatStartTime = Date.now();
     const { client } = copilotService.getClientInfo();
+
+    // Conversation persistence: get or create
+    let conversationId = incomingConvId as string | undefined;
+    if (conversationId) {
+      const existing = await conversationService.findById(conversationId);
+      if (!existing) conversationId = undefined;
+    }
+    if (!conversationId) {
+      conversationId = await conversationService.create(agent.id, userId);
+    }
+    // Save user message
+    const lastUserMsg = [...messages].reverse().find((m: CopilotMessage) => m.role === 'user');
+    if (lastUserMsg) {
+      await conversationService.addMessage(conversationId, 'user', lastUserMsg.content);
+    }
 
     // RAG: search knowledge base for relevant context
     let systemPrompt = agent.config.systemPrompt;
@@ -233,6 +249,9 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       'Cache-Control': 'no-cache',
       Connection: 'keep-alive',
     });
+
+    // Send conversation ID so the frontend can track the conversation
+    res.write(`data: ${JSON.stringify({ type: 'conversation', conversationId })}\n\n`);
 
     // Send RAG citations first so the frontend can display sources
     if (ragCitations.length > 0) {
@@ -371,6 +390,13 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Tool call loop limit reached' })}\n\n`);
     }
 
+    // Save assistant response to conversation
+    // Collect final assistant text from the messages we pushed during the loop
+    const finalAssistantContent = (openaiMessages
+      .filter(m => m.role === 'assistant')
+      .pop() as any)?.content || '(streamed)';
+    conversationService.addMessage(conversationId!, 'assistant', typeof finalAssistantContent === 'string' ? finalAssistantContent : '(streamed)').catch(() => {});
+
     // Track analytics (fire-and-forget)
     const chatEndTime = Date.now();
     const chatDuration = chatEndTime - chatStartTime;
@@ -412,5 +438,63 @@ agentsRouter.post('/:id/chat', async (req: Request, res: Response) => {
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Internal error' })}\n\n`);
       res.end();
     }
+  }
+});
+
+// ----------------------------------------------------------
+// GET /api/agents/:id/conversations  –  List conversations
+// ----------------------------------------------------------
+agentsRouter.get('/:id/conversations', async (req: Request, res: Response) => {
+  try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
+    const limit = Math.min(parseInt(req.query.limit as string) || 30, 100);
+    const offset = parseInt(req.query.offset as string) || 0;
+    const convs = await conversationService.listByAgent(req.params.id, limit, offset);
+    res.json({ conversations: convs, total: convs.length });
+  } catch (error: any) {
+    console.error('List conversations error:', error.message);
+    res.status(500).json({ error: 'Failed to list conversations' });
+  }
+});
+
+// ----------------------------------------------------------
+// GET /api/agents/:id/conversations/:convId/messages
+// ----------------------------------------------------------
+agentsRouter.get('/:id/conversations/:convId/messages', async (req: Request, res: Response) => {
+  try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
+    const conv = await conversationService.findById(req.params.convId);
+    if (!conv || conv.agentId !== req.params.id) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    const msgs = await conversationService.getMessages(req.params.convId);
+    res.json({ messages: msgs });
+  } catch (error: any) {
+    console.error('Get messages error:', error.message);
+    res.status(500).json({ error: 'Failed to get messages' });
+  }
+});
+
+// ----------------------------------------------------------
+// DELETE /api/agents/:id/conversations/:convId
+// ----------------------------------------------------------
+agentsRouter.delete('/:id/conversations/:convId', async (req: Request, res: Response) => {
+  try {
+    const userId = await verifyOwnership(req, res);
+    if (!userId) return;
+
+    const conv = await conversationService.findById(req.params.convId);
+    if (!conv || conv.agentId !== req.params.id) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+    await conversationService.deleteConversation(req.params.convId);
+    res.json({ message: 'Conversation deleted' });
+  } catch (error: any) {
+    console.error('Delete conversation error:', error.message);
+    res.status(500).json({ error: 'Failed to delete conversation' });
   }
 });

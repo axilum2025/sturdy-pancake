@@ -7,6 +7,7 @@ import { Router, Request, Response } from 'express';
 import { agentModel } from '../models/agent';
 import { webhookModel } from '../models/webhook';
 import { knowledgeService } from '../services/knowledgeService';
+import { conversationService } from '../services/conversationService';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { ApiKeyRequest } from '../middleware/apiKeyAuth';
 import OpenAI from 'openai';
@@ -64,13 +65,28 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
       return res.status(404).json({ error: 'Agent not found' });
     }
 
-    const { messages } = req.body;
+    const { messages, conversationId: incomingConvId } = req.body;
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'messages array is required' });
     }
 
     const streamMode = req.query.stream !== 'false';
     const { client } = copilotService.getClientInfo();
+
+    // Conversation persistence
+    let conversationId = incomingConvId as string | undefined;
+    if (conversationId) {
+      const existing = await conversationService.findById(conversationId);
+      if (!existing) conversationId = undefined;
+    }
+    if (!conversationId) {
+      conversationId = await conversationService.create(agentId);
+    }
+    // Save user message
+    const lastUserContent = messages[messages.length - 1]?.content || '';
+    if (lastUserContent) {
+      conversationService.addMessage(conversationId, 'user', lastUserContent).catch(() => {});
+    }
 
     // Fire webhook: on_conversation_start (if first message)
     if (messages.length === 1) {
@@ -142,6 +158,11 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
         }
       }
 
+      // Save assistant response
+      if (fullContent) {
+        conversationService.addMessage(conversationId!, 'assistant', fullContent).catch(() => {});
+      }
+
       // Increment stats
       await agentModel.update(agent.id, {
         totalConversations: agent.totalConversations + 1,
@@ -160,6 +181,11 @@ publicApiRouter.post('/agents/:id/chat', async (req: Request, res: Response) => 
       });
 
       const assistantMessage = completion.choices?.[0]?.message?.content || '';
+
+      // Save assistant response
+      if (assistantMessage) {
+        conversationService.addMessage(conversationId!, 'assistant', assistantMessage).catch(() => {});
+      }
 
       // Increment stats
       await agentModel.update(agent.id, {

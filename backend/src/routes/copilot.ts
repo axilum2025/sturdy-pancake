@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { copilotService, CopilotMessage } from '../services/copilotService';
+import { conversationService } from '../services/conversationService';
+import { AuthenticatedRequest } from '../middleware/auth';
 import OpenAI from 'openai';
 
 export const copilotRouter = Router();
@@ -38,7 +40,7 @@ copilotRouter.post('/chat', async (req: Request, res: Response) => {
 // ----------------------------------------------------------
 copilotRouter.post('/stream', async (req: Request, res: Response) => {
   try {
-    const { messages, model, temperature, maxTokens, projectContext } = req.body;
+    const { messages, model, temperature, maxTokens, projectContext, conversationId: incomingConvId } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       res.status(400).json({ error: 'messages array is required' });
@@ -46,6 +48,26 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     }
 
     const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext);
+    const userId = (req as AuthenticatedRequest).userId;
+    const agentId = projectContext?.projectId;
+
+    // Conversation persistence (when tied to an agent)
+    let conversationId: string | undefined;
+    if (agentId && agentId !== 'new-project') {
+      conversationId = incomingConvId as string | undefined;
+      if (conversationId) {
+        const existing = await conversationService.findById(conversationId);
+        if (!existing) conversationId = undefined;
+      }
+      if (!conversationId) {
+        conversationId = await conversationService.create(agentId, userId);
+      }
+      // Save user message
+      const lastUserMsg = [...messages].reverse().find((m: CopilotMessage) => m.role === 'user');
+      if (lastUserMsg) {
+        conversationService.addMessage(conversationId, 'user', lastUserMsg.content).catch(() => {});
+      }
+    }
 
     const openaiMessages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
@@ -69,17 +91,29 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       'Connection': 'keep-alive',
     });
 
+    // Send conversationId if we created/resumed one
+    if (conversationId) {
+      res.write(`data: ${JSON.stringify({ type: 'conversation', conversationId })}\n\n`);
+    }
+
+    let fullAssistantContent = '';
     for await (const chunk of stream) {
       const content = chunk.choices?.[0]?.delta?.content;
       const finishReason = chunk.choices?.[0]?.finish_reason;
 
       if (content) {
+        fullAssistantContent += content;
         res.write(`data: ${JSON.stringify({ type: 'content', content })}\n\n`);
       }
 
       if (finishReason) {
         res.write(`data: ${JSON.stringify({ type: 'done', finishReason })}\n\n`);
       }
+    }
+
+    // Save assistant response
+    if (conversationId && fullAssistantContent) {
+      conversationService.addMessage(conversationId, 'assistant', fullAssistantContent).catch(() => {});
     }
 
     res.write('data: [DONE]\n\n');

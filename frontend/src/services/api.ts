@@ -360,6 +360,7 @@ export interface CopilotChatRequest {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
+  conversationId?: string;
   projectContext?: {
     projectId: string;
     techStack?: string[];
@@ -453,6 +454,40 @@ export const getRepoInfo = async (owner: string, repo: string) => {
 /** Get GitHub repo file tree */
 export const getRepoTree = async (owner: string, repo: string, branch?: string) => {
   const response = await api.post('/copilot/repo/tree', { owner, repo, branch });
+  return response.data;
+};
+
+// ============ Conversations (History) ============
+
+export interface ConversationSummary {
+  id: string;
+  agentId: string;
+  userId: string | null;
+  startedAt: string;
+  messageCount: number;
+  preview?: string;
+}
+
+export interface ConversationMessage {
+  id: string;
+  conversationId: string;
+  role: string;
+  content: string;
+  createdAt: string;
+}
+
+export const getConversations = async (agentId: string, limit = 30): Promise<{ conversations: ConversationSummary[]; total: number }> => {
+  const response = await api.get(`/agents/${agentId}/conversations?limit=${limit}`);
+  return response.data;
+};
+
+export const getConversationMessages = async (agentId: string, conversationId: string): Promise<{ messages: ConversationMessage[] }> => {
+  const response = await api.get(`/agents/${agentId}/conversations/${conversationId}/messages`);
+  return response.data;
+};
+
+export const deleteConversation = async (agentId: string, conversationId: string) => {
+  const response = await api.delete(`/agents/${agentId}/conversations/${conversationId}`);
   return response.data;
 };
 

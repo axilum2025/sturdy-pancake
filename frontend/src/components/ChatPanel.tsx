@@ -14,7 +14,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
-import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile } from '../services/api';
+import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile, getConversations, getConversationMessages } from '../services/api';
 import { useStudioStore } from '../store/studioStore';
 
 // ============================================================
@@ -218,7 +218,32 @@ export default function ChatPanel() {
   const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const conversationIdRef = useRef<string | undefined>(undefined);
   const { projectId, triggerFileRefresh, addTimelineEvent, updateTimelineEvent } = useStudioStore();
+
+  // Load last conversation history on mount
+  useEffect(() => {
+    if (!projectId || projectId === 'new-project') return;
+    (async () => {
+      try {
+        const { conversations } = await getConversations(projectId, 1);
+        if (conversations.length === 0) return;
+        const latestConv = conversations[0];
+        conversationIdRef.current = latestConv.id;
+        const { messages: histMsgs } = await getConversationMessages(projectId, latestConv.id);
+        if (histMsgs.length === 0) return;
+        const restored: ChatMessage[] = histMsgs.map((m) => ({
+          id: `hist-${m.id}`,
+          role: m.role as 'user' | 'assistant',
+          content: m.content,
+          timestamp: new Date(m.createdAt),
+        }));
+        setMessages(restored);
+      } catch {
+        // No history available — that's fine
+      }
+    })();
+  }, [projectId]);
 
   useEffect(() => {
     getCopilotStatus()
@@ -378,6 +403,8 @@ export default function ChatPanel() {
                       : m,
                   ),
                 );
+              } else if (chunk.type === 'conversation' && chunk.conversationId) {
+                conversationIdRef.current = chunk.conversationId;
               } else if (chunk.type === 'error') {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -481,6 +508,7 @@ export default function ChatPanel() {
       const response = await copilotChatStream({
         messages: conversationHistory,
         stream: true,
+        conversationId: conversationIdRef.current,
         projectContext: projectId
           ? { projectId, techStack: ['React', 'Tailwind', 'Vite'] }
           : undefined,
