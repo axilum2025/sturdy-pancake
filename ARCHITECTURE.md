@@ -1,10 +1,10 @@
-# Architecture du Projet - GiLo AI Agent Builder
+# Architecture du Projet — GiLo AI Agent Builder
 
-> **Dernière mise à jour** : 8 février 2026
+> **Dernière mise à jour** : 12 février 2026
 
 ## Vue d'ensemble
 
-Ce projet est un **constructeur d'agents IA** (Agent Builder) avec un **Agent Store** intégré. Il permet aux utilisateurs de créer, configurer, tester et publier des agents IA accessibles via une interface de chat style ChatGPT/Gemini/Claude.
+**GiLo AI** est un constructeur d'agents IA (Agent Builder) avec un **Agent Store** intégré. Il permet de créer, configurer, tester, publier et déployer des agents IA accessibles via chat (style ChatGPT), API REST, widget embeddable ou subdomain personnalisé.
 
 ---
 
@@ -12,312 +12,303 @@ Ce projet est un **constructeur d'agents IA** (Agent Builder) avec un **Agent St
 
 ```mermaid
 flowchart TB
-    subgraph Frontend - Port 5173
-        A[React + Vite + Tailwind]
-        B[Pages]
-        C[Composants]
-        D[Services]
-        E[Store Zustand]
-        
-        B --> Home[Home - Landing]
-        B --> Dashboard[Dashboard - Liste agents]
-        B --> Builder[Builder - Agent Studio]
-        B --> AgentStore[AgentStore - Grille icônes]
-        B --> AgentStorePage[AgentStorePage - Détails]
-        B --> AgentChat[AgentChat - Chat plein écran]
-        
-        C --> ChatPanel
-        C --> AgentConfig
-        C --> Playground
-        C --> TimelinePanel
-        C --> MCPSettings
-        C --> MCPBrowser
-        C --> PublishModal
-        C --> AuthModal
-        
-        D --> api.ts
-        E --> sessionStore
-        E --> builderStore
+    subgraph Frontend["Frontend — React + Vite (Port 5173)"]
+        Pages[10 Pages]
+        Components[18+ Composants]
+        State[Zustand Store]
+        API[api.ts — HTTP Client]
     end
-    
-    subgraph Backend - Port 3001
-        F[Express Server]
-        G[Routes]
-        H[Services]
-        I[Models]
-        
-        G --> agentsRouter[/api/agents]
-        G --> storeRouter[/api/store]
-        G --> sessionRouter[/api/sessions]
-        G --> mcpRouter[/api/mcp]
-        G --> authRouter[/api/auth]
-        G --> storageRouter[/api/storage]
-        
-        H --> AgentService
-        H --> SessionManager
-        H --> MCPService
-        H --> StorageService
-        
-        I --> AgentModel[Agent Model - Map]
-        I --> StoreModel[StoreAgent Model - Map]
-        I --> UserModel[User Model - Map]
+
+    subgraph Caddy["Caddy Reverse Proxy (Port 80/443)"]
+        SSL[Auto HTTPS]
+        Subdomain["{slug}.gilo.dev → Backend"]
     end
-    
-    subgraph External APIs
-        J[GitHub Models API]
-        K[OpenAI Compatible - SSE]
+
+    subgraph Backend["Backend — Express + TypeScript (Port 3001)"]
+        Routes[20 Fichiers Routes]
+        Services[17 Services]
+        Middleware[6 Middlewares]
+        Models[7 Models]
     end
-    
-    A -- HTTP REST + SSE --> F
-    F -- Chat Streaming --> J
-    F -- Store Chat --> K
+
+    subgraph Database["PostgreSQL 16"]
+        Tables[15 Tables + pgvector]
+    end
+
+    subgraph External["APIs Externes"]
+        GitHub[GitHub Models API — GPT-4.1]
+        Stripe[Stripe — Billing]
+        MCP[MCP Servers — JSON-RPC 2.0]
+    end
+
+    subgraph Embed["Intégrations Externes"]
+        Widget[widget.js — Chat Bubble]
+        PublicAPI[API v1 — API Key Auth]
+        SubdomainChat["{slug}.gilo.dev/chat"]
+    end
+
+    Frontend --> Caddy --> Backend
+    Backend --> Database
+    Backend --> GitHub
+    Backend --> Stripe
+    Backend --> MCP
+    Widget --> PublicAPI --> Backend
+    SubdomainChat --> Backend
 ```
 
 ---
 
-## Structure des Données
+## Structure du Projet
 
-### Session (SessionManager)
-```typescript
-interface Session {
-  id: string;              // UUID
-  projectId: string;       // ID du projet
-  userId: string;           // ID utilisateur
-  createdAt: Date;          // Date de création
-  permissions: {
-    filesystem: 'sandbox' | 'restricted' | 'full';
-    allowedCommands: string[];
-    maxFileSize: number;
-    allowedPorts: number[];
-  };
-  state: 'active' | 'idle' | 'closed';
-}
 ```
-
-### Task (AgentService)
-```typescript
-interface Task {
-  id: string;
-  sessionId: string;
-  prompt: string;
-  constraints?: {
-    stack?: string[];
-    accessibility?: boolean;
-    mobileFirst?: boolean;
-    externalAPIs?: boolean;
-    mcpTools?: string[];
-  };
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  createdAt: Date;
-  completedAt?: Date;
-  result?: any;
-  error?: string;
-}
-```
-
-### MCP Server Config
-```typescript
-interface MCPServerConfig {
-  id: string;
-  name: string;
-  command: string;
-  args: string[];
-  env?: Record<string, string>;
-  enabled: boolean;
-  description?: string;
-}
-```
-
----
-
-## Flux de Données
-
-### 1. Création d'une Session
-```
-User → Builder.tsx → useSessionStore → POST /api/sessions → SessionManager
-```
-
-### 2. Envoi d'une Tâche
-```
-User → ChatPanel.tsx → POST /api/agent/task → AgentService
-    → Task créée avec statut 'pending'
-    → Exécution asynchrone
-    → Streaming des événements via SSE
-```
-
-### 3. Gestion MCP
-```
-MCPBrowser.tsx → GET /api/mcp/tools → MCPService
-    → Liste des outils disponibles
-    → Exécution via POST /api/mcp/tools/execute
+├── backend/
+│   ├── Dockerfile                # Multi-stage Node.js 20 Alpine
+│   ├── drizzle.config.ts         # Drizzle ORM config
+│   ├── vitest.config.ts          # Test config
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── data/
+│   │   ├── mcp-servers.json      # User MCP server configs
+│   │   ├── mcp-server-templates.json  # 12 templates pré-configurés
+│   │   └── projects/             # Filesystem storage
+│   ├── drizzle/                  # Migrations SQL
+│   ├── public/
+│   │   ├── chat.html             # Chat interface (subdomain)
+│   │   └── widget.js             # Embeddable chat widget
+│   └── src/
+│       ├── index.ts              # Express app entry point
+│       ├── db/
+│       │   ├── index.ts          # DB connection (Drizzle + pg)
+│       │   ├── schema.ts         # 15 tables PostgreSQL
+│       │   ├── migrate.ts        # Migration runner
+│       │   └── seed.ts           # Seeds (demo user, store agents)
+│       ├── middleware/
+│       │   ├── auth.ts           # JWT + optionalAuth
+│       │   ├── apiKeyAuth.ts     # API key auth (public API)
+│       │   ├── rateLimiter.ts    # Rate limiting par tier
+│       │   ├── publicRateLimiter.ts  # Rate limiting subdomain (IP)
+│       │   ├── subdomain.ts      # {slug}.gilo.dev routing
+│       │   └── validation.ts     # Zod v4 schemas + validate()
+│       ├── models/               # 7 models (agent, user, storeAgent, apiKey, webhook, integration, project)
+│       ├── routes/               # 20 route files (~100+ endpoints)
+│       └── services/             # 17 services + oauthProviders/
+├── frontend/
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tailwind.config.js
+│   └── src/
+│       ├── App.tsx               # Router principal
+│       ├── main.tsx              # Entry point
+│       ├── components/           # 18+ composants React
+│       ├── contexts/             # Auth context
+│       ├── i18n/                 # Traductions FR/EN
+│       ├── pages/                # 10 pages
+│       ├── services/             # api.ts (HTTP client)
+│       └── store/                # Zustand stores
+├── infra/
+│   ├── main.bicep                # Azure IaC complet
+│   └── parameters.example.json
+├── caddy/
+│   └── Dockerfile                # Caddy reverse proxy
+├── scripts/
+│   ├── setup-azure.sh            # Provisioning Azure
+│   └── setup-custom-domain.sh
+├── docker-compose.yml            # 4 services (caddy, backend, frontend, db)
+├── Caddyfile                     # Reverse proxy config
+├── ROADMAP.md                    # Roadmap détaillé avec statuts
+└── ARCHITECTURE.md               # Ce fichier
 ```
 
 ---
 
-## Technologies Utilisées
+## Base de Données — 15 Tables PostgreSQL
 
-### Frontend
-- **React 18** — Framework UI
-- **Vite** — Build tool
-- **Tailwind CSS** — Styling (design system glass/gradient custom)
-- **React Router v6** — Routing
-- **Zustand** — State management (sessionStore, builderStore)
-- **Lucide React** — Icônes
-- **TypeScript** — Typage
-
-### Backend
-- **Express.js** — Framework web
-- **TypeScript** — Langage
-- **OpenAI SDK** — Chat completions (GitHub Models API)
-- **SSE** — Server-Sent Events pour le streaming
-- **CORS** — Cross-origin middleware
-- **dotenv** — Variables d'environnement
-
-### AI
-- **GitHub Models API** — GPT-4.1 / GPT-4.1-mini / GPT-4.1-nano
-- **OpenAI-compatible endpoint** — `https://models.github.ai/inference`
-- **SSE streaming** — Réponses en temps réel
+| Table | Description | Relations |
+|-------|-------------|-----------|
+| `users` | Utilisateurs (email, passwordHash, tier, subscription, quotas) | → agents, api_keys, webhooks |
+| `agents` | Agents IA (name, config JSONB, status, slug, endpoint) | → users, conversations, knowledge_* |
+| `store_agents` | Agents publiés dans le Store (icon, category, rating, configSnapshot) | → agents |
+| `conversations` | Conversations persistées | → agents, messages |
+| `messages` | Messages individuels (role, content, metadata) | → conversations |
+| `knowledge_documents` | Documents indexés (name, type, size, chunkCount) | → agents |
+| `knowledge_chunks` | Chunks de texte + embedding vector | → knowledge_documents |
+| `api_keys` | Clés API par agent (hash SHA-256, prefix, requestCount) | → agents, users |
+| `webhooks` | Webhooks configurés (url, events, secretHash) | → agents, users |
+| `refresh_tokens` | Tokens de rafraîchissement JWT | → users |
+| `community_tools` | Outils communautaires (name, config, rating) | → users |
+| `agent_metrics` | Métriques agrégées (conversations, messages, tokens, cost) | → agents |
+| `agent_logs` | Logs détaillés de chaque interaction | → agents |
+| `agent_alerts` | Règles d'alerte configurées | → agents, users |
+| `integrations` | Intégrations OAuth/API key (provider, tokens chiffrés) | → agents, users |
 
 ---
 
-## API Endpoints
+## API Endpoints — Vue Complète
 
-### Auth
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/auth/login` | Connexion (demo) |
-| POST | `/api/auth/register` | Inscription (demo) |
-| GET | `/api/auth/me` | Utilisateur courant |
+### Auth (`/api/auth`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| POST | `/register` | — | Inscription (Zod: email, password min 6) |
+| POST | `/login` | — | Connexion (Zod: email, password) |
+| GET | `/me` | JWT | Profil utilisateur |
+| POST | `/upgrade` | JWT | Upgrade tier (demo/Stripe) |
+| POST | `/downgrade` | JWT | Downgrade to free |
+| GET | `/export` | JWT | RGPD — Export données |
+| DELETE | `/account` | JWT | RGPD — Suppression compte |
 
-### Agents
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/agents` | Lister les agents de l'utilisateur |
-| POST | `/api/agents` | Créer un agent |
-| GET | `/api/agents/:id` | Détail d'un agent |
-| PATCH | `/api/agents/:id` | Modifier un agent |
-| DELETE | `/api/agents/:id` | Supprimer un agent |
-| PATCH | `/api/agents/:id/config` | Modifier la config (model, temperature, tools) |
-| POST | `/api/agents/:id/chat` | Chat SSE avec l'agent |
-| POST | `/api/agents/:id/deploy` | Déployer un agent |
+### Agents (`/api/agents`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/` | JWT | Lister ses agents |
+| POST | `/` | JWT | Créer un agent (Zod: name, config) |
+| GET | `/:id` | JWT | Détail agent |
+| PATCH | `/:id` | JWT | Update metadata (Zod: name, description) |
+| PATCH | `/:id/config` | JWT | Update config (Zod: model, tools, appearance…) |
+| POST | `/:id/deploy` | JWT | Déployer l'agent |
+| DELETE | `/:id` | JWT | Supprimer l'agent |
+| POST | `/:id/chat` | JWT | Chat SSE (Zod: messages, conversationId) |
+| GET | `/:id/conversations` | JWT | Lister conversations |
+| GET | `/:id/conversations/:convId/messages` | JWT | Messages d'une conversation |
+| DELETE | `/:id/conversations/:convId` | JWT | Supprimer une conversation |
 
-### Agent Store
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/store` | Lister les agents du Store (cards) |
-| GET | `/api/store/categories` | Catégories disponibles |
-| GET | `/api/store/:id` | Détail d'un agent du Store |
-| POST | `/api/store/publish` | Publier un agent dans le Store |
-| POST | `/api/store/:id/chat` | Chat SSE avec un agent du Store |
-| POST | `/api/store/:id/use` | Incrémenter le compteur d'utilisation |
-| POST | `/api/store/:id/validate-token` | Valider un token d'accès privé |
-| DELETE | `/api/store/:id` | Retirer un agent du Store |
+### Billing (`/api/billing`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/plans` | — | Liste des plans (Free, Pro) |
+| POST | `/checkout` | JWT | Créer Stripe Checkout Session |
+| POST | `/portal` | JWT | Créer Stripe Customer Portal |
+| POST | `/webhook` | Stripe Sig | Handler webhook Stripe |
 
-### Sessions
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/sessions` | Créer une session |
-| GET | `/api/sessions/:sessionId` | Récupérer une session |
-| DELETE | `/api/sessions/:sessionId` | Supprimer une session |
+### Public API v1 (`/api/v1`) — API Key Auth
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/agents/:id` | API Key | Info agent public |
+| POST | `/agents/:id/chat` | API Key | Chat SSE/JSON (Zod: messages) |
 
-### MCP
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| GET | `/api/mcp/servers` | Liste des serveurs |
-| POST | `/api/mcp/servers` | Ajouter un serveur |
-| PATCH | `/api/mcp/servers/:id` | Modifier un serveur |
-| DELETE | `/api/mcp/servers/:id` | Supprimer un serveur |
-| GET | `/api/mcp/tools` | Liste des outils |
-| POST | `/api/mcp/tools/execute` | Exécuter un outil |
-| GET | `/api/mcp/resources` | Liste des ressources |
+### Store (`/api/store`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/` | — | Lister agents du Store |
+| GET | `/categories` | — | Catégories disponibles |
+| GET | `/:id` | — | Détail agent Store |
+| POST | `/publish` | JWT | Publier (Zod: agentId, name, description, category) |
+| POST | `/:id/chat` | — | Chat SSE avec agent Store |
+| POST | `/:id/remix` | JWT | Remixer un agent |
+| POST | `/:id/use` | — | Incrémenter compteur |
+| POST | `/:id/validate-token` | — | Valider token d'accès privé |
+| POST | `/:id/regenerate-token` | JWT | Régénérer token privé |
+| DELETE | `/:id` | JWT | Retirer du Store |
 
-### Storage
-| Méthode | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/api/storage/projects` | Créer un projet |
-| GET | `/api/storage/projects` | Lister les projets |
-| GET | `/api/storage/projects/:id` | Récupérer un projet |
-| POST | `/api/storage/projects/:id/files` | Sauvegarder un fichier |
+### Knowledge Base (`/api/agents/:id/knowledge`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| POST | `/` | JWT | Upload document (multipart) |
+| GET | `/` | JWT | Lister documents indexés |
+| GET | `/stats` | JWT | Stats (docs, chunks, tokens) |
+| POST | `/url` | JWT | Scraper une URL |
+| POST | `/search` | JWT | Recherche sémantique (test) |
+| DELETE | `/:docId` | JWT | Supprimer un document |
 
----
+### API Keys & Webhooks (`/api/agents/:id`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| POST | `/api-keys` | JWT | Créer API key (Zod: name) |
+| GET | `/api-keys` | JWT | Lister API keys |
+| DELETE | `/api-keys/:keyId` | JWT | Révoquer API key |
+| POST | `/webhooks` | JWT | Créer webhook (Zod: url, events) |
+| GET | `/webhooks` | JWT | Lister webhooks |
+| PATCH | `/webhooks/:webhookId` | JWT | Modifier webhook |
+| DELETE | `/webhooks/:webhookId` | JWT | Supprimer webhook |
 
-## Fonctionnalités Actuelles
+### Analytics & Alerts (`/api/analytics`, `/api/agents/:id/alerts`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/analytics` | JWT | Dashboard global |
+| GET | `/analytics/agents/:id/analytics` | JWT | Métriques par agent |
+| GET | `/analytics/agents/:id/logs` | JWT | Logs détaillés |
+| GET | `/analytics/agents/:id/logs/export` | JWT | Export CSV |
+| GET | `/alerts` | JWT | Lister alertes |
+| POST | `/alerts` | JWT | Créer alerte (Zod: type, config.threshold) |
+| PATCH | `/alerts/:alertId` | JWT | Modifier alerte |
+| DELETE | `/alerts/:alertId` | JWT | Supprimer alerte |
 
-### Phase 1 - Rebrand UI ✅
-- Design system glass/gradient (glass-strong, gradient-text, glow-icon, btn-gradient)
-- Landing page "GiLo AI — Agent Builder"
-- Responsive mobile/tablette/desktop
-- Animations (fade-in-up, slide-in-right, pulse-glow)
+### MCP (`/api/mcp`)
+| Méthode | Endpoint | Auth | Description |
+|---------|----------|------|-------------|
+| GET | `/templates` | JWT | 12 templates MCP |
+| POST | `/templates/:id/install` | JWT | Installer template |
+| GET/POST/PATCH/DELETE | `/servers/*` | JWT | CRUD serveurs MCP |
+| POST | `/servers/:id/connect` | JWT | Connecter (stdio/HTTP) |
+| GET | `/tools` | JWT | Lister outils découverts |
+| POST | `/tools/execute` | JWT | Exécuter outil MCP |
+| GET | `/resources` | JWT | Lister ressources |
+| GET | `/prompts` | JWT | Lister prompts |
 
-### Phase 2 - Agent Builder ✅
-- CRUD agents avec config (model, temperature, system prompt, tools)
-- Chat SSE temps réel (GitHub Models API — GPT-4.1)
-- AgentConfig UI (3 onglets : Instructions, Modèle, Outils)
-- Playground intégré pour tester les agents
-- Dashboard avec stats et création rapide
-- MCP Settings + Browser (design glass/gradient)
-- Timeline des actions
-- Auth demo (demo@example.com / demo)
-
-### Phase 2.5 - Agent Store ✅ (core)
-- Agent Store (grille d'icônes style app mobile)
-- Page détail agent (stats, features, boutons Utiliser/Remixer)
-- Interface chat plein écran style ChatGPT/Gemini/Claude
-- Publication depuis le Builder (3 étapes)
-- 9 catégories (support, dev, creative, data, education, marketing, gaming, hr, general)
-- Agents publics et privés (validation par token)
-
-### À venir (voir ROADMAP.md)
-- Phase 3 : Persistance DB + Auth JWT/OAuth
-- Phase 4 : Déploiement réel (API endpoints, widget, webhooks)
-- Phase 5 : Knowledge Base / RAG
-- Phase 6 : Outils & MCP fonctionnel
-- Phase 7-10 : Analytics, Versioning, Billing, Production
-
----
-
-## Points d'Extension Prioritaires
-
-### 1. Persistance (Phase 3)
-Actuellement tout est en mémoire (`Map`). Au restart, toutes les données sont perdues.
-→ Migration vers PostgreSQL + drizzle-orm
-
-### 2. Auth Réelle (Phase 3)
-Le système actuel utilise un header `x-user-id` avec un user demo fixe.
-→ JWT + OAuth GitHub/Google
-
-### 3. MCP Fonctionnel (Phase 6)
-Le `mcpService.ts` contient des stubs/placeholders :
-```typescript
-// Toutes les méthodes retournent des données statiques
-// TODO: Connecter de vrais serveurs MCP
-```
-
-### 4. Knowledge Base / RAG (Phase 5)
-Pas encore implémenté. Objectif : permettre aux agents d'accéder à des documents personnalisés via embeddings + recherche vectorielle.
+### Autres
+| Méthode | Route | Description |
+|---------|-------|-------------|
+| GET | `/health`, `/api/health` | Health check |
+| GET | `/widget.js` | Widget embeddable (CORS *) |
+| POST | `/api/copilot/chat\|stream` | Copilot IA (chat, stream SSE) |
+| GET/POST | `/api/integrations/*` | OAuth providers |
+| GET/POST/PUT/DELETE | `/api/projects/*` | Gestion projets |
+| POST | `/api/tools/*` | Catalogue outils, community, OpenAPI |
 
 ---
 
-## Sécurité
+## Validation — Zod v4 Schemas
 
-- **Sandbox filesystem**: Permissions configurables
-- **Allowlist commandes**: npm, pnpm, vite, eslint, prettier
-- **Pas d'accès aux secrets**: Variables d'environnement protégées
-- **Isolation par session**: Chaque projet a sa propre session
+Middleware centralisé dans `backend/src/middleware/validation.ts` :
 
----
-
-## Déploiement
-
-- **Azure Web Apps** avec CI/CD GitHub Actions
-- Variables d'environnement requises:
-  - `PORT`
-  - `NODE_ENV`
-  - `GITHUB_TOKEN`
-  - `ALLOWED_ORIGINS`
-  - `GILO_DOMAIN` (e.g. `gilo.dev`)
-  - `MCP_STORAGE_DIR`
+| Schema | Utilisé sur | Champs validés |
+|--------|-------------|----------------|
+| `registerSchema` | POST /auth/register | email, password (min 6), name? |
+| `loginSchema` | POST /auth/login | email, password |
+| `createAgentSchema` | POST /agents | name (required), description?, config? |
+| `updateAgentSchema` | PATCH /agents/:id | name?, description? |
+| `updateAgentConfigSchema` | PATCH /agents/:id/config | model, temperature, tools[], appearance, etc. |
+| `chatSchema` | POST /agents/:id/chat, /copilot/chat, /v1/agents/:id/chat | messages[] (role+content), conversationId? |
+| `copilotStreamSchema` | POST /copilot/stream | messages[], model?, temperature?, projectContext? |
+| `createWebhookSchema` | POST /agents/:id/webhooks | url (URL), events[] (enum) |
+| `createApiKeySchema` | POST /agents/:id/api-keys | name (required) |
+| `publishAgentSchema` | POST /store/publish | agentId, name, description, category |
+| `createAlertSchema` | POST /agents/:id/alerts | type (enum), config.threshold |
 
 ---
 
-*Document mis à jour le 8 février 2026*
+## Technologies
+
+| Couche | Technologie |
+|--------|-------------|
+| Frontend | React 18, Vite, TypeScript, Tailwind CSS, Zustand, React Router v6, Lucide, i18next |
+| Backend | Express.js, TypeScript, Drizzle ORM, Zod v4, OpenAI SDK, Stripe SDK |
+| Base de données | PostgreSQL 16 + pgvector |
+| Auth | JWT (jsonwebtoken) + bcryptjs, OAuth Google |
+| AI | GitHub Models API (GPT-4.1/Mini/Nano), text-embedding-3-small |
+| Billing | Stripe (Checkout, Customer Portal, Webhooks) |
+| Tests | Vitest (35 tests unitaires) |
+| Infra | Docker Compose, Caddy, Azure Container Apps, Bicep IaC, GitHub Actions CI/CD |
+
+---
+
+## Variables d'Environnement
+
+| Variable | Description | Requis |
+|----------|-------------|--------|
+| `PORT` | Port backend (défaut: 3001) | — |
+| `DATABASE_URL` | PostgreSQL connection string | ✅ |
+| `GITHUB_TOKEN` | GitHub Models API token | ✅ |
+| `JWT_SECRET` | Secret pour JWT signing | ✅ |
+| `ALLOWED_ORIGINS` | CORS origins (comma-separated) | — |
+| `GILO_DOMAIN` | Domaine pour subdomains (ex: gilo.dev) | — |
+| `FRONTEND_URL` | URL frontend pour redirects Stripe | — |
+| `STRIPE_SECRET_KEY` | Stripe API secret key | — |
+| `STRIPE_PRO_PRICE_ID` | Stripe Price ID pour plan Pro | — |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | — |
+| `MCP_STORAGE_DIR` | Répertoire stockage MCP configs | — |
+| `SENDGRID_API_KEY` | SendGrid pour emails (outils built-in) | — |
+
+---
+
+*Document mis à jour le 12 février 2026*
