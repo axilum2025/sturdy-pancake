@@ -2,20 +2,16 @@ import axios from 'axios';
 
 // In production, VITE_API_URL points to the Container Apps backend URL
 // In dev, it's empty and requests go through the Vite proxy (localhost:3001)
-function resolveApiBase(): string {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) return envUrl;
+//
+// IMPORTANT: The fallback MUST use window.location at runtime because
+// Vite statically replaces import.meta.env.* at build time.  If BACKEND_URL
+// is not set as a GitHub Actions variable the env value will be "".
+const _VITE_URL: string = import.meta.env.VITE_API_URL ?? '';
 
-  // Production fallback: if served from gilo.dev (SWA), route API to the backend
-  if (typeof window !== 'undefined' && window.location.hostname.endsWith('gilo.dev')) {
-    return 'https://api.gilo.dev';
-  }
-
-  // Dev: empty string → Vite proxy handles /api
-  return '';
-}
-
-export const API_BASE = resolveApiBase();
+export const API_BASE: string = _VITE_URL
+  || (typeof window !== 'undefined' && window.location.hostname.endsWith('gilo.dev')
+        ? 'https://api.gilo.dev'
+        : '');
 
 export const api = axios.create({
   baseURL: `${API_BASE}/api`,
