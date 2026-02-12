@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, MessageSquare, Star, Users, Sparkles, Lock, Globe,
   Copy, Check, Tag, Clock, Cpu, Thermometer, Shield, RefreshCw, CheckCircle, Loader2,
-  Share2, X, Link2, Download
+  Share2, X, Link2, Download, Trash2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -69,10 +69,31 @@ export default function AgentStorePage() {
   const [remixSuccess, setRemixSuccess] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     fetchAgent();
   }, [agentId]);
+
+  // Check admin status
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE}/api/store/admin/check`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setIsAdmin(data.isAdmin === true);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+  }, []);
 
   const fetchAgent = async (token?: string) => {
     try {
@@ -164,6 +185,25 @@ export default function AgentStorePage() {
     a.href = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&format=png&data=${encodeURIComponent(agentUrl)}`;
     a.download = `${agent?.name || 'agent'}-qr.png`;
     a.click();
+  };
+
+  const handleAdminDelete = async () => {
+    if (!agent || deleting) return;
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/store/admin/${agent.id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error('Delete failed');
+      navigate('/store');
+    } catch (error) {
+      console.error('Error deleting agent from store:', error);
+      setDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   const formatDate = (d: string) => {
@@ -432,6 +472,47 @@ export default function AgentStorePage() {
           </button>
           <span className="ml-2">v{agent.version}</span>
         </div>
+
+        {/* Admin Delete Section */}
+        {isAdmin && (
+          <div className="mt-8 pt-6 border-t border-red-500/20 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <div className="flex items-center gap-3">
+              <Shield className="w-5 h-5 text-red-400" />
+              <span className="text-sm text-red-400 font-medium">Zone Admin</span>
+            </div>
+            {!showDeleteConfirm ? (
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="mt-3 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                Supprimer du Store
+              </button>
+            ) : (
+              <div className="mt-3 p-4 rounded-xl border border-red-500/30 bg-red-500/5">
+                <p className="text-sm text-red-300 mb-3">
+                  Confirmer la suppression de <strong>{agent.name}</strong> du store ? Cette action est irréversible.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleAdminDelete}
+                    disabled={deleting}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium disabled:opacity-50"
+                  >
+                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                    Confirmer la suppression
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="px-4 py-2 rounded-lg border border-t-overlay/10 text-t-text/60 hover:text-t-text hover:bg-t-overlay/[0.08] transition-colors text-sm"
+                  >
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Share Modal */}

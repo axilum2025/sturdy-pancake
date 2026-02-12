@@ -15,11 +15,46 @@ import bcrypt from 'bcryptjs';
 const DEMO_USER_EMAIL = 'demo@example.com';
 const DEMO_PASSWORD = 'demo123';
 
+// Admin account — uses ADMIN_EMAIL from .env
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || '';
+const ADMIN_PASSWORD = 'Zgd10091990@';
+
 async function seed() {
   console.log('🌱 Seeding database...');
 
   await initDb();
   const db = getDb();
+
+  // ---- Create admin user (app developer) ----
+  if (ADMIN_EMAIL) {
+    const existingAdmin = await db.query.users.findFirst({
+      where: eq(users.email, ADMIN_EMAIL),
+    });
+
+    if (existingAdmin) {
+      console.log('  ✓ Admin user already exists');
+    } else {
+      const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+      const [adminUser] = await db.insert(users).values({
+        email: ADMIN_EMAIL,
+        passwordHash: adminHash,
+        tier: 'pro',
+        subscription: { status: 'active' },
+        quotas: {
+          projectsMax: 999,
+          storageMax: 50 * 1024 * 1024 * 1024,
+          deploymentsPerMonth: 9999,
+        },
+        usage: {
+          projectsCount: 0,
+          storageUsed: 0,
+          deploymentsThisMonth: 0,
+          lastResetDate: new Date().toISOString(),
+        },
+      }).returning();
+      console.log(`  ✓ Admin user created: ${adminUser.id} (${ADMIN_EMAIL})`);
+    }
+  }
 
   // ---- Create demo user ----
   const existing = await db.query.users.findFirst({
