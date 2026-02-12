@@ -115,7 +115,7 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         visibility,
       };
 
-      // Save chat background to agent appearance config
+      // Save chat background to agent appearance config BEFORE deploy
       if (chatBackground) {
         try {
           await api.patch(`/agents/${agentId}/config`, {
@@ -126,7 +126,10 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
         }
       }
 
-      // Auto-deploy the agent to make it accessible via subdomain URL
+      // Publish to the store first (so icon/metadata is saved)
+      const response = await api.post('/store/publish', body);
+
+      // Auto-deploy the agent AFTER publish so everything is in place
       try {
         const deployResult = await deployAgent(agentId);
         if (deployResult.subdomainUrl) {
@@ -135,8 +138,6 @@ export default function PublishModal({ agentId, agentName, onClose, onPublished 
       } catch (deployErr) {
         console.warn('Auto-deploy skipped:', deployErr);
       }
-
-      const response = await api.post('/store/publish', body);
       const listing = response.data;
       if (visibility === 'private' && listing.accessToken) {
         setAccessToken(listing.accessToken);

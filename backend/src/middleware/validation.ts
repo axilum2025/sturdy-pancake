@@ -80,7 +80,7 @@ export const updateAgentConfigSchema = z.object({
   appearance: z.object({
     theme: z.enum(['dark', 'light', 'auto']).optional(),
     accentColor: z.string().max(20).optional(),
-    chatBackground: z.string().max(100).optional(),
+    chatBackground: z.string().max(5_000_000).optional(),
   }).optional(),
 }).passthrough(); // allow extra fields for forward compat
 
@@ -151,8 +151,10 @@ export const createAlertSchema = z.object({
 export const publishAgentSchema = z.object({
   agentId: z.string().min(1, 'agentId is required'),
   name: z.string().min(1).max(200),
-  description: z.string().min(1).max(5000),
-  icon: z.string().max(10).optional(),
+  description: z.string().max(5000).optional(),
+  shortDescription: z.string().max(500).optional(),
+  icon: z.string().max(1_000_000).optional(),
+  iconColor: z.string().max(50).optional(),
   color: z.string().max(50).optional(),
   category: z.string().min(1).max(50),
   features: z.array(z.string().max(200)).max(20).optional(),
