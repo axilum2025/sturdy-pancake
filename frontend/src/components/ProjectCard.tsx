@@ -1,6 +1,8 @@
-import { Bot, Clock, Wrench, MessageSquare, Globe, ExternalLink, CheckCircle, AlertCircle, FileEdit, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, Clock, Wrench, MessageSquare, Globe, ExternalLink, CheckCircle, AlertCircle, FileEdit, Trash2, QrCode } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Agent } from '../services/api';
+import QRCodeModal from './QRCodeModal';
 
 interface ProjectCardProps {
   project: Agent;
@@ -10,6 +12,7 @@ interface ProjectCardProps {
 
 export default function ProjectCard({ project, onClick, onDelete }: ProjectCardProps) {
   const { t } = useTranslation();
+  const [showQR, setShowQR] = useState(false);
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'deployed': return { bg: 'bg-green-500/10', text: 'text-green-400', border: 'border-green-500/30', label: t('projectCard.deployed'), icon: CheckCircle };
@@ -119,20 +122,40 @@ export default function ProjectCard({ project, onClick, onDelete }: ProjectCardP
             {formatDate(project.updatedAt)}
           </span>
         </div>
-        {project.endpoint && (
-          <a
-            href={project.endpoint}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs font-medium text-t-text/70 hover:text-t-text flex items-center gap-1.5 transition-all duration-200"
-          >
-            <Globe className="w-3.5 h-3.5" />
-            API
-            <ExternalLink className="w-3 h-3" />
-          </a>
+        {project.endpoint && project.slug && (
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowQR(true); }}
+              className="btn-outline-glow px-2.5 py-1.5 rounded-lg text-xs font-medium text-t-text/70 hover:text-indigo-300 flex items-center gap-1 transition-all duration-200"
+              title={t('projectCard.qrCode', 'QR Code')}
+            >
+              <QrCode className="w-3.5 h-3.5" />
+              QR
+            </button>
+            <a
+              href={project.endpoint}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs font-medium text-t-text/70 hover:text-t-text flex items-center gap-1.5 transition-all duration-200"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              API
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         )}
       </div>
+
+      {/* QR Code Modal */}
+      {project.slug && (
+        <QRCodeModal
+          isOpen={showQR}
+          onClose={() => setShowQR(false)}
+          agentName={project.name}
+          agentSlug={project.slug}
+        />
+      )}
     </div>
   );
 }
