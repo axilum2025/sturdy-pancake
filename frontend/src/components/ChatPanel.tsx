@@ -14,7 +14,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
-import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile, getConversations, getConversationMessages } from '../services/api';
+import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile, getConversations, getConversationMessages, getAgent } from '../services/api';
 import { useStudioStore } from '../store/studioStore';
 
 // ============================================================
@@ -216,10 +216,12 @@ export default function ChatPanel() {
   const [copilotAvailable, setCopilotAvailable] = useState<boolean | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
+  const [configApplied, setConfigApplied] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const conversationIdRef = useRef<string | undefined>(undefined);
-  const { projectId, triggerFileRefresh, addTimelineEvent, updateTimelineEvent } = useStudioStore();
+  const autoGreetedRef = useRef(false);
+  const { projectId, triggerFileRefresh, triggerConfigRefresh, addTimelineEvent, updateTimelineEvent } = useStudioStore();
 
   // Load last conversation history on mount
   useEffect(() => {
@@ -244,6 +246,40 @@ export default function ChatPanel() {
       }
     })();
   }, [projectId]);
+
+  // Auto-greet: if the agent is brand-new (default config) and no history, insert a welcome message
+  useEffect(() => {
+    if (!projectId || autoGreetedRef.current) return;
+    // Wait until messages have been loaded (next tick)
+    const timer = setTimeout(async () => {
+      if (messages.length > 0 || autoGreetedRef.current) return;
+      try {
+        const agent = await getAgent(projectId);
+        const defaultPrompt = 'Tu es un assistant IA utile et concis';
+        const isNew = !agent.config?.systemPrompt || agent.config.systemPrompt.startsWith(defaultPrompt);
+        if (isNew) {
+          autoGreetedRef.current = true;
+          const welcome: ChatMessage = {
+            id: `greet-${Date.now()}`,
+            role: 'assistant',
+            content:
+              '👋 **Bonjour !** Je vois que votre agent vient d\'être créé. Je suis **GiLo AI**, votre copilote.\n\n' +
+              'Décrivez-moi **à quoi servira votre agent** et je le configurerai automatiquement pour vous :\n\n' +
+              '- Son rôle et sa personnalité\n' +
+              '- Le modèle d\'IA adapté\n' +
+              '- Les outils à activer\n' +
+              '- Le message d\'accueil\n\n' +
+              'Par exemple : *« Un assistant support client pour mon SaaS qui répond en français et en anglais »*',
+            timestamp: new Date(),
+          };
+          setMessages([welcome]);
+        }
+      } catch {
+        // Agent fetch failed — skip greeting
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [projectId, messages.length]);
 
   useEffect(() => {
     getCopilotStatus()
@@ -405,6 +441,10 @@ export default function ChatPanel() {
                 );
               } else if (chunk.type === 'conversation' && chunk.conversationId) {
                 conversationIdRef.current = chunk.conversationId;
+              } else if (chunk.type === 'config_applied' && chunk.fields) {
+                triggerConfigRefresh();
+                setConfigApplied(true);
+                setTimeout(() => setConfigApplied(false), 4000);
               } else if (chunk.type === 'error') {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -425,14 +465,21 @@ export default function ChatPanel() {
           }
         }
       } finally {
+        // Strip <!--GILO_APPLY_CONFIG:...--> from displayed content and mark done
         setMessages((prev) =>
           prev.map((m) =>
-            m.id === assistantMsgId ? { ...m, isStreaming: false } : m,
+            m.id === assistantMsgId
+              ? {
+                  ...m,
+                  content: m.content.replace(/<!--GILO_APPLY_CONFIG:[\s\S]*?-->/g, '').trim(),
+                  isStreaming: false,
+                }
+              : m,
           ),
         );
       }
     },
-    [],
+    [triggerConfigRefresh],
   );
 
   // ---- Send ----
@@ -604,7 +651,13 @@ export default function ChatPanel() {
   ];
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
+      {/* Config applied toast */}
+      {configApplied && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-green-500/90 text-white text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in-up flex items-center gap-2">
+          <span>✅</span> Configuration appliquée avec succès !
+        </div>
+      )}
       {/* Header */}
       <div className="px-4 py-3 border-b border-transparent flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">

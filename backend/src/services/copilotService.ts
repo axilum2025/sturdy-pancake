@@ -86,7 +86,7 @@ export class CopilotService {
   // ----------------------------------------------------------
   // Expose client info for direct route usage
   // ----------------------------------------------------------
-  getClientInfo(projectContext?: CopilotChatRequest['projectContext']): {
+  getClientInfo(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig): {
     client: OpenAI;
     systemPrompt: string;
     defaultModel: string;
@@ -94,7 +94,7 @@ export class CopilotService {
     this.ensureInit();
     return {
       client: this.openai,
-      systemPrompt: this.buildSystemPrompt(projectContext),
+      systemPrompt: this.buildSystemPrompt(projectContext, agentConfig),
       defaultModel: this.defaultModel,
     };
   }
@@ -132,7 +132,7 @@ export class CopilotService {
   // ----------------------------------------------------------
   // Build the GiLo AI system prompt
   // ----------------------------------------------------------
-  private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext']): string {
+  private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig): string {
     let system = `Tu es GiLo AI, un assistant expert en création d'agents IA, intégré dans la plateforme GiLo AI Agent Builder.
 Tu aides les utilisateurs à concevoir, configurer et déployer des agents IA conversationnels.
 Quand un utilisateur décrit un agent, tu génères :
@@ -154,6 +154,62 @@ Utilise le format JSON pour les configurations d'agent.`;
       if (projectContext.files?.length) {
         system += `\n- Fichiers de configuration: ${projectContext.files.join(', ')}`;
       }
+    }
+
+    // Check if the agent is new/unconfigured and enable guided creation mode
+    const isNewAgent = agentConfig && (
+      agentConfig.systemPrompt === 'Tu es un assistant IA utile et concis. Réponds toujours de manière professionnelle.' ||
+      !agentConfig.systemPrompt?.trim()
+    );
+
+    if (isNewAgent) {
+      system += `
+
+=== MODE CRÉATION GUIDÉE ===
+L'utilisateur vient de créer un nouvel agent qui n'est pas encore configuré.
+Tu dois le guider de manière conversationnelle pour configurer son agent.
+
+COMPORTEMENT :
+1. Commence par accueillir l'utilisateur et lui demander de décrire à quoi servira son agent (quel rôle, quel public cible, quel ton).
+2. Pose des questions de suivi si nécessaire (2-3 questions max, pas plus).
+3. Quand tu as assez d'informations, génère la configuration complète et applique-la.
+
+QUAND TU GÉNÈRES LA CONFIGURATION, tu DOIS inclure un bloc spécial dans ta réponse :
+<!--GILO_APPLY_CONFIG:{"systemPrompt":"...", "temperature": 0.7, "maxTokens": 2048, "welcomeMessage": "...", "tools": [...]}-->
+
+Ce bloc sera automatiquement détecté et appliqué à l'agent. L'utilisateur verra que la config a été appliquée.
+
+OUTILS DISPONIBLES (inclure seulement les pertinents) :
+- {"id":"builtin_get_current_time","name":"get_current_time","type":"builtin","enabled":true,"config":{"builtinId":"get_current_time"}} — heure actuelle
+- {"id":"builtin_calculator","name":"calculator","type":"builtin","enabled":true,"config":{"builtinId":"calculator"}} — calculs math
+- {"id":"builtin_http_get","name":"http_get","type":"builtin","enabled":true,"config":{"builtinId":"http_get"}} — requêtes HTTP GET
+- {"id":"builtin_http_post","name":"http_post","type":"builtin","enabled":true,"config":{"builtinId":"http_post"}} — requêtes HTTP POST
+- {"id":"builtin_json_extract","name":"json_extract","type":"builtin","enabled":true,"config":{"builtinId":"json_extract"}} — extraction JSON
+- {"id":"builtin_send_email","name":"send_email","type":"builtin","enabled":true,"config":{"builtinId":"send_email"}} — envoi d'emails
+- {"id":"builtin_webhook_trigger","name":"webhook_trigger","type":"builtin","enabled":true,"config":{"builtinId":"webhook_trigger"}} — déclenchement webhooks
+
+RÈGLES pour le systemPrompt généré :
+- 100 à 300 mots, avec des instructions numérotées
+- Adapté au ton et au contexte décrits par l'utilisateur
+- En français sauf si l'utilisateur écrit en anglais
+
+RÈGLES pour le welcomeMessage :
+- Court (1-2 phrases), accueillant, en rapport avec le rôle de l'agent
+
+Après avoir appliqué la config, dis à l'utilisateur que son agent est configuré et qu'il peut :
+- Tester dans le Playground (icône 👁️ dans la barre latérale)
+- Ajuster la configuration (icône ⚙️)
+- Déployer (icône 🚀)
+=== FIN MODE CRÉATION GUIDÉE ===`;
+    } else if (agentConfig) {
+      system += `\n\nConfiguration actuelle de l'agent:`;
+      system += `\n- Modèle: ${agentConfig.model}`;
+      system += `\n- Température: ${agentConfig.temperature}`;
+      system += `\n- System Prompt: ${agentConfig.systemPrompt?.substring(0, 200)}...`;
+      system += `\n- Outils: ${agentConfig.tools?.map(t => t.name).join(', ') || 'aucun'}`;
+      system += `\n\nSi l'utilisateur demande des modifications de config, tu peux générer un bloc:
+<!--GILO_APPLY_CONFIG:{"systemPrompt":"...", ...}-->
+pour appliquer automatiquement les changements.`;
     }
 
     return system;

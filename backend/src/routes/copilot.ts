@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { conversationService } from '../services/conversationService';
+import { agentModel } from '../models/agent';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { validate, chatSchema, copilotStreamSchema } from '../middleware/validation';
 import { enforceModelForTier } from '../models/agent';
@@ -40,10 +41,19 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
   try {
     const { messages, model, temperature, maxTokens, projectContext, conversationId: incomingConvId } = req.body;
 
-
-    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext);
     const userId = (req as AuthenticatedRequest).userId;
     const agentId = projectContext?.projectId;
+
+    // Fetch agent config if we have a real agent ID
+    let agentConfig: import('../models/agent').AgentConfig | undefined;
+    if (agentId && agentId !== 'new-project') {
+      try {
+        const agent = await agentModel.findById(agentId);
+        if (agent) agentConfig = agent.config;
+      } catch { /* ignore — config enrichment is optional */ }
+    }
+
+    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext, agentConfig);
 
     // Conversation persistence (when tied to an agent)
     let conversationId: string | undefined;
@@ -108,6 +118,29 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     // Save assistant response
     if (conversationId && fullAssistantContent) {
       conversationService.addMessage(conversationId, 'assistant', fullAssistantContent).catch(() => {});
+    }
+
+    // Detect and apply GILO_APPLY_CONFIG block
+    const configMatch = fullAssistantContent.match(/<!--GILO_APPLY_CONFIG:([\s\S]*?)-->/);
+    if (configMatch && agentId && agentId !== 'new-project') {
+      try {
+        const configData = JSON.parse(configMatch[1].trim());
+        const updates: Record<string, any> = {};
+        if (configData.systemPrompt) updates.systemPrompt = configData.systemPrompt;
+        if (configData.temperature !== undefined) updates.temperature = configData.temperature;
+        if (configData.maxTokens !== undefined) updates.maxTokens = configData.maxTokens;
+        if (configData.welcomeMessage) updates.welcomeMessage = configData.welcomeMessage;
+        if (configData.language) updates.language = configData.language;
+        if (Array.isArray(configData.tools)) updates.tools = configData.tools;
+
+        if (Object.keys(updates).length > 0) {
+          await agentModel.updateConfig(agentId, updates);
+          console.log('[Copilot] Auto-applied config to agent', agentId, Object.keys(updates));
+          res.write(`data: ${JSON.stringify({ type: 'config_applied', fields: Object.keys(updates) })}\n\n`);
+        }
+      } catch (e: any) {
+        console.error('[Copilot] Failed to auto-apply config:', e.message);
+      }
     }
 
     res.write('data: [DONE]\n\n');

@@ -3,6 +3,7 @@ import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft
 import { useTranslation } from 'react-i18next';
 import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useStudioStore } from '../store/studioStore';
 import KnowledgePanel from './KnowledgePanel';
 import IntegrationsPanel from './IntegrationsPanel';
 import AppearancePanel from './AppearancePanel';
@@ -79,10 +80,11 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   const [newToolUrl, setNewToolUrl] = useState('');
   const [newToolMethod, setNewToolMethod] = useState('GET');
   const [addMode, setAddMode] = useState<'catalogue' | 'http' | 'custom'>('catalogue');
+  const { configRefreshCounter } = useStudioStore();
 
   useEffect(() => {
     loadConfig();
-  }, [agentId]);
+  }, [agentId, configRefreshCounter]);
 
   const loadConfig = async () => {
     try {

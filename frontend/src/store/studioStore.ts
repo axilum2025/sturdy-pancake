@@ -29,6 +29,8 @@ interface StudioState {
   deploymentError: string | null;
   /** Incremented whenever a file is created/updated by the AI agent */
   fileRefreshCounter: number;
+  /** Incremented when agent config is auto-applied by copilot */
+  configRefreshCounter: number;
   /** Timeline events for the history panel */
   timelineEvents: TimelineEvent[];
   setSelectedFile: (path: string | null, content?: string | null) => void;
@@ -39,6 +41,8 @@ interface StudioState {
   clearDeployment: () => void;
   /** Signal that the file list should be refreshed */
   triggerFileRefresh: () => void;
+  /** Signal that the agent config should be refreshed */
+  triggerConfigRefresh: () => void;
   /** Add a new timeline event */
   addTimelineEvent: (event: TimelineEvent) => void;
   /** Update an existing timeline event by id */
@@ -55,6 +59,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   isDeploying: false,
   deploymentError: null,
   fileRefreshCounter: 0,
+  configRefreshCounter: 0,
   timelineEvents: [],
   setSelectedFile: (path, content) => 
     set({ selectedFile: path, selectedFileContent: content ?? null }),
@@ -64,6 +69,7 @@ export const useStudioStore = create<StudioState>((set, get) => ({
   setDeploymentError: (error) => set({ deploymentError: error }),
   clearDeployment: () => set({ deployment: null, isDeploying: false, deploymentError: null }),
   triggerFileRefresh: () => set({ fileRefreshCounter: get().fileRefreshCounter + 1 }),
+  triggerConfigRefresh: () => set({ configRefreshCounter: get().configRefreshCounter + 1 }),
   addTimelineEvent: (event) =>
     set({ timelineEvents: [...get().timelineEvents, event] }),
   updateTimelineEvent: (id, updates) =>
