@@ -403,6 +403,8 @@
     "by": "by {{name}}",
     "uses": "{{count}} uses",
     "remixes": "{{count}} remixes",
+    "yourRating": "Your rating",
+    "loginToRate": "Log in to rate this agent",
     "useAgent": "Use this Agent",
     "remix": "Remix",
     "remixSuccess": "Agent remixed successfully! Redirecting...",

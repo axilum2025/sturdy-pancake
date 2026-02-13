@@ -2,8 +2,8 @@ import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
 import { agentModel } from '../models/agent';
 import { userModel } from '../models/user';
-import { AuthenticatedRequest } from '../middleware/auth';
-import { validate, publishAgentSchema } from '../middleware/validation';
+import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
+import { validate, publishAgentSchema, rateAgentSchema } from '../middleware/validation';
 import { cacheGet, cacheSet, cacheDelPattern } from '../services/redisService';
 
 export const storeRouter = Router();
@@ -243,6 +243,49 @@ storeRouter.post('/:id/use', async (req: Request, res: Response) => {
   try {
     await storeModel.incrementUsage(req.params.id);
     res.json({ ok: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// POST /api/store/:id/rate — Rate an agent (1-5 stars, authenticated)
+// ============================================================
+storeRouter.post('/:id/rate', authMiddleware, validate(rateAgentSchema), async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const listing = await storeModel.findById(req.params.id);
+    if (!listing) return res.status(404).json({ error: 'Agent not found' });
+
+    // Prevent self-rating
+    if (listing.userId === userId) {
+      return res.status(403).json({ error: 'You cannot rate your own agent' });
+    }
+
+    const { rating } = req.body;
+    const result = await storeModel.rateAgent(req.params.id, userId, rating);
+
+    // Invalidate store caches
+    await cacheDelPattern('cache:store:*');
+
+    res.json({ rating: result.rating, ratingCount: result.ratingCount });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
+// GET /api/store/:id/my-rating — Get current user's rating for an agent
+// ============================================================
+storeRouter.get('/:id/my-rating', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const userRating = await storeModel.getUserRating(req.params.id, userId);
+    res.json({ rating: userRating });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

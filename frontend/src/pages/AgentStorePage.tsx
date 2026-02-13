@@ -73,8 +73,14 @@ export default function AgentStorePage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Rating state
+  const [myRating, setMyRating] = useState<number | null>(null);
+  const [hoverRating, setHoverRating] = useState<number>(0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+
   useEffect(() => {
     fetchAgent();
+    fetchMyRating();
   }, [agentId]);
 
   // Check admin status
@@ -109,6 +115,50 @@ export default function AgentStorePage() {
       console.error('Error fetching agent:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMyRating = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/store/${agentId}/my-rating`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMyRating(data.rating);
+      }
+    } catch {
+      // ignore – user just can't see their rating
+    }
+  };
+
+  const handleRate = async (stars: number) => {
+    const token = localStorage.getItem('authToken');
+    if (!token || ratingLoading) return;
+    setRatingLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/store/${agentId}/rate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ rating: stars }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMyRating(stars);
+        // Update agent rating in state
+        if (agent) {
+          setAgent({ ...agent, rating: data.rating, ratingCount: data.ratingCount });
+        }
+      }
+    } catch (error) {
+      console.error('Error rating agent:', error);
+    } finally {
+      setRatingLoading(false);
     }
   };
 
@@ -302,6 +352,40 @@ export default function AgentStorePage() {
                 <RefreshCw className="w-4 h-4 text-blue-400" />
                 <span className="text-t-text/80">{t('store.remixes', { count: agent.remixCount ?? 0 })}</span>
               </div>
+            </div>
+
+            {/* Interactive Star Rating */}
+            <div className="mt-3 flex items-center gap-3">
+              {isAuthenticated ? (
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      disabled={ratingLoading}
+                      onClick={() => handleRate(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="p-0.5 transition-transform hover:scale-110 disabled:opacity-50"
+                      title={`${star}/5`}
+                    >
+                      <Star
+                        className={`w-5 h-5 transition-colors ${
+                          (hoverRating || myRating || 0) >= star
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-t-text/20'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                  {myRating && (
+                    <span className="ml-2 text-xs text-t-text/50">
+                      {t('store.yourRating')}: {myRating}/5
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="text-xs text-t-text/40 italic">{t('store.loginToRate')}</span>
+              )}
             </div>
           </div>
         </div>

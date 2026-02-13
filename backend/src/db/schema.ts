@@ -125,6 +125,19 @@ export const storeAgents = pgTable('store_agents', {
 });
 
 // ============================================================
+// Store Agent Ratings (per-user rating tracking)
+// ============================================================
+
+export const storeAgentRatings = pgTable('store_agent_ratings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  storeAgentId: uuid('store_agent_id').notNull().references(() => storeAgents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  rating: integer('rating').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
 // Conversations & Messages (for history)
 // ============================================================
 
@@ -389,8 +402,14 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   integrations: many(integrations),
 }));
 
-export const storeAgentsRelations = relations(storeAgents, ({ one }) => ({
+export const storeAgentsRelations = relations(storeAgents, ({ one, many }) => ({
   user: one(users, { fields: [storeAgents.userId], references: [users.id] }),
+  ratings: many(storeAgentRatings),
+}));
+
+export const storeAgentRatingsRelations = relations(storeAgentRatings, ({ one }) => ({
+  storeAgent: one(storeAgents, { fields: [storeAgentRatings.storeAgentId], references: [storeAgents.id] }),
+  user: one(users, { fields: [storeAgentRatings.userId], references: [users.id] }),
 }));
 
 export const conversationsRelations = relations(conversations, ({ one, many }) => ({

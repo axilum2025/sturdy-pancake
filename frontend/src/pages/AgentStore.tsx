@@ -125,8 +125,8 @@ export default function AgentStore() {
     }
   };
 
-  const trending = [...agents].sort((a, b) => b.usageCount - a.usageCount).slice(0, 6);
-  const topRated = [...agents].sort((a, b) => b.rating - a.rating).slice(0, 6);
+  const trending = [...agents].filter(a => (a.usageCount ?? 0) > 0).sort((a, b) => b.usageCount - a.usageCount).slice(0, 6);
+  const topRated = [...agents].filter(a => (a.rating ?? 0) > 0 && (a.ratingCount ?? 0) > 0).sort((a, b) => b.rating - a.rating || (b.ratingCount ?? 0) - (a.ratingCount ?? 0)).slice(0, 6);
 
   return (
     <div className="min-h-screen bg-t-page text-t-text">
@@ -195,7 +195,7 @@ export default function AgentStore() {
         ) : (
           <>
             {/* Trending Section */}
-            {selectedCategory === 'all' && !searchQuery && (
+            {selectedCategory === 'all' && !searchQuery && trending.length > 0 && (
               <section className="mb-10 animate-fade-in-up">
                 <div className="flex items-center gap-2 mb-4">
                   <TrendingUp className="w-5 h-5 text-blue-400 glow-icon" />
@@ -219,7 +219,7 @@ export default function AgentStore() {
             )}
 
             {/* Top Rated */}
-            {selectedCategory === 'all' && !searchQuery && (
+            {selectedCategory === 'all' && !searchQuery && topRated.length > 0 && (
               <section className="mb-10 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
                 <div className="flex items-center gap-2 mb-4">
                   <Star className="w-5 h-5 text-amber-400 glow-icon" />

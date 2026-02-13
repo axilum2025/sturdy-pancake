@@ -115,6 +115,19 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
     );
   `);
 
+  // 4b. Store Agent Ratings (depends on store_agents, users)
+  await runSafe(pool, 'store_agent_ratings', `
+    CREATE TABLE IF NOT EXISTS store_agent_ratings (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      store_agent_id UUID NOT NULL REFERENCES store_agents(id) ON DELETE CASCADE,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(store_agent_id, user_id)
+    );
+  `);
+
   // 5. Conversations (depends on agents, users)
   await runSafe(pool, 'conversations', `
     CREATE TABLE IF NOT EXISTS conversations (

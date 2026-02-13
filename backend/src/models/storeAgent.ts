@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
-import { eq, ilike, or, sql, desc } from 'drizzle-orm';
+import { eq, ilike, or, sql, desc, and, avg } from 'drizzle-orm';
 import { getDb } from '../db';
-import { storeAgents } from '../db/schema';
+import { storeAgents, storeAgentRatings } from '../db/schema';
 
 // ============================================================
 // GiLo AI – Store Agent Model (PostgreSQL-backed via Drizzle ORM)
@@ -248,6 +248,63 @@ export class StoreModel {
     if (!row) return false;
     if (row.visibility === 'public') return true;
     return row.accessToken === token;
+  }
+
+  /**
+   * Rate an agent (1-5 stars). Upserts the user's rating and recalculates the average.
+   */
+  async rateAgent(storeAgentId: string, userId: string, rating: number): Promise<{ rating: number; ratingCount: number }> {
+    const db = getDb();
+
+    // Upsert the user's rating
+    const existing = await db.query.storeAgentRatings.findFirst({
+      where: and(
+        eq(storeAgentRatings.storeAgentId, storeAgentId),
+        eq(storeAgentRatings.userId, userId),
+      ),
+    });
+
+    if (existing) {
+      await db.update(storeAgentRatings)
+        .set({ rating, updatedAt: new Date() })
+        .where(eq(storeAgentRatings.id, existing.id));
+    } else {
+      await db.insert(storeAgentRatings).values({
+        storeAgentId,
+        userId,
+        rating,
+      });
+    }
+
+    // Recalculate average from all ratings
+    const result = await db.select({
+      avgRating: sql<number>`COALESCE(AVG(${storeAgentRatings.rating}), 0)`,
+      count: sql<number>`COUNT(*)`,
+    }).from(storeAgentRatings).where(eq(storeAgentRatings.storeAgentId, storeAgentId));
+
+    const avgRating = Math.round((Number(result[0]?.avgRating) || 0) * 10) / 10;
+    const ratingCount = Number(result[0]?.count) || 0;
+
+    // Update the store agent's aggregated rating
+    await db.update(storeAgents)
+      .set({ rating: avgRating, ratingCount, updatedAt: new Date() })
+      .where(eq(storeAgents.id, storeAgentId));
+
+    return { rating: avgRating, ratingCount };
+  }
+
+  /**
+   * Get the current user's rating for a specific store agent (or null if not rated).
+   */
+  async getUserRating(storeAgentId: string, userId: string): Promise<number | null> {
+    const db = getDb();
+    const row = await db.query.storeAgentRatings.findFirst({
+      where: and(
+        eq(storeAgentRatings.storeAgentId, storeAgentId),
+        eq(storeAgentRatings.userId, userId),
+      ),
+    });
+    return row ? row.rating : null;
   }
 
   private mapRow(row: any): StoreAgentListing {
