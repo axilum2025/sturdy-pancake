@@ -118,7 +118,24 @@
     "oauthError": "Échec de l'authentification",
     "redirecting": "Redirection...",
     "signingIn": "Connexion en cours...",
-    "captchaRequired": "Veuillez compléter la vérification"
+    "captchaRequired": "Veuillez compléter la vérification",
+    "forgotPasswordTitle": "Réinitialiser le mot de passe",
+    "forgotPasswordSubtitle": "Entrez votre email et nous vous enverrons un lien de réinitialisation",
+    "sendResetLink": "Envoyer le lien",
+    "resetEmailSent": "Vérifiez votre email",
+    "resetEmailSentDesc": "Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.",
+    "backToLogin": "Retour à la connexion",
+    "resetPasswordTitle": "Nouveau mot de passe",
+    "resetPasswordSubtitle": "Choisissez un mot de passe sécurisé pour votre compte",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "passwordMismatch": "Les mots de passe ne correspondent pas",
+    "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères",
+    "resetPasswordBtn": "Réinitialiser",
+    "passwordResetSuccess": "Mot de passe réinitialisé avec succès !",
+    "redirectingToLogin": "Redirection vers la connexion...",
+    "invalidResetLink": "Lien de réinitialisation invalide ou expiré",
+    "backToHome": "Retour à l'accueil"
   },
 
   "dashboard": {

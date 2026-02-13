@@ -363,3 +363,110 @@ authRouter.delete('/account', authMiddleware, async (req: Request, res: Response
     res.status(500).json({ error: 'Failed to delete account' });
   }
 });
+
+// ============================================================
+// Password Reset (Forgot Password)
+// ============================================================
+const passwordResetTokens = new Map<string, { userId: string; createdAt: number }>();
+
+// Clean up expired tokens every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of passwordResetTokens) {
+    if (now - val.createdAt > 30 * 60 * 1000) passwordResetTokens.delete(key);
+  }
+}, 10 * 60 * 1000);
+
+/**
+ * Send a password reset email (or log the link in dev).
+ */
+async function sendResetEmail(email: string, resetUrl: string): Promise<void> {
+  const sendgridKey = process.env.SENDGRID_API_KEY;
+  if (sendgridKey) {
+    await fetch('https://api.sendgrid.com/v3/mail/send', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${sendgridKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personalizations: [{ to: [{ email }] }],
+        from: { email: 'noreply@gilo.dev', name: 'GiLo AI' },
+        subject: 'Reset your password — GiLo AI',
+        content: [{
+          type: 'text/html',
+          value: `<p>You requested a password reset. Click the link below (valid 30 minutes):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>If you didn't request this, ignore this email.</p>`,
+        }],
+      }),
+    });
+  } else {
+    console.log(`🔑 Password reset link for ${email}: ${resetUrl}`);
+  }
+}
+
+/**
+ * POST /api/auth/forgot-password
+ * Generates a reset token and emails it (or logs it in dev).
+ * Always returns 200 to prevent email enumeration.
+ */
+authRouter.post('/forgot-password', async (req: Request, res: Response) => {
+  try {
+    const { email, turnstileToken } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    // Verify Turnstile
+    if (process.env.TURNSTILE_SECRET_KEY && turnstileToken) {
+      const ok = await verifyTurnstile(turnstileToken, req.ip);
+      if (!ok) return res.status(403).json({ error: 'Captcha verification failed' });
+    }
+
+    const user = await userModel.findByEmail(email);
+    if (user) {
+      const token = crypto.randomBytes(32).toString('hex');
+      passwordResetTokens.set(token, { userId: user.id, createdAt: Date.now() });
+      const frontendUrl = process.env.FRONTEND_URL || 'https://gilo.dev';
+      const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}`;
+      await sendResetEmail(email, resetUrl);
+    }
+
+    // Always return success (prevents email enumeration)
+    res.json({ message: 'If an account exists with that email, a reset link has been sent.' });
+  } catch (error: any) {
+    console.error('Forgot password error:', error.message);
+    res.status(500).json({ error: 'Failed to process request' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Resets the password using a valid reset token.
+ */
+authRouter.post('/reset-password', async (req: Request, res: Response) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token and new password are required' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+
+    const entry = passwordResetTokens.get(token);
+    if (!entry || Date.now() - entry.createdAt > 30 * 60 * 1000) {
+      passwordResetTokens.delete(token);
+      return res.status(400).json({ error: 'Invalid or expired reset token' });
+    }
+
+    passwordResetTokens.delete(token);
+
+    const bcrypt = await import('bcryptjs');
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const { getDb } = await import('../db');
+    const { users } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    const db = getDb();
+    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, entry.userId));
+
+    res.json({ message: 'Password has been reset successfully. You can now sign in.' });
+  } catch (error: any) {
+    console.error('Reset password error:', error.message);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});

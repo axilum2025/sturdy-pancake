@@ -14,6 +14,7 @@ import AgentChat from './pages/AgentChat';
 import Analytics from './pages/Analytics';
 import Billing from './pages/Billing';
 import AuthCallback from './pages/AuthCallback';
+import ResetPassword from './pages/ResetPassword';
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/reset-password" element={<ResetPassword />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/docs" element={<Documentation />} />

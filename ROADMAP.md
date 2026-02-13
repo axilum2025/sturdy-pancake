@@ -1,7 +1,7 @@
 # GiLo AI — Agent Builder : Roadmap des Phases de Développement
 
 > **État actuel** : Phase 1–7 ✅ + Phase 9 ✅ + Phase 10 (en cours) ✅
-> **Dernière mise à jour** : 13 février 2026
+> **Dernière mise à jour** : 14 février 2026
 
 ---
 
@@ -29,6 +29,9 @@
 - **PostgreSQL 16** + Drizzle ORM — 15 tables (users, agents, store_agents, conversations, messages, knowledge_documents, knowledge_chunks, api_keys, webhooks, refresh_tokens, community_tools, agent_metrics, agent_logs, agent_alerts, integrations)
 - **Redis 7** — cache, rate limiting persistent (sorted sets sliding window), fallback in-memory
 - **JWT Auth** réel avec bcrypt + jsonwebtoken (register, login, me, upgrade, downgrade)
+- **OAuth GitHub login** (findOrCreateByGithub, 3 cas : existant, email link, nouveau)
+- **Cloudflare Turnstile** captcha (managed mode, dark theme) anti-bot sur register + login
+- **Forgot password / Reset password** (token email + page reset)
 - **RGPD/GDPR** — `GET /auth/export` (Art. 15/20) + `DELETE /auth/account` (Art. 17)
 - **Docker Compose** — 5 services (Caddy reverse proxy, backend, frontend, PostgreSQL, Redis)
 - **Dockerfile** multi-stage backend (Node.js 20 Alpine)
@@ -39,7 +42,8 @@
 - **Rate limiting** par tier (free/pro) avec Redis sliding window (fallback in-memory)
 
 ### Backend — 20 fichiers routes, ~100+ endpoints
-- **Auth** : register, login, me, upgrade, downgrade, export RGPD, delete account
+- **Auth** : register, login, me, upgrade, downgrade, export RGPD, delete account, GitHub OAuth login, forgot/reset password
+- **Captcha** : Cloudflare Turnstile (managed mode) sur register + login
 - **Agents CRUD** : list, create, get, update, updateConfig, deploy, delete, chat SSE
 - **Conversations** : create, list, getMessages, delete (persistance automatique dans chat)
 - **Public API v1** : `GET /api/v1/agents/:id`, `POST /api/v1/agents/:id/chat` (API key auth)
@@ -129,7 +133,9 @@
 - [x] Déploiement Azure (SWA + Container Apps + PostgreSQL)
 - [x] CI/CD GitHub Actions
 - [x] **OAuth GitHub** provider (read:user, user:email, repo, gist, workflow scopes)
-- [ ] OAuth GitHub **login** — non implémenté (seules les intégrations agent sont supportées)
+- [x] **OAuth GitHub login** — `findOrCreateByGithub()` (existant, email link, nouveau)
+- [x] **Cloudflare Turnstile** captcha anti-bot sur register + login
+- [x] **Forgot / Reset password** — token email SendGrid + page `/auth/reset-password`
 
 ### ✅ Phase 4 — Déploiement Réel des Agents
 - [x] `POST /api/v1/agents/:id/chat` — API publique (SSE + JSON mode)
@@ -214,6 +220,9 @@
 - [x] RGPD endpoints (export + delete)
 - [x] Trust proxy (behind Caddy)
 - [x] Helmet.js — headers HTTP sécurisés (HSTS, X-Frame-Options, etc.)
+- [x] **Cloudflare Turnstile** — captcha anti-bot managed mode
+- [x] **OAuth GitHub login** — authentification GitHub complète
+- [x] **Forgot / Reset password** — flow email + page reset
 
 #### ❌ Non réalisé
 - [x] Redis pour cache, sessions, rate limiting (ioredis + sorted sets sliding window + fallback in-memory)
@@ -243,6 +252,9 @@
 | ~~OAuth GitHub provider~~ | 3 |
 | ~~Helmet.js + headers sécurité~~ | 10 |
 | ~~Templates d'agents prédéfinis~~ | 8 |
+| ~~OAuth GitHub login~~ | 3 |
+| ~~Cloudflare Turnstile captcha~~ | 10 |
+| ~~Forgot / Reset password~~ | 3 |
 
 ### 🟡 Priorité Moyenne
 | Tâche | Phase | Effort estimé |
@@ -280,7 +292,7 @@
 | **Validation** | Zod v4 (10 schemas, middleware centralisé) | ✅ |
 | **Base de données** | PostgreSQL 16 + pgvector (15 tables) | ✅ |
 | **Cache** | Redis 7 (ioredis) + in-memory fallback | ✅ |
-| **Auth** | JWT + bcrypt + OAuth Google + GitHub | ✅ |
+| **Auth** | JWT + bcrypt + OAuth GitHub login + Turnstile captcha | ✅ |
 | **AI** | GitHub Models API (GPT-4.1) + embeddings | ✅ |
 | **Recherche** | pgvector (cosinus similarity) | ✅ |
 | **Billing** | Stripe (checkout, portal, webhooks) | ✅ |
@@ -295,7 +307,16 @@
 ## Historique des commits récents
 
 | Date | Commit | Description |
-|------|--------|-------------|| 13 fév 2026 | `57589b0` | Per-agent pricing ($3/agent/mo) + BYO LLM + billing overhaul |
+|------|--------|-------------|
+| 14 fév 2026 | *en cours* | Forgot/reset password + auto-open auth modal |
+| 13 fév 2026 | `9d29793` | Long email overflow fix |
+| 13 fév 2026 | `9e700a0` | Cloudflare Turnstile captcha anti-bot |
+| 13 fév 2026 | `cd6a590` | Remove Google sign-in button |
+| 13 fév 2026 | `5382f76` | GitHub OAuth login |
+| 13 fév 2026 | `7844936` | 6 paid tier features |
+| 13 fév 2026 | `0f3b090` | Daily message quotas |
+| 13 fév 2026 | `70be5d5` | Security & billing audit |
+| 13 fév 2026 | `57589b0` | Per-agent pricing ($3/agent/mo) + BYO LLM + billing overhaul |
 | 13 fév 2026 | `10bd1bc` | Redis, GDPR, display name, star ratings, cost optimization || 12 fév 2026 | `d495575` | Stripe billing (checkout, portal, webhooks) |
 | 12 fév 2026 | `c21cbbf` | Widget.js embeddable + embed snippet UI |
 | 12 fév 2026 | `99501c1` | Zod validation middleware (10 schemas, 8 routes) |
@@ -305,4 +326,4 @@
 
 ---
 
-*Dernière mise à jour : 13 février 2026*
+*Dernière mise à jour : 14 février 2026*

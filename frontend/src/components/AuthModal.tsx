@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { X, Mail, Lock, Github, ArrowRight, Zap } from 'lucide-react';
+import { X, Mail, Lock, Github, ArrowRight, Zap, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { API_BASE } from '../services/api';
+import { API_BASE, api } from '../services/api';
 
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
@@ -13,11 +13,12 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<HTMLDivElement>(null);
   const turnstileWidgetId = useRef<string | null>(null);
@@ -77,6 +78,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     e.preventDefault();
     setError('');
 
+    // Forgot password mode
+    if (mode === 'forgot') {
+      setIsLoading(true);
+      try {
+        await api.post('/auth/forgot-password', { email, turnstileToken: turnstileToken || undefined });
+        setForgotSent(true);
+      } catch (err: any) {
+        setError(err.message || 'An error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     // Require Turnstile token if configured
     if (TURNSTILE_SITE_KEY && !turnstileToken) {
       setError(t('auth.captchaRequired', 'Please complete the verification'));
@@ -130,12 +145,16 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Logo / Branding */}
           <div className="relative text-center mb-8">
             <h2 className="text-2xl font-bold text-t-text mb-1">
-              {mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
+              {mode === 'forgot'
+                ? t('auth.forgotPasswordTitle', 'Reset password')
+                : mode === 'login' ? t('auth.welcomeBack') : t('auth.createAccount')}
             </h2>
             <p className="text-sm text-t-text/40">
-              {mode === 'login' 
-                ? t('auth.signInSubtitle') 
-                : t('auth.createSubtitle')}
+              {mode === 'forgot'
+                ? t('auth.forgotPasswordSubtitle', 'Enter your email and we\'ll send a reset link')
+                : mode === 'login' 
+                  ? t('auth.signInSubtitle') 
+                  : t('auth.createSubtitle')}
             </p>
           </div>
 
@@ -146,7 +165,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             </div>
           )}
 
-          {/* Social login buttons */}
+          {/* Social login buttons — hide in forgot mode */}
+          {mode !== 'forgot' && (
           <div className="relative space-y-3 mb-6">
             <button
               type="button"
@@ -157,15 +177,37 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               {t('auth.continueGithub')}
             </button>
           </div>
+          )}
 
-          {/* Divider */}
+          {/* Divider — hide in forgot mode */}
+          {mode !== 'forgot' && (
           <div className="relative flex items-center gap-4 mb-6">
             <div className="flex-1 divider-glow" />
             <span className="text-xs text-t-text/30 uppercase tracking-wider font-medium">{t('auth.or')}</span>
             <div className="flex-1 divider-glow" />
           </div>
+          )}
 
-          {/* Form */}
+          {/* Forgot password sent confirmation */}
+          {mode === 'forgot' && forgotSent && (
+            <div className="relative text-center py-6">
+              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-green-400" />
+              </div>
+              <p className="text-green-400 font-medium mb-2">{t('auth.resetEmailSent', 'Check your email')}</p>
+              <p className="text-t-text/40 text-sm mb-4">{t('auth.resetEmailSentDesc', 'If an account exists, a reset link has been sent.')}</p>
+              <button
+                onClick={() => { setMode('login'); setForgotSent(false); setError(''); }}
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 mx-auto"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                {t('auth.backToLogin', 'Back to sign in')}
+              </button>
+            </div>
+          )}
+
+          {/* Form — hide when forgotSent */}
+          {!(mode === 'forgot' && forgotSent) && (
           <form onSubmit={handleSubmit} className="relative space-y-4">
             <div>
               <label className="block text-sm font-medium text-t-text/50 mb-2">{t('auth.email')}</label>
@@ -182,6 +224,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               </div>
             </div>
 
+            {mode !== 'forgot' && (
             <div>
               <label className="block text-sm font-medium text-t-text/50 mb-2">{t('auth.password')}</label>
               <div className="relative">
@@ -197,10 +240,15 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 />
               </div>
             </div>
+            )}
 
             {mode === 'login' && (
               <div className="flex justify-end">
-                <button type="button" className="text-xs text-t-text/30 hover:text-blue-400 transition-colors">
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(''); setForgotSent(false); renderTurnstile(); }}
+                  className="text-xs text-t-text/30 hover:text-blue-400 transition-colors"
+                >
                   {t('auth.forgotPassword')}
                 </button>
               </div>
@@ -220,14 +268,18 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 <div className="w-5 h-5 border-2 border-t-overlay/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <>
-                  {mode === 'login' ? t('auth.signInBtn') : t('auth.createBtn')}
+                  {mode === 'forgot'
+                    ? t('auth.sendResetLink', 'Send reset link')
+                    : mode === 'login' ? t('auth.signInBtn') : t('auth.createBtn')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
+          )}
 
           {/* Toggle mode */}
+          {mode !== 'forgot' && !forgotSent && (
           <div className="relative mt-6 text-center">
             <p className="text-sm text-t-text/30">
               {mode === 'login' ? t('auth.noAccount') + ' ' : t('auth.hasAccount') + ' '}
@@ -243,6 +295,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               </button>
             </p>
           </div>
+          )}
+
+          {/* Back to login from forgot mode */}
+          {mode === 'forgot' && !forgotSent && (
+            <div className="relative mt-6 text-center">
+              <button
+                onClick={() => { setMode('login'); setError(''); renderTurnstile(); }}
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 mx-auto"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                {t('auth.backToLogin', 'Back to sign in')}
+              </button>
+            </div>
+          )}
 
           {/* Demo credentials */}
           <div className="relative mt-5 pt-5">

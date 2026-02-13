@@ -118,7 +118,24 @@
     "oauthError": "Authentication failed",
     "redirecting": "Redirecting...",
     "signingIn": "Signing in...",
-    "captchaRequired": "Please complete the verification"
+    "captchaRequired": "Please complete the verification",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordSubtitle": "Enter your email and we'll send a reset link",
+    "sendResetLink": "Send reset link",
+    "resetEmailSent": "Check your email",
+    "resetEmailSentDesc": "If an account exists with that email, a reset link has been sent.",
+    "backToLogin": "Back to sign in",
+    "resetPasswordTitle": "Set new password",
+    "resetPasswordSubtitle": "Choose a strong password for your account",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "resetPasswordBtn": "Reset password",
+    "passwordResetSuccess": "Password reset successfully!",
+    "redirectingToLogin": "Redirecting to sign in...",
+    "invalidResetLink": "Invalid or expired reset link",
+    "backToHome": "Back to home"
   },
 
   "dashboard": {

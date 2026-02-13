@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Zap, Shield, Globe, Code2, Cpu, Layers, 
   ArrowRight, Star, ChevronRight, Bot, Rocket, 
@@ -40,14 +40,25 @@ export default function Home() {
   const [showAuth, setShowAuth] = useState(false);
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const scrollRef = useScrollAnimation();
   const { t } = useTranslation();
 
+  // Redirect destination after login (from ProtectedRoute or default /dashboard)
+  const redirectTo = (location.state as any)?.from?.pathname || '/dashboard';
+
+  // Auto-open auth modal when redirected from a protected route
+  useEffect(() => {
+    if ((location.state as any)?.from) {
+      setShowAuth(true);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/dashboard');
+      navigate(redirectTo);
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading, navigate, redirectTo]);
 
   const features = [
     {
@@ -469,7 +480,7 @@ export default function Home() {
       <AuthModal
         isOpen={showAuth}
         onClose={() => setShowAuth(false)}
-        onSuccess={() => navigate('/dashboard')}
+        onSuccess={() => navigate(redirectTo)}
       />
     </div>
   );
