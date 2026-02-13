@@ -5,6 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { agentModel, enforceModelForTier, isByoLlm } from '../models/agent';
+import { checkMessageQuota } from '../middleware/messageQuota';
 import { webhookModel } from '../models/webhook';
 import { knowledgeService } from '../services/knowledgeService';
 import { conversationService } from '../services/conversationService';
@@ -68,8 +69,20 @@ publicApiRouter.post('/agents/:id/chat', validate(chatSchema), async (req: Reque
 
     const { messages, conversationId: incomingConvId } = req.body;
 
-    // BYO LLM or enforce tier-based model
+    // Daily message quota check
     const byoLlm = isByoLlm(agent.config);
+    const quota = await checkMessageQuota(agent.id, apiReq.agentTier || 'free', byoLlm);
+    if (!quota.allowed) {
+      return res.status(429).json({
+        error: 'Daily message limit reached',
+        message: `This agent has reached its daily limit of ${quota.limit} messages. Please try again tomorrow.`,
+        limit: quota.limit,
+        remaining: 0,
+        resetAt: quota.resetAt,
+      });
+    }
+
+    // BYO LLM or enforce tier-based model
     const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
     if (!byoLlm) {
       agent.config.model = enforceModelForTier(agent.config.model, apiReq.agentTier || 'free');

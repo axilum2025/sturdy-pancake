@@ -372,7 +372,7 @@ export default function Billing() {
         {/* Footer */}
         <div className="mt-16 text-center animate-fade-in-up">
           <p className="text-sm text-t-text/30 mb-4">
-            {t('billing.contactUs')} <a href="mailto:support@gilo.dev" className="text-blue-400 hover:underline">support@gilo.dev</a>
+            {t('billing.contactUs')} <a href="mailto:noreply@gilo.dev" className="text-blue-400 hover:underline">noreply@gilo.dev</a>
           </p>
         </div>
       </div>

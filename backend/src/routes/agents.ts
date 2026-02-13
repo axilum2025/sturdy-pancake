@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { agentModel, AgentCreateDTO, enforceModelForTier, isByoLlm } from '../models/agent';
+import { checkMessageQuota } from '../middleware/messageQuota';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
@@ -208,9 +209,22 @@ agentsRouter.post('/:id/chat', validate(chatSchema), async (req: Request, res: R
     const agent = (await agentModel.findById(req.params.id))!;
     const { messages, conversationId: incomingConvId } = req.body;
 
-    // BYO LLM or platform model
+    // Daily message quota check
     const chatStartTime = Date.now();
     const byoLlm = isByoLlm(agent.config);
+    const userTierForQuota = (req as AuthenticatedRequest).user?.tier || 'free';
+    const quota = await checkMessageQuota(agent.id, userTierForQuota, byoLlm);
+    if (!quota.allowed) {
+      return res.status(429).json({
+        error: 'Daily message limit reached',
+        message: `This agent has reached its daily limit of ${quota.limit} messages. Resets at midnight UTC.`,
+        limit: quota.limit,
+        remaining: 0,
+        resetAt: quota.resetAt,
+      });
+    }
+
+    // BYO LLM or platform model
     const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
     if (!byoLlm) {
       const userTier = (req as AuthenticatedRequest).user?.tier || 'free';

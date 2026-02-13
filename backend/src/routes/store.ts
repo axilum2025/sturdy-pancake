@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
 import { agentModel, enforceModelForTier, isByoLlm } from '../models/agent';
+import { checkMessageQuota } from '../middleware/messageQuota';
 import { copilotService } from '../services/copilotService';
 import { userModel } from '../models/user';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
@@ -315,6 +316,24 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'messages array required' });
     }
 
+    // Daily message quota check
+    const byoLlm = isByoLlm(listing.configSnapshot as any);
+    let storeOwnerTier = 'free';
+    try {
+      const owner = await userModel.findById(listing.userId);
+      if (owner) storeOwnerTier = owner.tier;
+    } catch { /* fallback to free */ }
+    const quota = await checkMessageQuota(listing.id, storeOwnerTier, byoLlm);
+    if (!quota.allowed) {
+      return res.status(429).json({
+        error: 'Daily message limit reached',
+        message: `This agent has reached its daily limit of ${quota.limit} messages. Please try again tomorrow.`,
+        limit: quota.limit,
+        remaining: 0,
+        resetAt: quota.resetAt,
+      });
+    }
+
     // Increment usage
     await storeModel.incrementUsage(listing.id);
 
@@ -324,16 +343,10 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
       ...messages.map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ];
 
-    // BYO LLM or platform model — look up owner's current tier
+    // BYO LLM or platform model — reuse owner tier from quota check above
     const config = listing.configSnapshot;
-    const byoLlm = isByoLlm(config as any);
     const { client, model: resolvedModel } = copilotService.getClientForAgent(config as any);
-    let ownerTier = 'free';
-    try {
-      const owner = await userModel.findById(listing.userId);
-      if (owner) ownerTier = owner.tier;
-    } catch { /* fallback to free */ }
-    const modelToUse = byoLlm ? resolvedModel : enforceModelForTier(config.model, ownerTier);
+    const modelToUse = byoLlm ? resolvedModel : enforceModelForTier(config.model, storeOwnerTier);
 
     // SSE streaming response
     res.setHeader('Content-Type', 'text/event-stream');

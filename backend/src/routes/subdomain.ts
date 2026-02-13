@@ -5,6 +5,7 @@
 
 import { Router, Request, Response } from 'express';
 import { Agent, enforceModelForTier, isByoLlm } from '../models/agent';
+import { checkMessageQuota } from '../middleware/messageQuota';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
@@ -215,6 +216,18 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
       const owner = await userModel.findById(agent.userId);
       if (owner) ownerTier = owner.tier;
     } catch { /* fallback to agent.tier */ }
+
+    // Daily message quota check
+    const quota = await checkMessageQuota(agent.id, ownerTier, byoLlm);
+    if (!quota.allowed) {
+      return res.status(429).json({
+        error: 'Daily message limit reached',
+        message: `This agent has reached its daily limit of ${quota.limit} messages. Please try again tomorrow.`,
+        limit: quota.limit,
+        remaining: 0,
+        resetAt: quota.resetAt,
+      });
+    }
 
     // Fire webhook on first message
     if (messages.length === 1) {

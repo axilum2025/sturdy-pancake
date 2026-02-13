@@ -237,7 +237,7 @@ export default function Terms() {
           <h2 className="text-2xl font-bold mb-4">{t('terms.contactTitle')}</h2>
           <p className="text-t-text/60 mb-6 max-w-xl mx-auto">{t('terms.contactContent')}</p>
           <a
-            href="mailto:legal@gilo-ai.com"
+            href="mailto:noreply@gilo.dev"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
           >
             {t('terms.contactButton')}
