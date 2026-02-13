@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Grid3X3, Sparkles, TrendingUp, Star, ArrowLeft, Store } from 'lucide-react';
+import { Search, Grid3X3, Sparkles, TrendingUp, Star, ArrowLeft, Store, Trash2, Loader2, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
 
@@ -44,9 +44,13 @@ export default function AgentStore() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchData();
+    checkAdmin();
   }, []);
 
   useEffect(() => {
@@ -80,6 +84,44 @@ export default function AgentStore() {
       setAgents(data.agents || []);
     } catch (error) {
       console.error('Error fetching agents:', error);
+    }
+  };
+
+  const checkAdmin = async () => {
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/store/admin/check`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setIsAdmin(data.isAdmin === true);
+    } catch {
+      setIsAdmin(false);
+    }
+  };
+
+  const handleAdminDelete = async (agentId: string) => {
+    if (confirmDeleteId !== agentId) {
+      setConfirmDeleteId(agentId);
+      return;
+    }
+    const token = localStorage.getItem('authToken');
+    if (!token) return;
+    setDeletingId(agentId);
+    try {
+      const res = await fetch(`${API_BASE}/api/store/admin/${agentId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (res.ok) {
+        setAgents((prev) => prev.filter((a) => a.id !== agentId));
+      }
+    } catch (error) {
+      console.error('Error deleting agent:', error);
+    } finally {
+      setDeletingId(null);
+      setConfirmDeleteId(null);
     }
   };
 
@@ -161,7 +203,16 @@ export default function AgentStore() {
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                   {trending.map((agent) => (
-                    <AgentIcon key={agent.id} agent={agent} onClick={() => navigate(`/store/${agent.id}`)} />
+                    <AgentIcon
+                      key={agent.id}
+                      agent={agent}
+                      onClick={() => navigate(`/store/${agent.id}`)}
+                      isAdmin={isAdmin}
+                      isConfirming={confirmDeleteId === agent.id}
+                      isDeleting={deletingId === agent.id}
+                      onDelete={() => handleAdminDelete(agent.id)}
+                      onCancelDelete={() => setConfirmDeleteId(null)}
+                    />
                   ))}
                 </div>
               </section>
@@ -176,7 +227,16 @@ export default function AgentStore() {
                 </div>
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4">
                   {topRated.map((agent) => (
-                    <AgentIcon key={agent.id} agent={agent} onClick={() => navigate(`/store/${agent.id}`)} />
+                    <AgentIcon
+                      key={agent.id}
+                      agent={agent}
+                      onClick={() => navigate(`/store/${agent.id}`)}
+                      isAdmin={isAdmin}
+                      isConfirming={confirmDeleteId === agent.id}
+                      isDeleting={deletingId === agent.id}
+                      onDelete={() => handleAdminDelete(agent.id)}
+                      onCancelDelete={() => setConfirmDeleteId(null)}
+                    />
                   ))}
                 </div>
               </section>
@@ -210,6 +270,11 @@ export default function AgentStore() {
                       agent={agent}
                       onClick={() => navigate(`/store/${agent.id}`)}
                       style={{ animationDelay: `${idx * 50}ms` }}
+                      isAdmin={isAdmin}
+                      isConfirming={confirmDeleteId === agent.id}
+                      isDeleting={deletingId === agent.id}
+                      onDelete={() => handleAdminDelete(agent.id)}
+                      onCancelDelete={() => setConfirmDeleteId(null)}
                     />
                   ))}
                 </div>
@@ -229,37 +294,83 @@ function AgentIcon({
   agent,
   onClick,
   style,
+  isAdmin,
+  isConfirming,
+  isDeleting,
+  onDelete,
+  onCancelDelete,
 }: {
   agent: StoreAgentCard;
   onClick: () => void;
   style?: React.CSSProperties;
+  isAdmin?: boolean;
+  isConfirming?: boolean;
+  isDeleting?: boolean;
+  onDelete?: () => void;
+  onCancelDelete?: () => void;
 }) {
   const getInitial = (name: string) => name.charAt(0).toUpperCase();
   const catColor = CATEGORY_COLORS[agent.category] || CATEGORY_COLORS.other;
 
   return (
-    <button
-      onClick={onClick}
-      className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-t-overlay/[0.04] transition-all duration-200 group animate-fade-in-up"
-      style={style}
-    >
-      {/* Icon */}
-      <div
-        className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200`}
-        style={agent.icon ? {} : { boxShadow: `0 4px 20px ${agent.iconColor}30` }}
+    <div className="relative group animate-fade-in-up" style={style}>
+      <button
+        onClick={onClick}
+        className="flex flex-col items-center gap-2 p-3 rounded-2xl hover:bg-t-overlay/[0.04] transition-all duration-200 w-full"
       >
-        {agent.icon ? (
-          <img src={agent.icon} alt={agent.name} className="w-full h-full rounded-[22%] object-cover" />
-        ) : (
-          <span className="text-2xl sm:text-3xl font-bold text-t-text/90 drop-shadow-lg">
-            {getInitial(agent.name)}
-          </span>
-        )}
-      </div>
-      {/* Name */}
-      <span className="text-xs sm:text-sm text-t-text/70 text-center leading-tight line-clamp-2 group-hover:text-t-text/90 transition-colors max-w-[80px] sm:max-w-[90px]">
-        {agent.name}
-      </span>
-    </button>
+        {/* Icon */}
+        <div
+          className={`w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 rounded-[22%] bg-gradient-to-br ${catColor} flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200`}
+          style={agent.icon ? {} : { boxShadow: `0 4px 20px ${agent.iconColor}30` }}
+        >
+          {agent.icon ? (
+            <img src={agent.icon} alt={agent.name} className="w-full h-full rounded-[22%] object-cover" />
+          ) : (
+            <span className="text-2xl sm:text-3xl font-bold text-t-text/90 drop-shadow-lg">
+              {getInitial(agent.name)}
+            </span>
+          )}
+        </div>
+        {/* Name */}
+        <span className="text-xs sm:text-sm text-t-text/70 text-center leading-tight line-clamp-2 group-hover:text-t-text/90 transition-colors max-w-[80px] sm:max-w-[90px]">
+          {agent.name}
+        </span>
+      </button>
+
+      {/* Admin delete badge */}
+      {isAdmin && !isConfirming && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 shadow-lg z-10"
+          title="Supprimer du store"
+        >
+          <Trash2 className="w-3 h-3" />
+        </button>
+      )}
+
+      {/* Confirm delete overlay */}
+      {isAdmin && isConfirming && (
+        <div className="absolute inset-0 bg-black/70 rounded-2xl flex flex-col items-center justify-center gap-2 z-10 backdrop-blur-sm">
+          <p className="text-[10px] text-red-300 text-center px-2 font-medium">Supprimer ?</p>
+          <div className="flex gap-1.5">
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
+              disabled={isDeleting}
+              className="px-2.5 py-1 rounded-lg bg-red-500 text-white text-[10px] font-medium hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+            >
+              {isDeleting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+              Oui
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onCancelDelete?.(); }}
+              className="px-2.5 py-1 rounded-lg bg-t-overlay/20 text-t-text/70 text-[10px] font-medium hover:bg-t-overlay/30 transition-colors flex items-center gap-1"
+            >
+              <X className="w-3 h-3" />
+              Non
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
