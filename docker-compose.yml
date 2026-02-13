@@ -38,10 +38,12 @@ services:
       PORT: 3001
       NODE_ENV: ${NODE_ENV:-development}
       DATABASE_URL: postgresql://gilo:gilo_dev_password@db:5432/gilo_ai
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GILO_DOMAIN: ${GILO_DOMAIN:-localhost}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-3600000}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
     depends_on:
       db:
         condition: service_healthy
@@ -55,14 +57,14 @@ services:
 
   # --- Frontend ---
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-}
     container_name: gilo-frontend
     restart: unless-stopped
     ports:
       - "5173:5173"
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-http://localhost:3001}
-      VITE_GILO_DOMAIN: ${GILO_DOMAIN:-localhost}
     depends_on:
       backend:
         condition: service_healthy
