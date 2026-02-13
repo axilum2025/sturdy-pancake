@@ -377,6 +377,8 @@ export default function ChatPanel() {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      let fullContent = '';
+      let suppressingConfig = false;
 
       try {
         while (true) {
@@ -397,6 +399,21 @@ export default function ChatPanel() {
             try {
               const chunk = JSON.parse(payload);
               if (chunk.type === 'content' && chunk.content) {
+                fullContent += chunk.content;
+                // Suppress the <!--GILO_APPLY_CONFIG:...--> block from display
+                if (suppressingConfig) continue;
+                if (fullContent.includes('<!--GILO_APPLY_CONFIG:')) {
+                  suppressingConfig = true;
+                  const cleanContent = fullContent.replace(/<!--GILO_APPLY_CONFIG:[\s\S]*$/g, '').trim();
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMsgId
+                        ? { ...m, content: cleanContent }
+                        : m,
+                    ),
+                  );
+                  continue;
+                }
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantMsgId
