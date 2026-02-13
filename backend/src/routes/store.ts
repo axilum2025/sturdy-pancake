@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
-import { agentModel } from '../models/agent';
+import { agentModel, enforceModelForTier } from '../models/agent';
 import { userModel } from '../models/user';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
 import { validate, publishAgentSchema, rateAgentSchema } from '../middleware/validation';
@@ -210,11 +210,11 @@ storeRouter.post('/publish', validate(publishAgentSchema), async (req: Request, 
           appearance: agent.config.appearance,
         }
       : {
-          model: 'openai/gpt-4.1',
+          model: 'openai/gpt-4.1-nano',
           systemPrompt: dto.description,
           welcomeMessage: 'Bonjour ! Comment puis-je vous aider ?',
           temperature: 0.7,
-          maxTokens: 2048,
+          maxTokens: 1024,
           tools: [],
         };
 
@@ -349,10 +349,10 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
         'Authorization': `Bearer ${token}`,
       },
       body: JSON.stringify({
-        model: listing.configSnapshot.model,
+        model: enforceModelForTier(listing.configSnapshot.model, 'free'),
         messages: fullMessages,
         temperature: listing.configSnapshot.temperature,
-        max_tokens: listing.configSnapshot.maxTokens,
+        max_tokens: Math.min(listing.configSnapshot.maxTokens, 1024),
         stream: true,
       }),
     });

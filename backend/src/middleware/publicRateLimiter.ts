@@ -17,8 +17,8 @@ interface RateLimitEntry {
 const memStore = new Map<string, RateLimitEntry>();
 
 const LIMITS = {
-  perMinute: parseInt(process.env.PUBLIC_RATE_LIMIT_PER_MINUTE || '30', 10),
-  perDay: parseInt(process.env.PUBLIC_RATE_LIMIT_PER_DAY || '500', 10),
+  perMinute: parseInt(process.env.PUBLIC_RATE_LIMIT_PER_MINUTE || '10', 10),
+  perDay: parseInt(process.env.PUBLIC_RATE_LIMIT_PER_DAY || '100', 10),
 };
 
 const MINUTE_MS = 60 * 1000;

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { agentModel, AgentCreateDTO } from '../models/agent';
+import { agentModel, AgentCreateDTO, enforceModelForTier } from '../models/agent';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
@@ -141,6 +141,11 @@ agentsRouter.patch('/:id/config', validate(updateAgentConfigSchema), async (req:
     if (!userId) return;
 
     const config = req.body;
+    // Enforce tier-based model restriction
+    const user = (req as AuthenticatedRequest).user;
+    if (config.model) {
+      config.model = enforceModelForTier(config.model, user?.tier || 'free');
+    }
     const agent = await agentModel.updateConfig(req.params.id, config);
     res.json(agentModel.toResponse(agent));
   } catch (error: any) {
@@ -201,6 +206,10 @@ agentsRouter.post('/:id/chat', validate(chatSchema), async (req: Request, res: R
 
     const agent = (await agentModel.findById(req.params.id))!;
     const { messages, conversationId: incomingConvId } = req.body;
+
+    // Enforce tier-based model at chat time
+    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+    agent.config.model = enforceModelForTier(agent.config.model, userTier);
 
     const chatStartTime = Date.now();
     const { client } = copilotService.getClientInfo();

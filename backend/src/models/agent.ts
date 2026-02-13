@@ -75,13 +75,32 @@ export interface AgentResponse {
 }
 
 const DEFAULT_CONFIG: AgentConfig = {
-  model: 'openai/gpt-4.1',
+  model: 'openai/gpt-4.1-nano',
   temperature: 0.7,
-  maxTokens: 2048,
+  maxTokens: 1024,
   systemPrompt: 'Tu es un assistant IA utile et concis. Réponds toujours de manière professionnelle.',
   welcomeMessage: 'Bonjour ! Comment puis-je vous aider ?',
   tools: [],
 };
+
+// ----------------------------------------------------------
+// Tier-based model restrictions (cost optimisation)
+// ----------------------------------------------------------
+export const TIER_ALLOWED_MODELS: Record<string, string[]> = {
+  free: ['openai/gpt-4.1-nano'],
+  pro:  ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
+};
+
+export function getAllowedModels(tier: string): string[] {
+  return TIER_ALLOWED_MODELS[tier] || TIER_ALLOWED_MODELS.free;
+}
+
+export function enforceModelForTier(requestedModel: string, tier: string): string {
+  const allowed = getAllowedModels(tier);
+  if (allowed.includes(requestedModel)) return requestedModel;
+  // Fall back to the cheapest allowed model
+  return allowed[0];
+}
 
 // ============================================================
 // Agent Model — PostgreSQL-backed
@@ -97,7 +116,7 @@ export class AgentModel {
         .from(agents)
         .where(eq(agents.userId, userId));
       const count = userAgents[0]?.count || 0;
-      const maxAgents = userTier === 'pro' ? 20 : 5;
+      const maxAgents = userTier === 'pro' ? 5 : 2;
 
       console.log(`[AgentModel] Count check: ${count}/${maxAgents} for tier ${userTier}`);
 

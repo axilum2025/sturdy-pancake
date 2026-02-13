@@ -15,8 +15,8 @@ export const billingRouter = Router();
 billingRouter.get('/plans', (req: Request, res: Response) => {
   res.json({
     plans: [
-      { id: 'free', name: 'Free', price: 0, currency: 'usd', interval: 'month', features: ['3 agents', '100 messages/day', '10 MB storage'] },
-      { id: 'pro', name: 'Pro', price: 29, currency: 'usd', interval: 'month', features: ['Unlimited agents', '10,000 messages/day', '1 GB storage', 'Custom domain', 'Priority support'] },
+      { id: 'free', name: 'Free', price: 0, currency: 'usd', interval: 'month', features: ['2 agents', 'GPT-4.1 Nano', '200 messages/day', '50 MB storage'] },
+      { id: 'pro', name: 'Pro', price: 19, currency: 'usd', interval: 'month', features: ['5 agents', 'GPT-4.1 Nano + Mini', '2,000 messages/day', '500 MB storage', 'Custom domain', 'Priority support'] },
     ],
   });
 });

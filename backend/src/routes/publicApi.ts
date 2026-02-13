@@ -4,7 +4,7 @@
 // ============================================================
 
 import { Router, Request, Response } from 'express';
-import { agentModel } from '../models/agent';
+import { agentModel, enforceModelForTier } from '../models/agent';
 import { webhookModel } from '../models/webhook';
 import { knowledgeService } from '../services/knowledgeService';
 import { conversationService } from '../services/conversationService';
@@ -67,6 +67,9 @@ publicApiRouter.post('/agents/:id/chat', validate(chatSchema), async (req: Reque
     }
 
     const { messages, conversationId: incomingConvId } = req.body;
+
+    // Enforce tier-based model
+    agent.config.model = enforceModelForTier(agent.config.model, apiReq.agentTier || 'free');
 
     const streamMode = req.query.stream !== 'false';
     const { client } = copilotService.getClientInfo();

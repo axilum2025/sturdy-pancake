@@ -60,7 +60,7 @@ export class CopilotService {
     // Defer actual init – env vars may not be loaded yet at import time
     this.openai = null as any;
     this.octokit = null as any;
-    this.defaultModel = 'openai/gpt-4.1';
+    this.defaultModel = 'openai/gpt-4.1-nano';
   }
 
   /** Lazy-initialize clients so env vars from dotenv are available */
@@ -79,7 +79,7 @@ export class CopilotService {
     });
 
     this.octokit = new Octokit({ auth: githubToken });
-    this.defaultModel = process.env.COPILOT_MODEL || 'openai/gpt-4.1';
+    this.defaultModel = process.env.COPILOT_MODEL || 'openai/gpt-4.1-nano';
   }
 
   // ----------------------------------------------------------

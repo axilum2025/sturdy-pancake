@@ -4,7 +4,7 @@
 // ============================================================
 
 import { Router, Request, Response } from 'express';
-import { Agent } from '../models/agent';
+import { Agent, enforceModelForTier } from '../models/agent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
@@ -250,10 +250,10 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
 
     if (streamMode) {
       const stream = await client.chat.completions.create({
-        model: agent.config.model,
+        model: enforceModelForTier(agent.config.model, agent.tier || 'free'),
         messages: openaiMessages,
         temperature: agent.config.temperature,
-        max_tokens: agent.config.maxTokens,
+        max_tokens: Math.min(agent.config.maxTokens, 1024),
         stream: true,
       });
 
@@ -278,10 +278,10 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
       res.end();
     } else {
       const completion = await client.chat.completions.create({
-        model: agent.config.model,
+        model: enforceModelForTier(agent.config.model, agent.tier || 'free'),
         messages: openaiMessages,
         temperature: agent.config.temperature,
-        max_tokens: agent.config.maxTokens,
+        max_tokens: Math.min(agent.config.maxTokens, 1024),
       });
 
       res.json({

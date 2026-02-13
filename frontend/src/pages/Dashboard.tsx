@@ -135,7 +135,7 @@ export default function Dashboard() {
     );
   }
 
-  const agentsMax = user?.tier === 'pro' ? 20 : 5;
+  const agentsMax = user?.tier === 'pro' ? 5 : 2;
   const agentsProgress = (projects.length / agentsMax) * 100;
   
   const totalConversations = projects.reduce((sum, a) => sum + (a.totalConversations || 0), 0);

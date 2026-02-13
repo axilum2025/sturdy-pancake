@@ -27,7 +27,7 @@ export const PLANS = {
   free: { name: 'Free', price: 0, priceId: '' },
   pro: {
     name: 'Pro',
-    price: 29,
+    price: 19,
     priceId: process.env.STRIPE_PRO_PRICE_ID || '',
   },
 } as const;

@@ -16,10 +16,10 @@ interface RateLimitEntry {
 
 const memStore = new Map<string, RateLimitEntry>();
 
-// Tier limits
+// Tier limits (tight to minimise LLM costs)
 const TIER_LIMITS: Record<string, { perMinute: number; perDay: number }> = {
-  free: { perMinute: 60, perDay: 1000 },
-  pro: { perMinute: 300, perDay: 10000 },
+  free: { perMinute: 10, perDay: 200 },
+  pro: { perMinute: 60, perDay: 2000 },
 };
 
 const MINUTE_MS = 60 * 1000;

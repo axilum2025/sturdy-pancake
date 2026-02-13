@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import KnowledgePanel from './KnowledgePanel';
 import IntegrationsPanel from './IntegrationsPanel';
 import AppearancePanel from './AppearancePanel';
@@ -36,18 +37,20 @@ interface AgentConfigData {
   };
 }
 
-const AVAILABLE_MODELS = [
-  { id: 'openai/gpt-4.1', labelKey: 'models.gpt41', descKey: 'models.gpt41Desc' },
-  { id: 'openai/gpt-4.1-mini', labelKey: 'models.gpt41Mini', descKey: 'models.gpt41MiniDesc' },
-  { id: 'openai/gpt-4.1-nano', labelKey: 'models.gpt41Nano', descKey: 'models.gpt41NanoDesc' },
+const ALL_MODELS = [
+  { id: 'openai/gpt-4.1-nano', labelKey: 'models.gpt41Nano', descKey: 'models.gpt41NanoDesc', tiers: ['free', 'pro'] },
+  { id: 'openai/gpt-4.1-mini', labelKey: 'models.gpt41Mini', descKey: 'models.gpt41MiniDesc', tiers: ['pro'] },
 ];
 
 export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const userTier = user?.tier || 'free';
+  const AVAILABLE_MODELS = ALL_MODELS.filter(m => m.tiers.includes(userTier));
   const [config, setConfig] = useState<AgentConfigData>({
-    model: 'openai/gpt-4.1',
+    model: 'openai/gpt-4.1-nano',
     temperature: 0.7,
-    maxTokens: 2048,
+    maxTokens: 1024,
     systemPrompt: 'Tu es un assistant IA utile et concis.',
     welcomeMessage: 'Bonjour ! Comment puis-je vous aider ?',
     language: 'fr',
@@ -87,9 +90,9 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
         const agent = await res.json();
         if (agent.config && typeof agent.config === 'object') {
           setConfig({
-            model: agent.config.model || 'openai/gpt-4.1',
+            model: agent.config.model || 'openai/gpt-4.1-nano',
             temperature: typeof agent.config.temperature === 'number' ? agent.config.temperature : 0.7,
-            maxTokens: typeof agent.config.maxTokens === 'number' ? agent.config.maxTokens : 2048,
+            maxTokens: typeof agent.config.maxTokens === 'number' ? agent.config.maxTokens : 1024,
             systemPrompt: agent.config.systemPrompt || '',
             welcomeMessage: agent.config.welcomeMessage || '',
             language: agent.config.language || 'fr',

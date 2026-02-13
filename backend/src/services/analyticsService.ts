@@ -123,8 +123,8 @@ export async function logChat(params: {
 
   // Also increment daily metrics
   const totalTokens = params.tokensPrompt + params.tokensCompletion;
-  // Rough cost estimate for GPT-4.1: $2/M input, $8/M output
-  const cost = (params.tokensPrompt * 2 + params.tokensCompletion * 8) / 1_000_000;
+  // Rough cost estimate for GPT-4.1-nano: $0.10/M input, $0.40/M output
+  const cost = (params.tokensPrompt * 0.1 + params.tokensCompletion * 0.4) / 1_000_000;
 
   await incrementMetrics({
     agentId: params.agentId,

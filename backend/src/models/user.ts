@@ -77,7 +77,7 @@ export class UserModel {
       displayName: data.displayName,
       githubId: data.githubId,
       tier: 'free',
-      quotas: { projectsMax: 3, storageMax: 100 * 1024 * 1024, deploymentsPerMonth: 5 },
+      quotas: { projectsMax: 2, storageMax: 50 * 1024 * 1024, deploymentsPerMonth: 3 },
       usage: { projectsCount: 0, storageUsed: 0, deploymentsThisMonth: 0, lastResetDate: new Date().toISOString() },
     }).returning();
 
@@ -139,9 +139,9 @@ export class UserModel {
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       },
       quotas: {
-        projectsMax: 10,
-        storageMax: 5 * 1024 * 1024 * 1024,
-        deploymentsPerMonth: 20,
+        projectsMax: 5,
+        storageMax: 500 * 1024 * 1024,
+        deploymentsPerMonth: 10,
       },
     });
   }
@@ -150,9 +150,9 @@ export class UserModel {
     return this.update(id, {
       tier: 'free',
       quotas: {
-        projectsMax: 3,
-        storageMax: 100 * 1024 * 1024,
-        deploymentsPerMonth: 5,
+        projectsMax: 2,
+        storageMax: 50 * 1024 * 1024,
+        deploymentsPerMonth: 3,
       },
     });
   }

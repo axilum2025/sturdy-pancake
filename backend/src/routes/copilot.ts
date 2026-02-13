@@ -3,6 +3,7 @@ import { copilotService, CopilotMessage } from '../services/copilotService';
 import { conversationService } from '../services/conversationService';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { validate, chatSchema, copilotStreamSchema } from '../middleware/validation';
+import { enforceModelForTier } from '../models/agent';
 import OpenAI from 'openai';
 
 export const copilotRouter = Router();
@@ -71,10 +72,10 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     ];
 
     const stream = await client.chat.completions.create({
-      model: model || defaultModel,
+      model: enforceModelForTier(model || defaultModel, (req as AuthenticatedRequest).user?.tier || 'free'),
       messages: openaiMessages,
       temperature: temperature ?? 0.4,
-      max_tokens: maxTokens ?? 4096,
+      max_tokens: maxTokens ?? 2048,
       stream: true,
     });
 
