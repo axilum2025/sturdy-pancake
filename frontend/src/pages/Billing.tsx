@@ -23,7 +23,7 @@ const PLAN_ICONS: Record<string, typeof Zap> = {
 };
 
 export default function Billing() {
-  const { t: _t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, refreshUser } = useAuth();
@@ -41,11 +41,11 @@ export default function Billing() {
   useEffect(() => {
     fetchPlans();
     if (isSuccess) {
-      setSuccessMessage('Votre abonnement a été activé avec succès !');
+      setSuccessMessage(t('billing.subscriptionActivated'));
       refreshUser?.();
     }
     if (isCanceled) {
-      setError('Le paiement a été annulé.');
+      setError(t('billing.paymentCanceled'));
     }
   }, []);
 
@@ -69,7 +69,7 @@ export default function Billing() {
         window.location.href = res.data.url;
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur lors de la création de la session de paiement.');
+      setError(err.response?.data?.error || t('billing.checkoutError'));
       setCheckoutLoading(false);
     }
   };
@@ -83,7 +83,7 @@ export default function Billing() {
         window.location.href = res.data.url;
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Erreur lors de l\'ouverture du portail.');
+      setError(err.response?.data?.error || t('billing.portalError'));
       setPortalLoading(false);
     }
   };
@@ -112,7 +112,7 @@ export default function Billing() {
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-blue-400" />
                 <span className="text-base font-bold tracking-tight gradient-text">
-                  Abonnement & Facturation
+                  {t('billing.title')}
                 </span>
               </div>
             </div>
@@ -158,13 +158,13 @@ export default function Billing() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Crown className="w-5 h-5 text-indigo-400" />
-                  <h2 className="text-lg font-bold text-t-text">Abonnement Pro actif</h2>
+                  <h2 className="text-lg font-bold text-t-text">{t('billing.proActive')}</h2>
                 </div>
                 <p className="text-sm text-t-text/50">
-                  Votre abonnement est actif.
+                  {t('billing.subscriptionActive')}
                   {subscription?.currentPeriodEnd && (
-                    <> Prochaine facturation : <span className="text-t-text/70 font-medium">
-                      {new Date(subscription.currentPeriodEnd).toLocaleDateString('fr-FR', {
+                    <> {t('billing.nextBilling')} <span className="text-t-text/70 font-medium">
+                      {new Date(subscription.currentPeriodEnd).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
                         day: 'numeric', month: 'long', year: 'numeric'
                       })}
                     </span></>
@@ -181,7 +181,7 @@ export default function Billing() {
                 ) : (
                   <ExternalLink className="w-4 h-4" />
                 )}
-                Gérer l'abonnement
+                {t('billing.manageSubscription')}
               </button>
             </div>
           </div>
@@ -190,12 +190,12 @@ export default function Billing() {
         {/* Plans section title */}
         <div className="text-center mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-t-text mb-2">
-            {isSubscribed ? 'Votre plan' : 'Choisissez votre plan'}
+            {isSubscribed ? t('billing.yourPlan') : t('billing.choosePlan')}
           </h1>
           <p className="text-sm text-t-text/40 max-w-lg mx-auto">
             {isSubscribed
-              ? 'Vous bénéficiez de toutes les fonctionnalités Pro. Gérez votre abonnement via le portail Stripe.'
-              : 'Commencez gratuitement, passez au Pro quand vous êtes prêt. Aucun engagement, annulez à tout moment.'
+              ? t('billing.proDescription')
+              : t('billing.freeDescription')
             }
           </p>
         </div>
@@ -226,7 +226,7 @@ export default function Billing() {
                   {isPro && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 text-white shadow-lg shadow-indigo-500/30">
-                        Populaire
+                        {t('billing.popular')}
                       </span>
                     </div>
                   )}
@@ -244,11 +244,11 @@ export default function Billing() {
                     <div className="mt-3 flex items-baseline justify-center gap-1">
                       <span className="text-4xl font-bold text-t-text">${plan.price}</span>
                       {plan.price > 0 && (
-                        <span className="text-sm text-t-text/40">/ mois</span>
+                        <span className="text-sm text-t-text/40">{t('billing.perMonth')}</span>
                       )}
                     </div>
                     {plan.price === 0 && (
-                      <p className="text-xs text-t-text/40 mt-1">Pour toujours</p>
+                      <p className="text-xs text-t-text/40 mt-1">{t('billing.forever')}</p>
                     )}
                   </div>
 
@@ -277,7 +277,7 @@ export default function Billing() {
                           : 'bg-blue-500/10 border-blue-500/20 text-blue-300'
                       }`}>
                         <Check className="w-4 h-4 inline mr-1.5" />
-                        Plan actuel
+                        {t('billing.currentPlan')}
                       </div>
                     ) : isPro ? (
                       <button
@@ -290,7 +290,7 @@ export default function Billing() {
                         ) : (
                           <>
                             <Crown className="w-4 h-4" />
-                            Passer au Pro
+                            {t('billing.upgradePro')}
                           </>
                         )}
                       </button>
@@ -303,12 +303,12 @@ export default function Billing() {
                         {portalLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                          'Downgrader'
+                          t('billing.downgrade')
                         )}
                       </button>
                     ) : (
                       <div className="w-full py-3 rounded-xl text-sm font-medium text-center bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/40">
-                        Plan actuel
+                        {t('billing.currentPlan')}
                       </div>
                     )}
                   </div>
@@ -320,12 +320,12 @@ export default function Billing() {
 
         {/* Comparison Table */}
         <div className="mt-16 max-w-3xl mx-auto">
-          <h2 className="text-lg font-bold text-t-text text-center mb-6">Comparaison détaillée</h2>
+          <h2 className="text-lg font-bold text-t-text text-center mb-6">{t('billing.comparison')}</h2>
           <div className="glass-card rounded-2xl overflow-hidden border border-t-overlay/10">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-t-overlay/10">
-                  <th className="text-left px-6 py-4 text-t-text/50 font-medium">Fonctionnalité</th>
+                  <th className="text-left px-6 py-4 text-t-text/50 font-medium">{t('billing.feature')}</th>
                   <th className="text-center px-4 py-4 text-blue-400 font-semibold">Free</th>
                   <th className="text-center px-4 py-4 text-indigo-400 font-semibold">
                     Pro
@@ -335,18 +335,18 @@ export default function Billing() {
               </thead>
               <tbody>
                 {[
-                  ['Agents', '5', 'Illimité'],
-                  ['Messages / jour', '100', '10 000'],
-                  ['Stockage', '10 Mo', '1 Go'],
-                  ['Knowledge Base (RAG)', '1 doc', 'Illimité'],
-                  ['MCP Servers', '2', 'Illimité'],
-                  ['Webhook Events', '2', 'Illimité'],
-                  ['API Keys', '1', 'Illimité'],
-                  ['Domaine personnalisé', '—', <Check key="cd" className="w-4 h-4 text-green-400 inline" />],
-                  ['Widget embeddable', <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
-                  ['Store Publishing', <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
-                  ['Analytics avancés', '—', <Check key="a" className="w-4 h-4 text-green-400 inline" />],
-                  ['Support prioritaire', '—', <Check key="sp" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compAgents'), t('billing.compFree5'), t('billing.unlimited')],
+                  [t('billing.compMessages'), t('billing.compFreeMsg'), t('billing.compProMsg')],
+                  [t('billing.compStorage'), t('billing.compFreeStorage'), t('billing.compProStorage')],
+                  [t('billing.compKnowledge'), t('billing.compFreeKnowledge'), t('billing.unlimited')],
+                  [t('billing.compMcp'), t('billing.compFreeMcp'), t('billing.unlimited')],
+                  [t('billing.compWebhooks'), t('billing.compFreeWebhooks'), t('billing.unlimited')],
+                  [t('billing.compApiKeys'), t('billing.compFreeApiKeys'), t('billing.unlimited')],
+                  [t('billing.compCustomDomain'), '—', <Check key="cd" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compWidget'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compStore'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compAnalytics'), '—', <Check key="a" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compSupport'), '—', <Check key="sp" className="w-4 h-4 text-green-400 inline" />],
                 ].map(([feature, free, pro], i) => (
                   <tr key={i} className={`border-b border-t-overlay/5 ${i % 2 === 0 ? 'bg-t-overlay/[0.02]' : ''}`}>
                     <td className="px-6 py-3 text-t-text/70">{feature}</td>
@@ -361,24 +361,24 @@ export default function Billing() {
 
         {/* FAQ */}
         <div className="mt-16 max-w-2xl mx-auto">
-          <h2 className="text-lg font-bold text-t-text text-center mb-6">Questions fréquentes</h2>
+          <h2 className="text-lg font-bold text-t-text text-center mb-6">{t('billing.faq')}</h2>
           <div className="space-y-3">
             {[
               {
-                q: 'Puis-je annuler à tout moment ?',
-                a: 'Oui, vous pouvez annuler votre abonnement Pro à tout moment depuis le portail de gestion. Vous conserverez l\'accès Pro jusqu\'à la fin de la période de facturation en cours.',
+                q: t('billing.faq1q'),
+                a: t('billing.faq1a'),
               },
               {
-                q: 'Que se passe-t-il si je dépasse les limites du plan Free ?',
-                a: 'Vous recevrez une notification et vos agents continueront de fonctionner. Nous vous inviterons à passer au plan Pro pour débloquer des limites plus élevées.',
+                q: t('billing.faq2q'),
+                a: t('billing.faq2a'),
               },
               {
-                q: 'Le paiement est-il sécurisé ?',
-                a: 'Oui, tous les paiements sont traités par Stripe, le leader mondial du paiement en ligne. Vos données bancaires ne transitent jamais par nos serveurs.',
+                q: t('billing.faq3q'),
+                a: t('billing.faq3a'),
               },
               {
-                q: 'Y a-t-il une période d\'essai ?',
-                a: 'Le plan Free vous permet de tester toutes les fonctionnalités de base sans limite de temps. Passez au Pro uniquement quand vous en avez besoin.',
+                q: t('billing.faq4q'),
+                a: t('billing.faq4a'),
               },
             ].map((item, i) => (
               <details key={i} className="glass-card rounded-xl border border-t-overlay/10 group">
@@ -398,7 +398,7 @@ export default function Billing() {
         {!isSubscribed && (
           <div className="mt-16 text-center animate-fade-in-up">
             <p className="text-sm text-t-text/30 mb-4">
-              Des questions ? Contactez-nous à <a href="mailto:support@gilo.dev" className="text-blue-400 hover:underline">support@gilo.dev</a>
+              {t('billing.contactUs')} <a href="mailto:support@gilo.dev" className="text-blue-400 hover:underline">support@gilo.dev</a>
             </p>
           </div>
         )}
