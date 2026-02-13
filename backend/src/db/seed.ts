@@ -32,7 +32,12 @@ async function seed() {
     });
 
     if (existingAdmin) {
-      console.log('  ✓ Admin user already exists');
+      // Always reset password to ensure it matches seed config
+      const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+      await db.update(users)
+        .set({ passwordHash: adminHash, tier: 'pro', subscription: { status: 'active' } })
+        .where(eq(users.email, ADMIN_EMAIL));
+      console.log('  ✓ Admin user already exists — password & tier reset');
     } else {
       const adminHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
       const [adminUser] = await db.insert(users).values({
