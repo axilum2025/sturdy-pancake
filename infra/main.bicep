@@ -36,6 +36,9 @@ param githubToken string = ''
 @description('Container image tag')
 param imageTag string = 'latest'
 
+@description('Admin email for store management (app developer)')
+param adminEmail string = ''
+
 @description('Custom domain for the application (e.g. gilo.dev)')
 param customDomain string = 'gilo.dev'
 
@@ -201,6 +204,7 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'PORT', value: '3001' }
             { name: 'GILO_DOMAIN', value: customDomain }
             { name: 'ALLOWED_ORIGINS', value: 'https://${customDomain},https://www.${customDomain}' }
+            { name: 'ADMIN_EMAIL', value: adminEmail }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
             { name: 'GITHUB_TOKEN', secretRef: 'github-token' }

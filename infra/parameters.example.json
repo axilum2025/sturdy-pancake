@@ -22,6 +22,9 @@
     },
     "imageTag": {
       "value": "latest"
+    },
+    "adminEmail": {
+      "value": "zgdsaid31@gmail.com"
     }
   }
 }
