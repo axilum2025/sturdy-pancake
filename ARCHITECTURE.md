@@ -1,6 +1,6 @@
 # Architecture du Projet — GiLo AI Agent Builder
 
-> **Dernière mise à jour** : 12 février 2026
+> **Dernière mise à jour** : 13 février 2026
 
 ## Vue d'ensemble
 
@@ -35,6 +35,11 @@ flowchart TB
         Tables[15 Tables + pgvector]
     end
 
+    subgraph Cache["Redis 7"]
+        RateLimit[Rate Limiting - Sorted Sets]
+        CacheLayer[Cache - Store/Analytics]
+    end
+
     subgraph External["APIs Externes"]
         GitHub[GitHub Models API — GPT-4.1]
         Stripe[Stripe — Billing]
@@ -49,6 +54,7 @@ flowchart TB
 
     Frontend --> Caddy --> Backend
     Backend --> Database
+    Backend --> Cache
     Backend --> GitHub
     Backend --> Stripe
     Backend --> MCP
@@ -114,7 +120,7 @@ flowchart TB
 ├── scripts/
 │   ├── setup-azure.sh            # Provisioning Azure
 │   └── setup-custom-domain.sh
-├── docker-compose.yml            # 4 services (caddy, backend, frontend, db)
+├── docker-compose.yml            # 5 services (caddy, backend, frontend, db, redis)
 ├── Caddyfile                     # Reverse proxy config
 ├── ROADMAP.md                    # Roadmap détaillé avec statuts
 └── ARCHITECTURE.md               # Ce fichier
@@ -282,13 +288,13 @@ Middleware centralisé dans `backend/src/middleware/validation.ts` :
 | Couche | Technologie |
 |--------|-------------|
 | Frontend | React 18, Vite, TypeScript, Tailwind CSS, Zustand, React Router v6, Lucide, i18next |
-| Backend | Express.js, TypeScript, Drizzle ORM, Zod v4, OpenAI SDK, Stripe SDK |
+| Backend | Express.js, TypeScript, Drizzle ORM, Zod v4, OpenAI SDK, Stripe SDK, ioredis |
 | Base de données | PostgreSQL 16 + pgvector |
 | Auth | JWT (jsonwebtoken) + bcryptjs, OAuth Google |
 | AI | GitHub Models API (GPT-4.1/Mini/Nano), text-embedding-3-small |
 | Billing | Stripe (Checkout, Customer Portal, Webhooks) |
 | Tests | Vitest (35 tests unitaires) |
-| Infra | Docker Compose, Caddy, Azure Container Apps, Bicep IaC, GitHub Actions CI/CD |
+| Infra | Docker Compose, Caddy, Redis 7, Azure Container Apps, Bicep IaC, GitHub Actions CI/CD |
 
 ---
 
@@ -306,9 +312,10 @@ Middleware centralisé dans `backend/src/middleware/validation.ts` :
 | `STRIPE_SECRET_KEY` | Stripe API secret key | — |
 | `STRIPE_PRO_PRICE_ID` | Stripe Price ID pour plan Pro | — |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | — |
+| `REDIS_URL` | Redis connection URL (ex: redis://redis:6379) | — |
 | `MCP_STORAGE_DIR` | Répertoire stockage MCP configs | — |
 | `SENDGRID_API_KEY` | SendGrid pour emails (outils built-in) | — |
 
 ---
 
-*Document mis à jour le 12 février 2026*
+*Document mis à jour le 13 février 2026*

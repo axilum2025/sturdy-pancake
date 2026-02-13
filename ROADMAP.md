@@ -1,6 +1,6 @@
 # GiLo AI — Agent Builder : Roadmap des Phases de Développement
 
-> **État actuel** : Phase 1–7 ✅ + Phase 9 ✅ + Phase 10 (partiel) ✅
+> **État actuel** : Phase 1–7 ✅ + Phase 9 ✅ + Phase 10 (en cours) ✅
 > **Dernière mise à jour** : 13 février 2026
 
 ---
@@ -19,7 +19,7 @@
 | 7 | Analytics & Monitoring | ✅ Terminé | — |
 | 8 | Versioning & Collaboration | ⏳ Planifié | Basse |
 | 9 | Billing Stripe | ✅ Terminé | — |
-| 10 | Production & DevOps | 🟡 Partiel | Moyenne |
+| 10 | Production & DevOps | 🟡 En cours | Moyenne |
 
 ---
 
@@ -27,15 +27,16 @@
 
 ### Infrastructure & Fondations
 - **PostgreSQL 16** + Drizzle ORM — 15 tables (users, agents, store_agents, conversations, messages, knowledge_documents, knowledge_chunks, api_keys, webhooks, refresh_tokens, community_tools, agent_metrics, agent_logs, agent_alerts, integrations)
+- **Redis 7** — cache, rate limiting persistent (sorted sets sliding window), fallback in-memory
 - **JWT Auth** réel avec bcrypt + jsonwebtoken (register, login, me, upgrade, downgrade)
 - **RGPD/GDPR** — `GET /auth/export` (Art. 15/20) + `DELETE /auth/account` (Art. 17)
-- **Docker Compose** — 4 services (Caddy reverse proxy, backend, frontend, PostgreSQL)
+- **Docker Compose** — 5 services (Caddy reverse proxy, backend, frontend, PostgreSQL, Redis)
 - **Dockerfile** multi-stage backend (Node.js 20 Alpine)
 - **Bicep IaC** — Azure Container Apps + ACR + PostgreSQL Flexible + SWA + Log Analytics
 - **CI/CD** GitHub Actions — deploy-backend.yml + deploy-frontend.yml
 - **Zod v4 validation** sur toutes les routes critiques (10 schemas, middleware centralisé)
 - **35 tests unitaires** vitest (chunker, toolExecutor, toolCatalogue, httpActionService)
-- **Rate limiting** par tier (free/pro) avec compteurs in-memory
+- **Rate limiting** par tier (free/pro) avec Redis sliding window (fallback in-memory)
 
 ### Backend — 20 fichiers routes, ~100+ endpoints
 - **Auth** : register, login, me, upgrade, downgrade, export RGPD, delete account
@@ -209,7 +210,7 @@
 - [x] Helmet.js — headers HTTP sécurisés (HSTS, X-Frame-Options, etc.)
 
 #### ❌ Non réalisé
-- [ ] Redis pour cache, sessions, rate limiting (actuellement in-memory)
+- [x] Redis pour cache, sessions, rate limiting (ioredis + sorted sets sliding window + fallback in-memory)
 - [ ] Tests d'intégration API routes
 - [ ] Tests E2E (Playwright) frontend
 - [ ] Couverture > 80% (actuellement ~35 tests unitaires seulement)
@@ -226,12 +227,12 @@
 ### 🔴 Priorité Haute
 | Tâche | Phase | Effort estimé |
 |-------|-------|---------------|
-| Redis cache + rate limiter persistent | 10 | 1 jour |
 | Tests d'intégration routes API | 10 | 2-3 jours |
 
 ### ✅ Récemment complété (Haute/Moyenne)
 | Tâche | Phase |
 |-------|-------|
+| ~~Redis cache + rate limiter persistent~~ | 10 |
 | ~~Page Billing frontend (plans, checkout, portal)~~ | 9 |
 | ~~OAuth GitHub provider~~ | 3 |
 | ~~Helmet.js + headers sécurité~~ | 10 |
@@ -272,7 +273,7 @@
 | **Backend** | Express + TypeScript + Drizzle ORM | ✅ |
 | **Validation** | Zod v4 (10 schemas, middleware centralisé) | ✅ |
 | **Base de données** | PostgreSQL 16 + pgvector (15 tables) | ✅ |
-| **Cache** | In-memory (Map) | ⚠️ Pas de Redis |
+| **Cache** | Redis 7 (ioredis) + in-memory fallback | ✅ |
 | **Auth** | JWT + bcrypt + OAuth Google + GitHub | ✅ |
 | **AI** | GitHub Models API (GPT-4.1) + embeddings | ✅ |
 | **Recherche** | pgvector (cosinus similarity) | ✅ |

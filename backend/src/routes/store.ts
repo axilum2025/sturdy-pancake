@@ -3,6 +3,7 @@ import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent
 import { agentModel } from '../models/agent';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { validate, publishAgentSchema } from '../middleware/validation';
+import { cacheGet, cacheSet, cacheDelPattern } from '../services/redisService';
 
 export const storeRouter = Router();
 
@@ -19,6 +20,15 @@ storeRouter.get('/', async (req: Request, res: Response) => {
     }
     if (search) {
       options.search = search as string;
+    }
+
+    // Cache key based on filters (only cache non-search requests for 60s)
+    const cacheKey = `cache:store:list:${category || 'all'}:${search || ''}`;
+    if (!search) {
+      const cached = await cacheGet<{ agents: any[]; total: number }>(cacheKey);
+      if (cached) {
+        return res.json(cached);
+      }
     }
 
     const listings = await storeModel.findAll(options);
@@ -38,7 +48,14 @@ storeRouter.get('/', async (req: Request, res: Response) => {
       creatorName: l.creatorName,
     }));
 
-    res.json({ agents: cards, total: cards.length });
+    const result = { agents: cards, total: cards.length };
+
+    // Cache non-search listings for 60 seconds
+    if (!search) {
+      await cacheSet(cacheKey, result, 60);
+    }
+
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -207,6 +224,9 @@ storeRouter.post('/publish', validate(publishAgentSchema), async (req: Request, 
     if (agent) {
       await agentModel.deploy(agent.id);
     }
+
+    // Invalidate store listing cache
+    await cacheDelPattern('cache:store:*');
 
     res.status(201).json(listing);
   } catch (error: any) {

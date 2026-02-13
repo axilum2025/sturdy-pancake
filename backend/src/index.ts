@@ -7,6 +7,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import { initDb, closeDb } from './db';
+import { initRedis, closeRedis } from './services/redisService';
 import { sessionRouter } from './routes/session';
 import { agentRouter } from './routes/agent';
 import { mcpRouter } from './routes/mcp';
@@ -31,6 +32,7 @@ import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { rateLimiter } from './middleware/rateLimiter';
 import { subdomainMiddleware } from './middleware/subdomain';
+import { isRedisAvailable } from './services/redisService';
 
 const port = process.env.PORT || 3001;
 
@@ -38,6 +40,9 @@ async function main() {
   // ---- Initialize database ----
   await initDb();
   console.log('✅ Database ready');
+
+  // ---- Initialize Redis (cache + rate limiting) ----
+  await initRedis();
 
   const app: Express = express();
 
@@ -93,14 +98,16 @@ async function main() {
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      version: '3.0.0'
+      version: '3.0.0',
+      redis: isRedisAvailable() ? 'connected' : 'unavailable (in-memory fallback)',
     });
   });
   app.get('/api/health', (req: Request, res: Response) => {
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      version: '3.0.0'
+      version: '3.0.0',
+      redis: isRedisAvailable() ? 'connected' : 'unavailable (in-memory fallback)',
     });
   });
 
@@ -182,6 +189,7 @@ async function main() {
     console.log('\n🛑 Shutting down...');
     const { mcpService } = await import('./services/mcpService');
     await mcpService.shutdown();
+    await closeRedis();
     await closeDb();
     process.exit(0);
   };

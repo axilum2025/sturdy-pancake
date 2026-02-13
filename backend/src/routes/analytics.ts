@@ -14,6 +14,7 @@ import {
   getUserAnalytics,
   getAgentLogs,
 } from '../services/analyticsService';
+import { cacheGet, cacheSet } from '../services/redisService';
 
 export const analyticsRouter = Router();
 
@@ -37,8 +38,16 @@ analyticsRouter.get('/', async (req: Request, res: Response) => {
     if (!userId) return res.status(401).json({ error: 'Authentication required' });
 
     const { startDate, endDate } = defaultRange(req);
+
+    // Cache analytics for 30s to avoid repeated heavy queries
+    const cacheKey = `cache:analytics:user:${userId}:${startDate}:${endDate}`;
+    const cached = await cacheGet(cacheKey);
+    if (cached) return res.json(cached);
+
     const summary = await getUserAnalytics(userId, startDate, endDate);
-    res.json({ ...summary, startDate, endDate });
+    const result = { ...summary, startDate, endDate };
+    await cacheSet(cacheKey, result, 30);
+    res.json(result);
   } catch (error: any) {
     console.error('Global analytics error:', error.message);
     res.status(500).json({ error: 'Failed to load analytics' });

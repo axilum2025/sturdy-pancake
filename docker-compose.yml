@@ -44,8 +44,11 @@ services:
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173,http://localhost:80}
       SESSION_TIMEOUT: ${SESSION_TIMEOUT:-3600000}
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      REDIS_URL: redis://redis:6379
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3001/health"]
@@ -68,6 +71,24 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    networks:
+      - gilo
+
+  # --- Redis (cache, rate limiting, sessions) ---
+  redis:
+    image: redis:7-alpine
+    container_name: gilo-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     networks:
       - gilo
 
@@ -94,6 +115,7 @@ services:
 
 volumes:
   pgdata:
+  redisdata:
   caddy_data:
   caddy_config:
 
