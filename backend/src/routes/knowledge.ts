@@ -5,7 +5,8 @@
 
 import { Router, Request, Response } from 'express';
 import multer from 'multer';
-import { agentModel } from '../models/agent';
+import { agentModel, getKnowledgeLimit } from '../models/agent';
+import { userModel } from '../models/user';
 import { knowledgeService } from '../services/knowledgeService';
 import { isSupportedMimeType } from '../services/documentParser';
 import { AuthenticatedRequest } from '../middleware/auth';
@@ -54,6 +55,23 @@ knowledgeRouter.post('/:id/knowledge', upload.single('file'), async (req: Reques
 
     if (!file) {
       return res.status(400).json({ error: 'No file uploaded. Use multipart/form-data with field name "file".' });
+    }
+
+    // Check knowledge base document limit based on owner tier
+    const existingDocs = await knowledgeService.listDocuments(agentId);
+    let ownerTier = 'free';
+    try {
+      const owner = await userModel.findById(userId);
+      if (owner) ownerTier = owner.tier;
+    } catch { /* fallback */ }
+    const docLimit = getKnowledgeLimit(ownerTier);
+    if (existingDocs.length >= docLimit) {
+      return res.status(403).json({
+        error: 'Knowledge base document limit reached',
+        message: `Your plan allows ${docLimit} documents per agent. Upgrade to add more.`,
+        limit: docLimit,
+        current: existingDocs.length,
+      });
     }
 
     const doc = await knowledgeService.processDocument(
@@ -145,6 +163,23 @@ knowledgeRouter.post('/:id/knowledge/url', async (req: Request, res: Response) =
       }
     } catch {
       return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    // Check knowledge base document limit based on owner tier
+    const existingDocs = await knowledgeService.listDocuments(agentId);
+    let urlOwnerTier = 'free';
+    try {
+      const owner = await userModel.findById(userId);
+      if (owner) urlOwnerTier = owner.tier;
+    } catch { /* fallback */ }
+    const urlDocLimit = getKnowledgeLimit(urlOwnerTier);
+    if (existingDocs.length >= urlDocLimit) {
+      return res.status(403).json({
+        error: 'Knowledge base document limit reached',
+        message: `Your plan allows ${urlDocLimit} documents per agent. Upgrade to add more.`,
+        limit: urlDocLimit,
+        current: existingDocs.length,
+      });
     }
 
     const doc = await knowledgeService.processUrl(agentId, userId, url.trim());

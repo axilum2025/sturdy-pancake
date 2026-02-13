@@ -3,7 +3,7 @@
 // Manages conversations & messages in PostgreSQL
 // ============================================================
 
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, desc, and, gte, sql } from 'drizzle-orm';
 import { getDb } from '../db';
 import { conversations, messages } from '../db/schema';
 
@@ -88,12 +88,17 @@ async function listByAgent(
   agentId: string,
   limit = 30,
   offset = 0,
+  since?: Date,
 ): Promise<ConversationSummary[]> {
   const db = getDb();
+  const conditions = [eq(conversations.agentId, agentId)];
+  if (since) {
+    conditions.push(gte(conversations.startedAt, since));
+  }
   const rows = await db
     .select()
     .from(conversations)
-    .where(eq(conversations.agentId, agentId))
+    .where(and(...conditions))
     .orderBy(desc(conversations.startedAt))
     .limit(limit)
     .offset(offset);

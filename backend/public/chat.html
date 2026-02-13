@@ -680,6 +680,9 @@
     document.getElementById('emptyName').textContent = AGENT.name;
     document.getElementById('emptyHint').textContent = t.startConversation;
     document.getElementById('footerLink').textContent = t.powered;
+    if (AGENT.hideBranding) {
+      document.getElementById('footerLink').style.display = 'none';
+    }
 
     document.title = AGENT.name + ' — GiLo AI';
 

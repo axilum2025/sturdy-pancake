@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
-import { agentModel, enforceModelForTier, isByoLlm } from '../models/agent';
+import { agentModel, enforceModelForTier, enforceMaxTokensForTier, isByoLlm } from '../models/agent';
 import { checkMessageQuota } from '../middleware/messageQuota';
 import { copilotService } from '../services/copilotService';
 import { userModel } from '../models/user';
@@ -358,7 +358,7 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
         model: modelToUse,
         messages: fullMessages,
         temperature: config.temperature,
-        max_tokens: Math.min(config.maxTokens, 1024),
+        max_tokens: byoLlm ? config.maxTokens : enforceMaxTokensForTier(config.maxTokens, storeOwnerTier, false),
         stream: true,
       });
 

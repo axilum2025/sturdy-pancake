@@ -182,7 +182,11 @@ export default function Billing() {
                 t('billing.free2Agents', '2 agents inclus'),
                 'GPT-4.1 Nano',
                 t('billing.free200Msg', '200 messages/jour/agent'),
+                t('billing.freeMaxTokens', '512 tokens max / réponse'),
+                t('billing.freeKnowledge', '2 documents knowledge base'),
                 t('billing.free50Mb', '50 MB stockage'),
+                t('billing.freeAnalytics', 'Analytics (7 jours)'),
+                t('billing.freeHistory', 'Historique chat (7 jours)'),
                 t('billing.freeCustomDomain', 'Domaine personnalisé (slug.gilo.dev)'),
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-3">
@@ -221,7 +225,13 @@ export default function Billing() {
               {[
                 t('billing.paidNanoMini', 'GPT-4.1 Nano + Mini'),
                 t('billing.paid500Msg', '500 messages/jour/agent'),
+                t('billing.paidMaxTokens', '2048 tokens max / réponse'),
+                t('billing.paidKnowledge', '20 documents knowledge base'),
                 t('billing.paidByoLlm', 'BYO LLM (votre propre clé API)'),
+                t('billing.paidWebhooks', 'Webhooks'),
+                t('billing.paidAnalytics', 'Analytics (90 jours + export CSV)'),
+                t('billing.paidHistory', 'Historique chat (90 jours)'),
+                t('billing.paidBranding', 'Retirer "Powered by GiLo"'),
                 t('billing.paidPriority', 'Support prioritaire'),
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-3">
@@ -299,12 +309,16 @@ export default function Billing() {
                 {[
                   [t('billing.compModel', 'Modèle IA'), 'GPT-4.1 Nano', 'Nano + Mini'],
                   [t('billing.compMessages', 'Messages/jour'), '200', '500'],
+                  [t('billing.compMaxTokens', 'Tokens max / réponse'), '512', '2048'],
+                  [t('billing.compKnowledge', 'Knowledge base (docs)'), '2', '20'],
                   [t('billing.compByoLlm', 'BYO LLM'), '—', <Check key="byo" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compWebhooks', 'Webhooks'), '—', <Check key="wh2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compAnalytics', 'Analytics'), t('billing.comp7d', '7 jours'), t('billing.comp90d', '90 jours + CSV')],
+                  [t('billing.compHistory', 'Historique chat'), t('billing.comp7d', '7 jours'), t('billing.comp90dPlain', '90 jours')],
+                  [t('billing.compBranding', '"Powered by GiLo"'), t('billing.compRequired', 'Obligatoire'), t('billing.compRemovable', 'Retirable')],
                   [t('billing.compCustomDomain', 'Custom domain'), <Check key="cd1" className="w-4 h-4 text-green-400 inline" />, <Check key="cd2" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compWidget', 'Widget embed'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compStore', 'Store'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compKnowledge', 'Knowledge base'), <Check key="k1" className="w-4 h-4 text-green-400 inline" />, <Check key="k2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compWebhooks', 'Webhooks'), <Check key="wh1" className="w-4 h-4 text-green-400 inline" />, <Check key="wh2" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compApi', 'API publique'), <Check key="a1" className="w-4 h-4 text-green-400 inline" />, <Check key="a2" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compSupport', 'Support prioritaire'), '—', <Check key="sp" className="w-4 h-4 text-green-400 inline" />],
                 ].map(([feature, free, paid], i) => (

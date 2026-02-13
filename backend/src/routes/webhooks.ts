@@ -6,6 +6,7 @@
 import { Router, Request, Response } from 'express';
 import { webhookModel, WEBHOOK_EVENTS } from '../models/webhook';
 import { agentModel } from '../models/agent';
+import { userModel } from '../models/user';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { validate, createWebhookSchema } from '../middleware/validation';
 
@@ -27,6 +28,19 @@ webhooksRouter.post('/:id/webhooks', validate(createWebhookSchema), async (req: 
     }
     if (agent.userId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Webhooks are a paid-only feature
+    let ownerTier = 'free';
+    try {
+      const owner = await userModel.findById(userId);
+      if (owner) ownerTier = owner.tier;
+    } catch { /* fallback */ }
+    if (ownerTier === 'free') {
+      return res.status(403).json({
+        error: 'Webhooks require a paid plan',
+        message: 'Upgrade to a paid plan to use webhook events.',
+      });
     }
 
     const result = await webhookModel.create(agentId, userId, { url: url.trim(), events });

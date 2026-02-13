@@ -4,7 +4,7 @@
 // ============================================================
 
 import { Router, Request, Response } from 'express';
-import { Agent, enforceModelForTier, isByoLlm } from '../models/agent';
+import { Agent, enforceModelForTier, enforceMaxTokensForTier, isByoLlm } from '../models/agent';
 import { checkMessageQuota } from '../middleware/messageQuota';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
@@ -85,6 +85,7 @@ subdomainRouter.get('/', async (req: Request, res: Response) => {
     iconColor,
     appearance: agent.config.appearance || {},
     welcomeMessage: agent.config.welcomeMessage || (lang === 'en' ? 'Hello! How can I help you?' : 'Bonjour ! Comment puis-je vous aider ?'),
+    hideBranding: !!agent.config.hideBranding,
   });
 
   const html = chatTemplate
@@ -275,7 +276,7 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
         model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, ownerTier),
         messages: openaiMessages,
         temperature: agent.config.temperature,
-        max_tokens: Math.min(agent.config.maxTokens, 1024),
+        max_tokens: byoLlm ? agent.config.maxTokens : enforceMaxTokensForTier(agent.config.maxTokens, ownerTier, false),
         stream: true,
       });
 
@@ -303,7 +304,7 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
         model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, ownerTier),
         messages: openaiMessages,
         temperature: agent.config.temperature,
-        max_tokens: Math.min(agent.config.maxTokens, 1024),
+        max_tokens: byoLlm ? agent.config.maxTokens : enforceMaxTokensForTier(agent.config.maxTokens, ownerTier, false),
       });
 
       res.json({

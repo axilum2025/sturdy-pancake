@@ -38,6 +38,8 @@ export interface AgentConfig {
   customLlmKey?: string;
   customLlmUrl?: string;
   customLlmModel?: string;
+  // Branding — paid agents can hide "Powered by GiLo AI"
+  hideBranding?: boolean;
 }
 
 export interface Agent {
@@ -106,6 +108,36 @@ export function enforceModelForTier(requestedModel: string, tier: string): strin
   if (allowed.includes(requestedModel)) return requestedModel;
   // Fall back to the cheapest allowed model
   return allowed[0];
+}
+
+// ----------------------------------------------------------
+// Tier-based max tokens (cost optimisation)
+// Free = 512, paid/pro = 2048, BYO LLM = user-configured
+// ----------------------------------------------------------
+const TIER_MAX_TOKENS: Record<string, number> = {
+  free: 512,
+  paid: 2048,
+  pro: 2048,
+};
+
+export function enforceMaxTokensForTier(requestedTokens: number, tier: string, isByo: boolean): number {
+  if (isByo) return requestedTokens; // BYO LLM = no cap from us
+  const cap = TIER_MAX_TOKENS[tier] || TIER_MAX_TOKENS.free;
+  return Math.min(requestedTokens, cap);
+}
+
+// ----------------------------------------------------------
+// Tier-based knowledge base document limits
+// Free = 2 docs, paid/pro = 20 docs
+// ----------------------------------------------------------
+const TIER_KNOWLEDGE_LIMITS: Record<string, number> = {
+  free: 2,
+  paid: 20,
+  pro: 20,
+};
+
+export function getKnowledgeLimit(tier: string): number {
+  return TIER_KNOWLEDGE_LIMITS[tier] || TIER_KNOWLEDGE_LIMITS.free;
 }
 
 /**

@@ -191,6 +191,17 @@
     </div>
     <div id="${NS}-powered">Powered by <a href="https://gilo.ai" target="_blank" rel="noopener">GiLo AI</a></div>
   `;
+
+  // Fetch agent config to check hideBranding
+  fetch(`${CFG.baseUrl}/api/v1/agents/${CFG.agentId}`, {
+    headers: CFG.apiKey ? { 'x-api-key': CFG.apiKey } : {},
+  }).then(r => r.json()).then(data => {
+    if (data?.config?.hideBranding) {
+      const pw = document.getElementById(`${NS}-powered`);
+      if (pw) pw.style.display = 'none';
+    }
+  }).catch(() => {});
+
   document.body.appendChild(panel);
 
   // ---- Elements ----

@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { agentModel, AgentCreateDTO, enforceModelForTier, isByoLlm } from '../models/agent';
+import { agentModel, AgentCreateDTO, enforceModelForTier, enforceMaxTokensForTier, isByoLlm } from '../models/agent';
 import { checkMessageQuota } from '../middleware/messageQuota';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
@@ -148,6 +148,10 @@ agentsRouter.patch('/:id/config', validate(updateAgentConfigSchema), async (req:
     if (config.model) {
       config.model = enforceModelForTier(config.model, user?.tier || 'free');
     }
+    // hideBranding is a paid-only feature
+    if (config.hideBranding && (!user || user.tier === 'free')) {
+      config.hideBranding = false;
+    }
     const agent = await agentModel.updateConfig(req.params.id, config);
     res.json(agentModel.toResponse(agent));
   } catch (error: any) {
@@ -229,6 +233,7 @@ agentsRouter.post('/:id/chat', validate(chatSchema), async (req: Request, res: R
     if (!byoLlm) {
       const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
       agent.config.model = enforceModelForTier(agent.config.model, userTier);
+      agent.config.maxTokens = enforceMaxTokensForTier(agent.config.maxTokens, userTier, false);
     } else {
       agent.config.model = resolvedModel;
     }
@@ -489,8 +494,14 @@ agentsRouter.get('/:id/conversations', async (req: Request, res: Response) => {
 
     const limit = Math.min(parseInt(req.query.limit as string) || 30, 100);
     const offset = parseInt(req.query.offset as string) || 0;
-    const convs = await conversationService.listByAgent(req.params.id, limit, offset);
-    res.json({ conversations: convs, total: convs.length });
+
+    // Tier-based chat history retention: free = 7 days, paid = 90 days
+    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+    const retentionDays = userTier === 'free' ? 7 : 90;
+    const since = new Date(Date.now() - retentionDays * 86_400_000);
+
+    const convs = await conversationService.listByAgent(req.params.id, limit, offset, since);
+    res.json({ conversations: convs, total: convs.length, retentionDays });
   } catch (error: any) {
     console.error('List conversations error:', error.message);
     res.status(500).json({ error: 'Failed to list conversations' });

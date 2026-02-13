@@ -4,7 +4,7 @@
 // ============================================================
 
 import { Router, Request, Response } from 'express';
-import { agentModel, enforceModelForTier, isByoLlm } from '../models/agent';
+import { agentModel, enforceModelForTier, enforceMaxTokensForTier, isByoLlm } from '../models/agent';
 import { checkMessageQuota } from '../middleware/messageQuota';
 import { webhookModel } from '../models/webhook';
 import { knowledgeService } from '../services/knowledgeService';
@@ -82,10 +82,12 @@ publicApiRouter.post('/agents/:id/chat', validate(chatSchema), async (req: Reque
       });
     }
 
-    // BYO LLM or enforce tier-based model
+    // BYO LLM or enforce tier-based model + token cap
+    const apiTier = apiReq.agentTier || 'free';
     const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
     if (!byoLlm) {
-      agent.config.model = enforceModelForTier(agent.config.model, apiReq.agentTier || 'free');
+      agent.config.model = enforceModelForTier(agent.config.model, apiTier);
+      agent.config.maxTokens = enforceMaxTokensForTier(agent.config.maxTokens, apiTier, false);
     } else {
       agent.config.model = resolvedModel;
     }
