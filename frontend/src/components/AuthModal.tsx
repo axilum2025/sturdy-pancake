@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Mail, Lock, Github, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { API_BASE } from '../services/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -89,6 +90,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           <div className="relative space-y-3 mb-6">
             <button
               type="button"
+              onClick={() => { window.location.href = `${API_BASE}/api/auth/github`; }}
               className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl btn-outline-glow text-t-text/70 hover:text-t-text text-sm font-medium"
             >
               <Github className="w-4 h-4" />

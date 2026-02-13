@@ -13,6 +13,7 @@ import AgentStorePage from './pages/AgentStorePage';
 import AgentChat from './pages/AgentChat';
 import Analytics from './pages/Analytics';
 import Billing from './pages/Billing';
+import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/docs" element={<Documentation />} />

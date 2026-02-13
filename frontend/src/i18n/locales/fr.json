@@ -114,7 +114,10 @@
     "poweredBy": "Propulsé par l'IA",
     "or": "ou",
     "signUpLink": "S'inscrire",
-    "signInLink": "Se connecter"
+    "signInLink": "Se connecter",
+    "oauthError": "Échec de l'authentification",
+    "redirecting": "Redirection...",
+    "signingIn": "Connexion en cours..."
   },
 
   "dashboard": {

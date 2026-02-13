@@ -114,7 +114,10 @@
     "poweredBy": "Powered by AI",
     "or": "or",
     "signUpLink": "Sign Up",
-    "signInLink": "Sign In"
+    "signInLink": "Sign In",
+    "oauthError": "Authentication failed",
+    "redirecting": "Redirecting...",
+    "signingIn": "Signing in..."
   },
 
   "dashboard": {

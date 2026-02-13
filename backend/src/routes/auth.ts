@@ -1,9 +1,135 @@
 import { Router, Request, Response } from 'express';
+import crypto from 'crypto';
 import { userModel } from '../models/user';
 import { authMiddleware, generateToken, AuthenticatedRequest } from '../middleware/auth';
 import { validate, registerSchema, loginSchema, changePasswordSchema, updateProfileSchema } from '../middleware/validation';
 
 export const authRouter = Router();
+
+// ============================================================
+// GitHub OAuth Login — state store (short-lived, in-memory)
+// ============================================================
+const githubAuthStates = new Map<string, { createdAt: number }>();
+
+// Clean up expired states every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of githubAuthStates) {
+    if (now - val.createdAt > 10 * 60 * 1000) githubAuthStates.delete(key);
+  }
+}, 10 * 60 * 1000);
+
+function getGithubConfig() {
+  return {
+    clientId: process.env.GITHUB_CLIENT_ID || '',
+    clientSecret: process.env.GITHUB_CLIENT_SECRET || '',
+    callbackUrl: process.env.GITHUB_AUTH_CALLBACK_URL
+      || `${process.env.API_BASE_URL || 'https://api.gilo.dev'}/api/auth/github/callback`,
+  };
+}
+
+/**
+ * GET /api/auth/github
+ * Initiate GitHub OAuth login — redirects user to GitHub
+ */
+authRouter.get('/github', (_req: Request, res: Response) => {
+  const cfg = getGithubConfig();
+  if (!cfg.clientId || !cfg.clientSecret) {
+    return res.status(500).json({ error: 'GitHub OAuth is not configured' });
+  }
+
+  const state = crypto.randomBytes(32).toString('hex');
+  githubAuthStates.set(state, { createdAt: Date.now() });
+
+  const params = new URLSearchParams({
+    client_id: cfg.clientId,
+    redirect_uri: cfg.callbackUrl,
+    scope: 'read:user user:email',
+    state,
+    allow_signup: 'true',
+  });
+
+  res.redirect(`https://github.com/login/oauth/authorize?${params.toString()}`);
+});
+
+/**
+ * GET /api/auth/github/callback
+ * GitHub redirects here after user authorises.
+ * Exchanges code for token, finds or creates user, returns JWT via frontend redirect.
+ */
+authRouter.get('/github/callback', async (req: Request, res: Response) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'https://gilo.dev';
+
+  try {
+    const { code, state, error: oauthError } = req.query;
+
+    if (oauthError || !code || !state) {
+      return res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent((oauthError as string) || 'missing_params')}`);
+    }
+
+    // Validate state
+    if (!githubAuthStates.has(state as string)) {
+      return res.redirect(`${frontendUrl}/auth/callback?error=invalid_state`);
+    }
+    githubAuthStates.delete(state as string);
+
+    // Exchange code for access token
+    const cfg = getGithubConfig();
+    const tokenRes = await fetch('https://github.com/login/oauth/access_token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        client_id: cfg.clientId,
+        client_secret: cfg.clientSecret,
+        code,
+        redirect_uri: cfg.callbackUrl,
+      }),
+    });
+
+    const tokenData = await tokenRes.json() as Record<string, any>;
+    if (tokenData.error) {
+      return res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent(tokenData.error_description || tokenData.error)}`);
+    }
+
+    const accessToken = tokenData.access_token as string;
+
+    // Fetch GitHub user profile
+    const ghHeaders = { Authorization: `Bearer ${accessToken}`, Accept: 'application/vnd.github+json' };
+    const userRes = await fetch('https://api.github.com/user', { headers: ghHeaders });
+    if (!userRes.ok) throw new Error(`GitHub API error: ${userRes.status}`);
+    const ghUser = await userRes.json() as { id: number; login: string; name?: string; email?: string; avatar_url?: string };
+
+    // Resolve email (may be private)
+    let email = ghUser.email;
+    if (!email) {
+      try {
+        const emailsRes = await fetch('https://api.github.com/user/emails', { headers: ghHeaders });
+        if (emailsRes.ok) {
+          const emails = await emailsRes.json() as Array<{ email: string; primary: boolean; verified: boolean }>;
+          const primary = emails.find(e => e.primary && e.verified);
+          email = primary?.email || emails.find(e => e.verified)?.email;
+        }
+      } catch { /* ignore */ }
+    }
+
+    if (!email) {
+      return res.redirect(`${frontendUrl}/auth/callback?error=no_email`);
+    }
+
+    // Find or create user
+    const user = await userModel.findOrCreateByGithub(
+      ghUser.id.toString(),
+      email,
+      ghUser.name || ghUser.login,
+    );
+
+    const token = generateToken(user);
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
+  } catch (error: any) {
+    console.error('GitHub OAuth callback error:', error);
+    res.redirect(`${frontendUrl}/auth/callback?error=${encodeURIComponent(error.message)}`);
+  }
+});
 
 /**
  * POST /api/auth/register

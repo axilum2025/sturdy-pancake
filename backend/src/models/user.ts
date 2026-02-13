@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../db';
@@ -105,6 +106,37 @@ export class UserModel {
     const db = getDb();
     const row = await db.query.users.findFirst({ where: eq(users.githubId, githubId) });
     return row ? this.mapRow(row) : undefined;
+  }
+
+  /**
+   * Find an existing user by GitHub ID or email, or create a new one.
+   * If an email-only account exists, links the GitHub ID to it.
+   */
+  async findOrCreateByGithub(githubId: string, email: string, name?: string): Promise<User> {
+    // 1. Already linked — returning user
+    const byGithub = await this.findByGithubId(githubId);
+    if (byGithub) return byGithub;
+
+    // 2. Same email exists — link GitHub ID
+    const byEmail = await this.findByEmail(email);
+    if (byEmail) {
+      return this.update(byEmail.id, { githubId, ...(name && !byEmail.displayName ? { displayName: name } : {}) });
+    }
+
+    // 3. Brand new user — create with random unguessable password
+    const db = getDb();
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+    const [row] = await db.insert(users).values({
+      email,
+      passwordHash,
+      displayName: name,
+      githubId,
+      tier: 'free',
+      quotas: { projectsMax: 2, storageMax: 50 * 1024 * 1024, deploymentsPerMonth: 3 },
+      usage: { projectsCount: 0, storageUsed: 0, deploymentsThisMonth: 0, lastResetDate: new Date().toISOString() },
+    }).returning();
+
+    return this.mapRow(row);
   }
 
   async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId' | 'displayName' | 'paidAgentSlots'>>): Promise<User> {
