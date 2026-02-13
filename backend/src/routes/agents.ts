@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { agentModel, AgentCreateDTO } from '../models/agent';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
@@ -15,6 +17,13 @@ import { validate, createAgentSchema, updateAgentSchema, updateAgentConfigSchema
 import OpenAI from 'openai';
 
 export const agentsRouter = Router();
+
+// Load agent templates
+let agentTemplates: any[] = [];
+try {
+  const raw = readFileSync(join(process.cwd(), 'data', 'agent-templates.json'), 'utf-8');
+  agentTemplates = JSON.parse(raw);
+} catch { /* templates file not found — ok */ }
 
 // Helper: verify agent ownership
 async function verifyOwnership(req: Request, res: Response): Promise<string | null> {
@@ -34,6 +43,13 @@ async function verifyOwnership(req: Request, res: Response): Promise<string | nu
   }
   return userId;
 }
+
+// ----------------------------------------------------------
+// GET /api/agents/templates  –  List agent templates
+// ----------------------------------------------------------
+agentsRouter.get('/templates', (_req: Request, res: Response) => {
+  res.json({ templates: agentTemplates });
+});
 
 // ----------------------------------------------------------
 // GET /api/agents  –  List user's agents

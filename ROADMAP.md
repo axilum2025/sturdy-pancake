@@ -1,7 +1,7 @@
 # GiLo AI — Agent Builder : Roadmap des Phases de Développement
 
 > **État actuel** : Phase 1–7 ✅ + Phase 9 ✅ + Phase 10 (partiel) ✅
-> **Dernière mise à jour** : 12 février 2026
+> **Dernière mise à jour** : 13 février 2026
 
 ---
 
@@ -127,7 +127,8 @@
 - [x] RGPD : export données + suppression compte
 - [x] Déploiement Azure (SWA + Container Apps + PostgreSQL)
 - [x] CI/CD GitHub Actions
-- [ ] OAuth GitHub — **non implémenté** (seul Google OAuth existe)
+- [x] **OAuth GitHub** provider (read:user, user:email, repo, gist, workflow scopes)
+- [ ] OAuth GitHub **login** — non implémenté (seules les intégrations agent sont supportées)
 
 ### ✅ Phase 4 — Déploiement Réel des Agents
 - [x] `POST /api/v1/agents/:id/chat` — API publique (SSE + JSON mode)
@@ -175,7 +176,7 @@
 - [ ] Table `agent_versions` + CRUD + rollback + diff visuel
 - [ ] Environnements Draft / Staging / Production
 - [ ] Collaboration équipe (teams, roles owner/editor/viewer, invitations)
-- [ ] Templates d'agents prédéfinis (Support Client, Assistant RH, Bot E-commerce, etc.)
+- [x] **Templates d'agents prédéfinis** (10 templates : Support Client, Assistant RH, Bot E-commerce, Code Reviewer, Content Writer, Tuteur IA, Data Analyst, Assistant Juridique, Social Media Manager, Assistant Réunion)
 
 ### ✅ Phase 9 — Billing Stripe
 - [x] Stripe SDK installé + billingService.ts
@@ -187,9 +188,9 @@
   - [x] `customer.subscription.created/updated` → update tier + subscription
   - [x] `customer.subscription.deleted` → downgrade to free
 - [x] Env vars : `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- [x] **Page Billing frontend** — plans, checkout Stripe, portail gestion, tableau comparatif, FAQ
 - [ ] **Plan Team** ($99/mois) — non implémenté (dépend Phase 8 Collaboration)
 - [ ] **Usage-based billing** (metered) — non implémenté
-- [ ] **UI page Billing frontend** — non implémenté
 
 ### 🟡 Phase 10 — Production & DevOps (partiel)
 
@@ -205,10 +206,10 @@
 - [x] Rate limiting (API key tier + public IP)
 - [x] RGPD endpoints (export + delete)
 - [x] Trust proxy (behind Caddy)
+- [x] Helmet.js — headers HTTP sécurisés (HSTS, X-Frame-Options, etc.)
 
 #### ❌ Non réalisé
 - [ ] Redis pour cache, sessions, rate limiting (actuellement in-memory)
-- [ ] Helmet.js pour headers HTTP sécurisés
 - [ ] Tests d'intégration API routes
 - [ ] Tests E2E (Playwright) frontend
 - [ ] Couverture > 80% (actuellement ~35 tests unitaires seulement)
@@ -226,19 +227,23 @@
 | Tâche | Phase | Effort estimé |
 |-------|-------|---------------|
 | Redis cache + rate limiter persistent | 10 | 1 jour |
-| Page Billing frontend (plans, checkout, portal) | 9 | 1 jour |
 | Tests d'intégration routes API | 10 | 2-3 jours |
-| OAuth GitHub provider | 3 | 1 jour |
+
+### ✅ Récemment complété (Haute/Moyenne)
+| Tâche | Phase |
+|-------|-------|
+| ~~Page Billing frontend (plans, checkout, portal)~~ | 9 |
+| ~~OAuth GitHub provider~~ | 3 |
+| ~~Helmet.js + headers sécurité~~ | 10 |
+| ~~Templates d'agents prédéfinis~~ | 8 |
 
 ### 🟡 Priorité Moyenne
 | Tâche | Phase | Effort estimé |
 |-------|-------|---------------|
 | Agent Versioning (table, CRUD, rollback, diff) | 8 | 3-4 jours |
-| Helmet.js + headers sécurité | 10 | 0.5 jour |
 | Error tracking (Sentry/App Insights) | 10 | 1 jour |
 | Connecteur Notion (Knowledge Base) | 5 | 2 jours |
 | Connecteur Google Drive (Knowledge Base) | 5 | 2 jours |
-| Templates d'agents prédéfinis | 8 | 2 jours |
 | Deploy réel Azure pipeline (production) | 10 | 1-2 jours |
 
 ### 🟢 Priorité Basse
@@ -268,7 +273,7 @@
 | **Validation** | Zod v4 (10 schemas, middleware centralisé) | ✅ |
 | **Base de données** | PostgreSQL 16 + pgvector (15 tables) | ✅ |
 | **Cache** | In-memory (Map) | ⚠️ Pas de Redis |
-| **Auth** | JWT + bcrypt + OAuth Google | ✅ (manque GitHub) |
+| **Auth** | JWT + bcrypt + OAuth Google + GitHub | ✅ |
 | **AI** | GitHub Models API (GPT-4.1) + embeddings | ✅ |
 | **Recherche** | pgvector (cosinus similarity) | ✅ |
 | **Billing** | Stripe (checkout, portal, webhooks) | ✅ |
@@ -293,4 +298,4 @@
 
 ---
 
-*Dernière mise à jour : 12 février 2026*
+*Dernière mise à jour : 13 février 2026*

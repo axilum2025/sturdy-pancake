@@ -5,6 +5,7 @@
 
 import { OAuthProvider } from './base';
 import { GoogleProvider } from './google';
+import { GitHubProvider } from './github';
 
 // ---- Provider Registry ----
 
@@ -12,9 +13,9 @@ const providers: Map<string, OAuthProvider> = new Map();
 
 // Register all providers
 providers.set('google', new GoogleProvider());
+providers.set('github', new GitHubProvider());
 // Future: providers.set('slack', new SlackProvider());
 // Future: providers.set('notion', new NotionProvider());
-// Future: providers.set('github', new GitHubProvider());
 
 /**
  * Get a provider by ID

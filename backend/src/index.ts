@@ -4,6 +4,7 @@ dotenv.config();
 
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import path from 'path';
 import { initDb, closeDb } from './db';
 import { sessionRouter } from './routes/session';
@@ -74,6 +75,13 @@ async function main() {
 
   // Trust proxy (required behind Caddy/nginx for correct IP detection)
   app.set('trust proxy', 1);
+
+  // Security headers
+  app.use(helmet({
+    contentSecurityPolicy: false,       // CSP handled at Caddy/CDN level; chat.html uses inline scripts
+    crossOriginEmbedderPolicy: false,   // widget.js must be embeddable
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // allow widget & icon loading cross-origin
+  }));
 
   // Subdomain routing: {slug}.gilo.dev → agent
   // Must be before other routes so subdomain requests are caught first

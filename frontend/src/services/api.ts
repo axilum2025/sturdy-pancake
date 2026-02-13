@@ -223,9 +223,23 @@ export const getAgent = async (agentId: string): Promise<Agent> => {
   return response.data;
 };
 
-export const createAgent = async (name: string, description?: string): Promise<Agent> => {
-  const response = await api.post('/agents', { name, description });
+export const createAgent = async (name: string, description?: string, config?: Partial<AgentConfig>): Promise<Agent> => {
+  const response = await api.post('/agents', { name, description, config });
   return response.data;
+};
+
+export interface AgentTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  config: Partial<AgentConfig>;
+}
+
+export const getAgentTemplates = async (): Promise<AgentTemplate[]> => {
+  const response = await api.get('/agents/templates');
+  return response.data.templates || [];
 };
 
 export const updateAgent = async (agentId: string, data: Partial<Agent>): Promise<Agent> => {

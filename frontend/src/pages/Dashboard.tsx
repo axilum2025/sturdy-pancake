@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store, Trash2, BarChart3 } from 'lucide-react';
+import { Plus, LogOut, Zap, Cloud, Bot, MessageSquare, Rocket, Crown, Sparkles, Store, Trash2, BarChart3, CreditCard } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { listAgents, createAgent, deleteAgent, Agent } from '../services/api';
+import { listAgents, createAgent, deleteAgent, getAgentTemplates, Agent, AgentTemplate } from '../services/api';
 import AuthModal from '../components/AuthModal';
 import ProjectCard from '../components/ProjectCard';
 
@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [showAuth, setShowAuth] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<AgentTemplate | null>(null);
+  const [templates, setTemplates] = useState<AgentTemplate[]>([]);
   const [deleteTarget, setDeleteTarget] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -23,6 +25,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchProjects();
+      getAgentTemplates().then(setTemplates).catch(() => {});
     }
   }, [isAuthenticated, user]);
 
@@ -38,14 +41,18 @@ export default function Dashboard() {
   };
 
   const handleCreateProject = async () => {
-    if (!newProjectName.trim() || isCreating) return;
+    const name = newProjectName.trim() || selectedTemplate?.name;
+    if (!name || isCreating) return;
     
     setIsCreating(true);
     try {
-      const agent = await createAgent(newProjectName, t('common.loading'));
+      const config = selectedTemplate?.config || undefined;
+      const description = selectedTemplate?.description || t('common.loading');
+      const agent = await createAgent(name, description, config);
       setProjects([agent, ...projects]);
       setShowCreateModal(false);
       setNewProjectName('');
+      setSelectedTemplate(null);
       navigate(`/studio/${agent.id}`);
     } catch (error: any) {
       console.error('Error creating agent:', error);
@@ -160,6 +167,13 @@ export default function Dashboard() {
               >
                 <BarChart3 className="w-4 h-4 text-green-400 group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-medium text-green-300 hidden sm:inline">Analytics</span>
+              </button>
+              <button
+                onClick={() => navigate('/billing')}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 hover:border-indigo-500/40 hover:bg-indigo-500/15 transition-all duration-200 group"
+              >
+                <CreditCard className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
+                <span className="text-sm font-medium text-indigo-300 hidden sm:inline">Billing</span>
               </button>
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
@@ -336,7 +350,7 @@ export default function Dashboard() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setShowCreateModal(false)}
           />
-          <div className="relative glass-strong rounded-2xl w-full max-w-lg p-5 sm:p-8 border-gradient animate-fade-in-scale">
+          <div className="relative glass-strong rounded-2xl w-full max-w-lg p-5 sm:p-8 border-gradient animate-fade-in-scale max-h-[90vh] overflow-y-auto">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
                 <Plus className="w-5 h-5 text-white" />
@@ -346,6 +360,44 @@ export default function Dashboard() {
                 <p className="text-t-text/40 text-sm">{t('dashboard.createModal.subtitle')}</p>
               </div>
             </div>
+
+            {/* Template selection */}
+            {templates.length > 0 && (
+              <div className="mb-5">
+                <label className="block text-t-text/70 text-sm font-medium mb-2">
+                  Démarrer depuis un template
+                </label>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                  <button
+                    onClick={() => { setSelectedTemplate(null); setNewProjectName(''); }}
+                    className={`p-3 rounded-xl text-left transition-all text-xs ${
+                      !selectedTemplate
+                        ? 'bg-blue-500/15 border border-blue-500/30 text-blue-300'
+                        : 'bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/50 hover:border-t-overlay/20'
+                    }`}
+                  >
+                    <span className="text-lg block mb-1">✨</span>
+                    <span className="font-medium block">Agent vide</span>
+                    <span className="text-t-text/30 block mt-0.5">Partir de zéro</span>
+                  </button>
+                  {templates.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      onClick={() => { setSelectedTemplate(tpl); setNewProjectName(tpl.name); }}
+                      className={`p-3 rounded-xl text-left transition-all text-xs ${
+                        selectedTemplate?.id === tpl.id
+                          ? 'bg-blue-500/15 border border-blue-500/30 text-blue-300'
+                          : 'bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/50 hover:border-t-overlay/20'
+                      }`}
+                    >
+                      <span className="text-lg block mb-1">{tpl.icon}</span>
+                      <span className="font-medium block truncate">{tpl.name}</span>
+                      <span className="text-t-text/30 block mt-0.5 truncate">{tpl.description.substring(0, 50)}...</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <div className="mb-6">
               <label className="block text-t-text/70 text-sm font-medium mb-2">{t('dashboard.createModal.nameLabel')}</label>
@@ -369,7 +421,7 @@ export default function Dashboard() {
               </button>
               <button
                 onClick={handleCreateProject}
-                disabled={!newProjectName.trim() || isCreating}
+                disabled={(!newProjectName.trim() && !selectedTemplate) || isCreating}
                 className="flex-1 btn-gradient px-4 py-3 rounded-xl text-t-text font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isCreating ? (
