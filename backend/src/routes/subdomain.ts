@@ -8,6 +8,7 @@ import { Agent, enforceModelForTier, isByoLlm } from '../models/agent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
+import { userModel } from '../models/user';
 import { publicRateLimiter } from '../middleware/publicRateLimiter';
 import { getDb } from '../db';
 import { storeAgents } from '../db/schema';
@@ -208,6 +209,13 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
     const byoLlm = isByoLlm(agent.config);
     const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
 
+    // Look up the agent owner's current tier (not the stale tier stored on the agent row)
+    let ownerTier = agent.tier || 'free';
+    try {
+      const owner = await userModel.findById(agent.userId);
+      if (owner) ownerTier = owner.tier;
+    } catch { /* fallback to agent.tier */ }
+
     // Fire webhook on first message
     if (messages.length === 1) {
       webhookModel.fire(agent.id, 'on_conversation_start', {
@@ -251,7 +259,7 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
 
     if (streamMode) {
       const stream = await client.chat.completions.create({
-        model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, agent.tier || 'free'),
+        model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, ownerTier),
         messages: openaiMessages,
         temperature: agent.config.temperature,
         max_tokens: Math.min(agent.config.maxTokens, 1024),
@@ -279,7 +287,7 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
       res.end();
     } else {
       const completion = await client.chat.completions.create({
-        model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, agent.tier || 'free'),
+        model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, ownerTier),
         messages: openaiMessages,
         temperature: agent.config.temperature,
         max_tokens: Math.min(agent.config.maxTokens, 1024),

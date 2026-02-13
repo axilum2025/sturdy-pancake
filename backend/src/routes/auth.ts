@@ -73,43 +73,8 @@ authRouter.get('/me', authMiddleware, async (req: Request, res: Response) => {
   }
 });
 
-/**
- * POST /api/auth/upgrade
- * Upgrade to Pro tier (demo - would integrate Stripe)
- */
-authRouter.post('/upgrade', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as AuthenticatedRequest).userId;
-    const { stripeCustomerId, subscriptionId } = req.body;
-
-    const user = await userModel.upgradeToPro(userId, stripeCustomerId || 'demo', subscriptionId || 'demo');
-
-    res.json({
-      message: 'Upgraded to Pro successfully',
-      user: userModel.toResponse(user),
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-/**
- * POST /api/auth/downgrade
- * Downgrade to Free tier
- */
-authRouter.post('/downgrade', authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const userId = (req as AuthenticatedRequest).userId;
-    const user = await userModel.downgradeToFree(userId);
-
-    res.json({
-      message: 'Downgraded to Free successfully',
-      user: userModel.toResponse(user),
-    });
-  } catch (error: any) {
-    res.status(500).json({ error: 'Failed to downgrade' });
-  }
-});
+// Legacy upgrade/downgrade endpoints removed — billing is now handled
+// exclusively through Stripe checkout + webhook flow (billingService.ts).
 
 // ============================================================
 // Profile Update

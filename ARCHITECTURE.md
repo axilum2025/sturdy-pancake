@@ -310,7 +310,7 @@ Middleware centralisé dans `backend/src/middleware/validation.ts` :
 | `GILO_DOMAIN` | Domaine pour subdomains (ex: gilo.dev) | — |
 | `FRONTEND_URL` | URL frontend pour redirects Stripe | — |
 | `STRIPE_SECRET_KEY` | Stripe API secret key | — |
-| `STRIPE_PRO_PRICE_ID` | Stripe Price ID pour plan Pro | — |
+| `STRIPE_AGENT_PRICE_ID` | Stripe Price ID pour agent slot ($3/mois) | — |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret | — |
 | `REDIS_URL` | Redis connection URL (ex: redis://redis:6379) | — |
 | `MCP_STORAGE_DIR` | Répertoire stockage MCP configs | — |

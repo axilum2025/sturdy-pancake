@@ -27,18 +27,21 @@
 
 ---
 
-## Modèle de Revenue Révisé
+## Modèle de Revenue Révisé (v2 — Per-Agent Pricing)
 
-| Feature | Starter (Free) | Pro ($29/mois) | Team ($99/mois) |
-|---------|----------------|----------------|-----------------|
-| **Prix** | $0 | $29/mois | $99/mois |
-| **Domaine** | `*.yourdomain.com` (notre Azure) | Domaine personnalisé | Domaine personnalisé |
-| **GitHub** | ❌ | ✅ Repo privé | ✅ Repo privé |
-| **Azure** | Notre compte | Compte dédié | Compte dédié |
-| **Stockage** | 500Mo | 10Go | 50Go |
-| **Databases** | ❌ | ✅ | ✅ |
-| **CI/CD** | Automatique | GitHub Actions | GitHub Actions |
-| **Support** | Communauté | Email | Prioritaire |
+| Feature | Free | Per-Agent ($3/agent/mois) |
+|---------|------|--------------------------|
+| **Prix** | $0 | $3/agent/mois |
+| **Agents** | 2 inclus | 2 gratuits + slots payants illimités |
+| **BYO LLM** | ✅ (propre clé OpenAI) | ✅ (propre clé OpenAI) |
+| **Domaine** | `{slug}.gilo.dev` | `{slug}.gilo.dev` + custom |
+| **Stockage** | 50Mo | 50Mo + extensible |
+| **Knowledge Base** | ✅ (RAG + pgvector) | ✅ (RAG + pgvector) |
+| **API Keys** | ✅ | ✅ |
+| **Widget Embed** | ✅ | ✅ |
+| **Support** | Communauté | Email |
+
+> **Note** : L'ancien modèle flat-rate Pro $29/mois a été remplacé par un modèle per-agent à $3/agent/mois (commit `57589b0`). Chaque utilisateur a 2 agents gratuits. Les slots supplémentaires sont achetés via Stripe quantity-based subscriptions.
 
 ---
 

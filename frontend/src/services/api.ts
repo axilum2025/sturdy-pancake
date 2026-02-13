@@ -53,6 +53,8 @@ export interface User {
   email: string;
   displayName?: string;
   tier: 'free' | 'pro' | 'team';
+  paidAgentSlots: number;
+  maxAgents: number;
   quotas: {
     projectsMax: number;
     storageMax: number;

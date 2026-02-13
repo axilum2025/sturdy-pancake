@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -58,9 +59,8 @@ export default function Dashboard() {
       navigate(`/studio/${agent.id}`);
     } catch (error: any) {
       console.error('Error creating agent:', error);
-      // Use the error message from the backend if available (via interceptor)
       const message = error?.message || t('common.error') || 'Failed to create agent';
-      alert(message);
+      setCreateError(message);
     } finally {
       setIsCreating(false);
     }
@@ -135,8 +135,8 @@ export default function Dashboard() {
     );
   }
 
-  const paidSlots = (user as any)?.paidAgentSlots || 0;
-  const agentsMax = 2 + paidSlots;
+  const paidSlots = user?.paidAgentSlots || 0;
+  const agentsMax = user?.maxAgents || (2 + paidSlots);
   const agentsProgress = (projects.length / agentsMax) * 100;
   
   const totalConversations = projects.reduce((sum, a) => sum + (a.totalConversations || 0), 0);
@@ -409,6 +409,14 @@ export default function Dashboard() {
               </div>
             )}
             
+            {/* Error banner */}
+            {createError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-2 animate-fade-in-up">
+                <span className="text-red-400 text-sm flex-1">{createError}</span>
+                <button onClick={() => setCreateError(null)} className="text-red-400/60 hover:text-red-400 text-lg leading-none">&times;</button>
+              </div>
+            )}
+
             <div className="mb-6">
               <label className="block text-t-text/70 text-sm font-medium mb-2">{t('dashboard.createModal.nameLabel')}</label>
               <input

@@ -23,8 +23,8 @@ export default function Billing() {
   const isSuccess = searchParams.get('success') === 'true';
   const isCanceled = searchParams.get('canceled') === 'true';
 
-  const paidSlots = (user as any)?.paidAgentSlots || 0;
-  const maxAgents = 2 + paidSlots;
+  const paidSlots = user?.paidAgentSlots || 0;
+  const maxAgents = user?.maxAgents || (2 + paidSlots);
   const hasPaidSlots = paidSlots > 0;
   const subscription = user?.subscription;
   const isSubscribed = hasPaidSlots && subscription?.status === 'active';
@@ -261,17 +261,17 @@ export default function Billing() {
             </div>
 
             <button
-              onClick={handleCheckout}
-              disabled={checkoutLoading}
+              onClick={isSubscribed ? handlePortal : handleCheckout}
+              disabled={checkoutLoading || portalLoading}
               className="w-full py-3 rounded-xl text-sm font-semibold btn-gradient glow-blue flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {checkoutLoading ? (
+              {(checkoutLoading || portalLoading) ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <Crown className="w-4 h-4" />
                   {isSubscribed
-                    ? t('billing.addAgents', 'Ajouter des agents')
+                    ? t('billing.manageAgents', 'Gérer mes agents (portail)')
                     : t('billing.getStarted', 'Commencer — $' + (agentQuantity * 3) + '/mois')
                   }
                 </>

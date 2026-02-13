@@ -256,13 +256,22 @@ export class AgentModel {
   }
 
   toResponse(agent: Agent): AgentResponse {
+    // Mask custom LLM key in API responses for security
+    const safeConfig = { ...agent.config };
+    if (safeConfig.customLlmKey) {
+      const key = safeConfig.customLlmKey;
+      safeConfig.customLlmKey = key.length > 8
+        ? key.substring(0, 4) + '...' + key.substring(key.length - 4)
+        : '••••••••';
+    }
+
     return {
       id: agent.id,
       name: agent.name,
       slug: agent.slug,
       description: agent.description,
       tier: agent.tier,
-      config: agent.config,
+      config: safeConfig,
       status: agent.status,
       endpoint: agent.endpoint,
       totalConversations: agent.totalConversations,

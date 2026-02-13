@@ -324,11 +324,16 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
       ...messages.map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ];
 
-    // BYO LLM or platform model
+    // BYO LLM or platform model — look up owner's current tier
     const config = listing.configSnapshot;
     const byoLlm = isByoLlm(config as any);
     const { client, model: resolvedModel } = copilotService.getClientForAgent(config as any);
-    const modelToUse = byoLlm ? resolvedModel : enforceModelForTier(config.model, 'free');
+    let ownerTier = 'free';
+    try {
+      const owner = await userModel.findById(listing.userId);
+      if (owner) ownerTier = owner.tier;
+    } catch { /* fallback to free */ }
+    const modelToUse = byoLlm ? resolvedModel : enforceModelForTier(config.model, ownerTier);
 
     // SSE streaming response
     res.setHeader('Content-Type', 'text/event-stream');

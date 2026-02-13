@@ -179,17 +179,23 @@
 - [ ] Collaboration équipe (teams, roles owner/editor/viewer, invitations)
 - [x] **Templates d'agents prédéfinis** (10 templates : Support Client, Assistant RH, Bot E-commerce, Code Reviewer, Content Writer, Tuteur IA, Data Analyst, Assistant Juridique, Social Media Manager, Assistant Réunion)
 
-### ✅ Phase 9 — Billing Stripe
+### ✅ Phase 9 — Billing Stripe (Per-Agent Pricing + BYO LLM)
 - [x] Stripe SDK installé + billingService.ts
-- [x] `GET /api/billing/plans` — liste des plans (Free $0, Pro $29/mois)
-- [x] `POST /api/billing/checkout` — crée Stripe Checkout Session (JWT required)
+- [x] **Modèle per-agent** : Free (2 agents) + $3/agent/mois supplémentaire
+- [x] `GET /api/billing/plans` — liste des plans (Free $0, Agent slot $3/mois)
+- [x] `POST /api/billing/checkout` — Stripe Checkout avec `mode: subscription`, `quantity` dynamique
 - [x] `POST /api/billing/portal` — crée Stripe Customer Portal Session
 - [x] `POST /api/billing/webhook` — handler Stripe (raw body)
-  - [x] `checkout.session.completed` → upgrade tier
-  - [x] `customer.subscription.created/updated` → update tier + subscription
-  - [x] `customer.subscription.deleted` → downgrade to free
-- [x] Env vars : `STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
-- [x] **Page Billing frontend** — plans, checkout Stripe, portail gestion, tableau comparatif, FAQ
+  - [x] `checkout.session.completed` → ajoute `paid_agent_slots` à l'utilisateur
+  - [x] `customer.subscription.created/updated` → sync quantity ↔ paid_agent_slots
+  - [x] `customer.subscription.deleted` → reset paid_agent_slots à 0
+- [x] Env vars : `STRIPE_SECRET_KEY`, `STRIPE_AGENT_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- [x] **BYO LLM** — chaque agent peut utiliser sa propre clé OpenAI (apiKey + baseUrl + model)
+  - [x] `copilotService.getClientForAgent()` — crée un client OpenAI dédié par agent
+  - [x] Fallback sur GitHub Models API si pas de BYO LLM configuré
+  - [x] UI AgentConfig avec section "LLM personnalisé" (toggle, champs clé/url/modèle)
+- [x] **Page Billing frontend** — calculateur d'agents, checkout Stripe, portail gestion, FAQ
+- [x] `maxAgents = 2 + paidAgentSlots` — logique dynamique backend + frontend
 - [ ] **Plan Team** ($99/mois) — non implémenté (dépend Phase 8 Collaboration)
 - [ ] **Usage-based billing** (metered) — non implémenté
 
@@ -289,8 +295,8 @@
 ## Historique des commits récents
 
 | Date | Commit | Description |
-|------|--------|-------------|
-| 12 fév 2026 | `d495575` | Stripe billing (checkout, portal, webhooks) |
+|------|--------|-------------|| 13 fév 2026 | `57589b0` | Per-agent pricing ($3/agent/mo) + BYO LLM + billing overhaul |
+| 13 fév 2026 | `10bd1bc` | Redis, GDPR, display name, star ratings, cost optimization || 12 fév 2026 | `d495575` | Stripe billing (checkout, portal, webhooks) |
 | 12 fév 2026 | `c21cbbf` | Widget.js embeddable + embed snippet UI |
 | 12 fév 2026 | `99501c1` | Zod validation middleware (10 schemas, 8 routes) |
 | 12 fév 2026 | `2542c93` | Vitest + 35 tests unitaires backend |

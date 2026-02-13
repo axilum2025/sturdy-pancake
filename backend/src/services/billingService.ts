@@ -170,25 +170,29 @@ export async function handleWebhookEvent(
       break;
     }
 
-    // Checkout session completed (first-time subscription)
+    // Checkout session completed — only store Stripe customer/subscription IDs
+    // The actual paidAgentSlots sync is handled by customer.subscription.created/updated
+    // which is the source of truth for quantity.
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId;
       if (!userId) break;
 
-      const quantity = parseInt(session.metadata?.quantity || '1', 10);
       const customerId = typeof session.customer === 'string' ? session.customer : (session.customer as any)?.id;
       const subId = typeof session.subscription === 'string' ? session.subscription : (session.subscription as any)?.id;
 
-      await userModel.update(userId, {
-        tier: 'pro',
-        paidAgentSlots: quantity,
-        subscription: {
-          status: 'active',
-          stripeCustomerId: customerId || undefined,
-          subscriptionId: subId || undefined,
-        },
-      });
+      // Only set stripeCustomerId/subscriptionId — don't set paidAgentSlots here
+      // to avoid race condition with subscription.created event
+      const user = await userModel.findById(userId);
+      if (user && !user.subscription?.stripeCustomerId) {
+        await userModel.update(userId, {
+          subscription: {
+            status: 'active',
+            stripeCustomerId: customerId || undefined,
+            subscriptionId: subId || undefined,
+          },
+        });
+      }
       break;
     }
 
