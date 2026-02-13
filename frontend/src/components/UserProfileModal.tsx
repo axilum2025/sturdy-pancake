@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, User, Mail, Crown, Shield, Download, Trash2, Lock,
   Globe, Moon, Sun, AlertTriangle, Check, Loader2, CreditCard,
-  KeyRound, Calendar
+  KeyRound, Calendar, AtSign
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { exportUserData, deleteAccount, changePassword } from '../services/api';
+import { exportUserData, deleteAccount, changePassword, updateProfile } from '../services/api';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ interface UserProfileModalProps {
 type Tab = 'profile' | 'security' | 'preferences' | 'gdpr';
 
 export default function UserProfileModal({ isOpen, onClose }: UserProfileModalProps) {
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -42,10 +42,37 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
   // Export state
   const [exportLoading, setExportLoading] = useState(false);
 
+  // Display name state
+  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [displayNameLoading, setDisplayNameLoading] = useState(false);
+  const [displayNameSuccess, setDisplayNameSuccess] = useState(false);
+  const [displayNameError, setDisplayNameError] = useState('');
+
   if (!isOpen || !user) return null;
 
   const getInitials = (email: string) => {
+    if (user?.displayName) {
+      return user.displayName.slice(0, 2).toUpperCase();
+    }
     return email.split('@')[0].slice(0, 2).toUpperCase();
+  };
+
+  const handleSaveDisplayName = async () => {
+    setDisplayNameError('');
+    setDisplayNameSuccess(false);
+    if (!displayName || displayName.length < 2) return;
+
+    setDisplayNameLoading(true);
+    try {
+      await updateProfile(displayName.trim());
+      await refreshUser();
+      setDisplayNameSuccess(true);
+      setTimeout(() => setDisplayNameSuccess(false), 3000);
+    } catch (err: any) {
+      setDisplayNameError(err.message || t('profile.displayNameError'));
+    } finally {
+      setDisplayNameLoading(false);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -152,7 +179,10 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
               {getInitials(user.email)}
             </div>
             <div>
-              <p className="text-t-text font-semibold">{user.email}</p>
+              <p className="text-t-text font-semibold">{user.displayName || user.email}</p>
+              {user.displayName && (
+                <p className="text-t-text/40 text-xs">{user.email}</p>
+              )}
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-medium capitalize ${
                   user.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
@@ -201,6 +231,45 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
                   <span className="text-t-text/50 text-sm">{t('profile.email')}</span>
                 </div>
                 <p className="text-t-text font-medium ml-7">{user.email}</p>
+              </div>
+
+              {/* Display Name / Pseudo */}
+              <div className="glass-card rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-1">
+                  <AtSign className="w-4 h-4 text-purple-400" />
+                  <span className="text-t-text/50 text-sm">{t('profile.displayName')}</span>
+                </div>
+                <div className="ml-7 mt-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="input-futuristic flex-1 px-3 py-2 rounded-xl text-t-text text-sm"
+                      placeholder={t('profile.displayNamePlaceholder')}
+                      maxLength={50}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSaveDisplayName()}
+                    />
+                    <button
+                      onClick={handleSaveDisplayName}
+                      disabled={displayNameLoading || !displayName || displayName.length < 2 || displayName === user.displayName}
+                      className="px-3 py-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-300 text-sm font-medium hover:bg-purple-500/25 transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                      {displayNameLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                  <p className="text-t-text/30 text-xs mt-1.5">{t('profile.displayNameHint')}</p>
+                  {displayNameSuccess && (
+                    <p className="text-green-400 text-xs mt-1.5 flex items-center gap-1">
+                      <Check className="w-3 h-3" /> {t('profile.displayNameSaved')}
+                    </p>
+                  )}
+                  {displayNameError && (
+                    <p className="text-red-400 text-xs mt-1.5 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" /> {displayNameError}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Plan */}

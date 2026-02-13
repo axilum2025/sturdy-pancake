@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
 import { agentModel } from '../models/agent';
+import { userModel } from '../models/user';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { validate, publishAgentSchema } from '../middleware/validation';
 import { cacheGet, cacheSet, cacheDelPattern } from '../services/redisService';
@@ -217,7 +218,8 @@ storeRouter.post('/publish', validate(publishAgentSchema), async (req: Request, 
           tools: [],
         };
 
-    const creatorName = 'User'; // TODO: fetch from user model
+    const creatorUser = await userModel.findById(userId);
+    const creatorName = creatorUser?.displayName || creatorUser?.email?.split('@')[0] || 'User';
     const listing = await storeModel.publish(userId, creatorName, dto, configSnapshot);
 
     // Update agent status to deployed

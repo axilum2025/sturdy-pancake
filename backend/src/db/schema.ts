@@ -14,6 +14,7 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+  displayName: varchar('display_name', { length: 50 }),
   githubId: varchar('github_id', { length: 255 }),
   tier: varchar('tier', { length: 20 }).notNull().default('free'),
   subscription: jsonb('subscription').$type<{

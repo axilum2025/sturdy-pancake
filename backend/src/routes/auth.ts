@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { userModel } from '../models/user';
 import { authMiddleware, generateToken, AuthenticatedRequest } from '../middleware/auth';
-import { validate, registerSchema, loginSchema, changePasswordSchema } from '../middleware/validation';
+import { validate, registerSchema, loginSchema, changePasswordSchema, updateProfileSchema } from '../middleware/validation';
 
 export const authRouter = Router();
 
@@ -108,6 +108,31 @@ authRouter.post('/downgrade', authMiddleware, async (req: Request, res: Response
     });
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to downgrade' });
+  }
+});
+
+// ============================================================
+// Profile Update
+// ============================================================
+
+/**
+ * PATCH /api/auth/profile
+ * Update user profile (display name)
+ */
+authRouter.patch('/profile', authMiddleware, validate(updateProfileSchema), async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    const { displayName } = req.body;
+
+    const user = await userModel.update(userId, { displayName });
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: userModel.toResponse(user),
+    });
+  } catch (error: any) {
+    console.error('Profile update error:', error.message);
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 });
 

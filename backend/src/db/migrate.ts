@@ -41,6 +41,7 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       email VARCHAR(255) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
+      display_name VARCHAR(50),
       github_id VARCHAR(255),
       tier VARCHAR(20) NOT NULL DEFAULT 'free',
       subscription JSONB,
@@ -52,6 +53,11 @@ export async function ensureSchema(pool: pg.Pool): Promise<void> {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+  `);
+
+  // 2b. Add display_name column if missing (existing DBs)
+  await runSafe(pool, 'users_add_display_name', `
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS display_name VARCHAR(50);
   `);
 
   // 3. Agents table (depends on users)

@@ -10,6 +10,7 @@ export interface User {
   id: string;
   email: string;
   passwordHash: string;
+  displayName?: string;
   githubId?: string;
   tier: UserTier;
   subscription?: {
@@ -36,12 +37,14 @@ export interface User {
 export interface UserCreateDTO {
   email: string;
   password: string;
+  displayName?: string;
   githubId?: string;
 }
 
 export interface UserResponse {
   id: string;
   email: string;
+  displayName?: string;
   tier: UserTier;
   quotas: User['quotas'];
   usage: {
@@ -71,6 +74,7 @@ export class UserModel {
     const [row] = await db.insert(users).values({
       email: data.email,
       passwordHash,
+      displayName: data.displayName,
       githubId: data.githubId,
       tier: 'free',
       quotas: { projectsMax: 3, storageMax: 100 * 1024 * 1024, deploymentsPerMonth: 5 },
@@ -98,7 +102,7 @@ export class UserModel {
     return row ? this.mapRow(row) : undefined;
   }
 
-  async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId'>>): Promise<User> {
+  async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId' | 'displayName'>>): Promise<User> {
     const db = getDb();
     const [row] = await db.update(users)
       .set({ ...data, updatedAt: new Date() })
@@ -214,6 +218,7 @@ export class UserModel {
       user: {
         id: user.id,
         email: user.email,
+        displayName: user.displayName,
         tier: user.tier,
         quotas: user.quotas,
         usage: user.usage,
@@ -268,6 +273,7 @@ export class UserModel {
     return {
       id: user.id,
       email: user.email,
+      displayName: user.displayName,
       tier: user.tier,
       quotas: user.quotas,
       usage: {
@@ -284,6 +290,7 @@ export class UserModel {
       id: row.id,
       email: row.email,
       passwordHash: row.passwordHash,
+      displayName: row.displayName ?? undefined,
       githubId: row.githubId ?? undefined,
       tier: row.tier as UserTier,
       subscription: row.subscription ?? undefined,

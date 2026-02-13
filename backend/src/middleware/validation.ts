@@ -43,6 +43,10 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6, 'New password must be at least 6 characters').max(128),
 });
 
+export const updateProfileSchema = z.object({
+  displayName: z.string().min(2, 'Display name must be at least 2 characters').max(50).trim(),
+});
+
 // ----------------------------------------------------------
 // Agent Schemas
 // ----------------------------------------------------------

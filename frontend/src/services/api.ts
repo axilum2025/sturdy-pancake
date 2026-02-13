@@ -51,6 +51,7 @@ api.interceptors.response.use(
 export interface User {
   id: string;
   email: string;
+  displayName?: string;
   tier: 'free' | 'pro' | 'team';
   quotas: {
     projectsMax: number;
@@ -113,6 +114,11 @@ export const deleteAccount = async (password: string): Promise<void> => {
 
 export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
   await api.post('/auth/change-password', { currentPassword, newPassword });
+};
+
+export const updateProfile = async (displayName: string): Promise<User> => {
+  const response = await api.patch('/auth/profile', { displayName });
+  return response.data.user;
 };
 
 // ============ Projects ============

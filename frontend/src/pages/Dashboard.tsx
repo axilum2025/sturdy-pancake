@@ -81,6 +81,9 @@ export default function Dashboard() {
   };
 
   const getInitials = (email: string) => {
+    if (user?.displayName) {
+      return user.displayName.slice(0, 2).toUpperCase();
+    }
     return email.split('@')[0].slice(0, 2).toUpperCase();
   };
 
