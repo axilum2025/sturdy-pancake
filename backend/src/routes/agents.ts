@@ -73,6 +73,117 @@ agentsRouter.get('/', async (req: Request, res: Response) => {
 });
 
 // ----------------------------------------------------------
+// POST /api/agents/quick-create  –  AI-powered agent creation
+// User describes the agent in natural language → GPT generates config → agent created
+// ----------------------------------------------------------
+agentsRouter.post('/quick-create', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    if (!userId) return res.status(401).json({ error: 'Authentication required' });
+
+    const { description, language } = req.body as { description: string; language?: 'fr' | 'en' };
+    if (!description?.trim() || description.trim().length < 10) {
+      return res.status(400).json({ error: 'Description must be at least 10 characters' });
+    }
+
+    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+    const paidAgentSlots = (req as AuthenticatedRequest).user?.paidAgentSlots || 0;
+    const lang = language || 'fr';
+
+    // Available built-in tools the AI can choose from
+    const availableTools = [
+      { id: 'builtin_get_current_time', name: 'get_current_time', desc: 'Get current date/time' },
+      { id: 'builtin_calculator', name: 'calculator', desc: 'Math calculations' },
+      { id: 'builtin_http_get', name: 'http_get', desc: 'Fetch data from URLs' },
+      { id: 'builtin_http_post', name: 'http_post', desc: 'Send data to APIs' },
+      { id: 'builtin_json_extract', name: 'json_extract', desc: 'Parse/extract JSON data' },
+      { id: 'builtin_string_utils', name: 'string_utils', desc: 'Text manipulation' },
+      { id: 'builtin_send_email', name: 'send_email', desc: 'Send emails' },
+      { id: 'builtin_webhook_trigger', name: 'webhook_trigger', desc: 'Trigger webhooks' },
+    ];
+
+    const systemPrompt = `You are an AI agent configuration generator for GiLo AI platform.
+Given a user's description of the agent they want, generate a complete agent configuration.
+
+Available built-in tools: ${JSON.stringify(availableTools)}
+
+Respond ONLY with a valid JSON object (no markdown, no explanation) with this exact schema:
+{
+  "name": "short agent name (2-5 words)",
+  "description": "one sentence description",
+  "config": {
+    "model": "openai/gpt-4.1",
+    "temperature": 0.3 to 0.9 (lower for factual, higher for creative),
+    "maxTokens": 2048 or 4096,
+    "systemPrompt": "comprehensive system prompt for the agent, detailed instructions",
+    "welcomeMessage": "a friendly welcome message the agent will show first",
+    "language": "${lang}",
+    "tools": [
+      { "id": "builtin_xxx", "name": "xxx", "type": "builtin", "enabled": true, "config": { "builtinId": "xxx" } }
+    ]
+  }
+}
+
+Rules:
+- The systemPrompt should be thorough (100-300 words), with numbered instructions
+- Only include tools that are relevant to the agent's purpose
+- If no tools are needed, return an empty tools array
+- The welcomeMessage should match the agent's personality
+- Write in ${lang === 'fr' ? 'French' : 'English'}`;
+
+    const { client, defaultModel } = copilotService.getClientInfo();
+
+    const completion = await client.chat.completions.create({
+      model: defaultModel,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: description.trim() },
+      ],
+      temperature: 0.7,
+      max_tokens: 2000,
+    });
+
+    const raw = completion.choices[0]?.message?.content?.trim() || '';
+    
+    // Parse JSON from response (strip markdown fences if present)
+    let parsed: any;
+    try {
+      const jsonStr = raw.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+      parsed = JSON.parse(jsonStr);
+    } catch {
+      console.error('[QuickCreate] Failed to parse AI response:', raw.substring(0, 500));
+      return res.status(500).json({ error: 'AI generated invalid configuration. Please try again.' });
+    }
+
+    // Validate & sanitize
+    const name = (parsed.name || 'My Agent').substring(0, 100);
+    const agentDesc = (parsed.description || description.trim()).substring(0, 500);
+    const config = {
+      model: parsed.config?.model || 'openai/gpt-4.1-nano',
+      temperature: Math.min(1, Math.max(0, parsed.config?.temperature ?? 0.7)),
+      maxTokens: Math.min(4096, Math.max(256, parsed.config?.maxTokens ?? 2048)),
+      systemPrompt: (parsed.config?.systemPrompt || '').substring(0, 10000),
+      welcomeMessage: (parsed.config?.welcomeMessage || '').substring(0, 500),
+      language: lang,
+      tools: Array.isArray(parsed.config?.tools) ? parsed.config.tools.slice(0, 10) : [],
+    };
+
+    // Create the agent
+    const agent = await agentModel.create(userId, { name, description: agentDesc, config }, userTier, paidAgentSlots);
+    console.log('[QuickCreate] Agent created:', agent.id, name);
+
+    res.status(201).json(agentModel.toResponse(agent));
+  } catch (error: any) {
+    console.error('Quick-create error:', error.message);
+    const message = error?.message || 'Failed to create agent';
+    if (typeof message === 'string' && message.toLowerCase().includes('agent limit reached')) {
+      return res.status(403).json({ error: message });
+    }
+    res.status(500).json({ error: 'Failed to quick-create agent' });
+  }
+});
+
+// ----------------------------------------------------------
 // POST /api/agents  –  Create a new agent
 // ----------------------------------------------------------
 agentsRouter.post('/', validate(createAgentSchema), async (req: Request, res: Response) => {

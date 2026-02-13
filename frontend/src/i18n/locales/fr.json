@@ -138,7 +138,36 @@
     "backToHome": "Retour à l'accueil"
   },
 
+  "quickCreate": {
+    "title": "Créer avec l'IA",
+    "subtitle": "Décrivez votre agent et l'IA configurera tout automatiquement",
+    "placeholder": "Un agent de support client qui répond aux questions sur notre produit, consulte la base de connaissances et escalade les problèmes complexes vers un humain...",
+    "generate": "Générer mon agent",
+    "editAfter": "Vous pourrez tout ajuster dans le Studio après la création",
+    "patience": "Cela prend généralement 5 à 10 secondes...",
+    "error": "Échec de la génération. Veuillez réessayer.",
+    "step": {
+      "analyzing": "Analyse de votre description...",
+      "generating": "Génération du prompt et de la config...",
+      "tools": "Sélection des outils adaptés...",
+      "creating": "Création de votre agent..."
+    },
+    "exampleLabel": {
+      "support": "Support",
+      "code": "Dev",
+      "content": "Contenu",
+      "data": "Données"
+    },
+    "example": {
+      "support": "Un agent de support client qui répond aux questions sur le produit, consulte la base de connaissances et escalade vers un humain si nécessaire",
+      "code": "Un assistant de revue de code qui détecte les bugs, suggère des améliorations et vérifie les bonnes pratiques de sécurité",
+      "content": "Un rédacteur de contenu qui crée des articles de blog, des légendes pour les réseaux sociaux et du contenu marketing dans un ton professionnel",
+      "data": "Un assistant d'analyse de données qui aide à interpréter des graphiques, calculer des statistiques et générer des rapports"
+    }
+  },
+
   "dashboard": {
+    "aiCreate": "Créer avec l'IA",
     "connectPrompt": "Connectez-vous pour accéder à vos agents",
     "agentStore": "Agent Store",
     "plan": "Plan",

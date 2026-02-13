@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { listAgents, createAgent, deleteAgent, getAgentTemplates, Agent, AgentTemplate } from '../services/api';
 import AuthModal from '../components/AuthModal';
 import UserProfileModal from '../components/UserProfileModal';
+import QuickCreateModal from '../components/QuickCreateModal';
 import ProjectCard from '../components/ProjectCard';
 
 export default function Dashboard() {
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -305,14 +307,24 @@ export default function Dashboard() {
               </h2>
               <p className="text-t-text/40 text-sm">{t('dashboard.manageAgents')}</p>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              disabled={projects.length >= agentsMax}
-              className="btn-gradient px-5 py-2.5 rounded-xl text-t-text font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus className="w-4 h-4" />
-              {t('dashboard.newAgent')}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowQuickCreate(true)}
+                disabled={projects.length >= agentsMax}
+                className="px-4 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 bg-gradient-to-r from-purple-500/15 to-blue-500/15 border border-purple-500/20 text-purple-300 hover:from-purple-500/25 hover:to-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Sparkles className="w-4 h-4" />
+                {t('dashboard.aiCreate', 'AI Create')}
+              </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                disabled={projects.length >= agentsMax}
+                className="btn-gradient px-5 py-2.5 rounded-xl text-t-text font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus className="w-4 h-4" />
+                {t('dashboard.newAgent')}
+              </button>
+            </div>
           </div>
 
           {isLoading ? (
@@ -335,6 +347,13 @@ export default function Dashboard() {
               >
                 <Plus className="w-4 h-4" />
                 {t('dashboard.createFirst')}
+              </button>
+              <button
+                onClick={() => setShowQuickCreate(true)}
+                className="px-6 py-3 rounded-xl font-semibold inline-flex items-center gap-2 bg-gradient-to-r from-purple-500/15 to-blue-500/15 border border-purple-500/20 text-purple-300 hover:from-purple-500/25 hover:to-blue-500/25 transition-all"
+              >
+                <Sparkles className="w-4 h-4" />
+                {t('dashboard.aiCreate', 'AI Create')}
               </button>
             </div>
           ) : (
@@ -511,6 +530,9 @@ export default function Dashboard() {
 
       {/* User Profile Modal */}
       <UserProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
+
+      {/* AI Quick Create Modal */}
+      <QuickCreateModal isOpen={showQuickCreate} onClose={() => setShowQuickCreate(false)} />
     </div>
   );
 }

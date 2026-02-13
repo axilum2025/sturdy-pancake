@@ -138,7 +138,36 @@
     "backToHome": "Back to home"
   },
 
+  "quickCreate": {
+    "title": "Create with AI",
+    "subtitle": "Describe your agent and AI will configure everything",
+    "placeholder": "A customer support agent that answers questions about our product, queries the knowledge base, and escalates complex issues to a human...",
+    "generate": "Generate my agent",
+    "editAfter": "You can fine-tune everything in the Studio after creation",
+    "patience": "This usually takes 5-10 seconds...",
+    "error": "Failed to generate agent. Please try again.",
+    "step": {
+      "analyzing": "Analyzing your description...",
+      "generating": "Generating system prompt & config...",
+      "tools": "Selecting the right tools...",
+      "creating": "Creating your agent..."
+    },
+    "exampleLabel": {
+      "support": "Support",
+      "code": "Dev",
+      "content": "Content",
+      "data": "Data"
+    },
+    "example": {
+      "support": "A customer support agent that answers product questions, queries the knowledge base, and escalates to a human if needed",
+      "code": "A code review assistant that detects bugs, suggests improvements, and checks security best practices",
+      "content": "A content writer that creates blog posts, social media captions, and marketing copy in a professional tone",
+      "data": "A data analysis assistant that helps interpret charts, calculate statistics, and generate reports"
+    }
+  },
+
   "dashboard": {
+    "aiCreate": "AI Create",
     "connectPrompt": "Sign in to access your agents",
     "agentStore": "Agent Store",
     "plan": "Plan",

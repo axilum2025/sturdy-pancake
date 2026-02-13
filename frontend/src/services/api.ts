@@ -251,6 +251,11 @@ export const createAgent = async (name: string, description?: string, config?: P
   return response.data;
 };
 
+export const quickCreateAgent = async (description: string, language?: 'fr' | 'en'): Promise<Agent> => {
+  const response = await api.post('/agents/quick-create', { description, language });
+  return response.data;
+};
+
 export interface AgentTemplate {
   id: string;
   name: string;
