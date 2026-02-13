@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Mail, Lock, Github, ArrowRight, Zap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
+
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,27 +18,85 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetId = useRef<string | null>(null);
   
   const { login, register } = useAuth();
   const { t } = useTranslation();
+
+  // Load Turnstile script once
+  useEffect(() => {
+    if (!TURNSTILE_SITE_KEY) return;
+    if (document.getElementById('cf-turnstile-script')) return;
+    const script = document.createElement('script');
+    script.id = 'cf-turnstile-script';
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+
+  // Render/reset the widget when modal opens
+  const renderTurnstile = useCallback(() => {
+    if (!TURNSTILE_SITE_KEY || !turnstileRef.current) return;
+    const win = window as any;
+    if (!win.turnstile) return;
+
+    // Remove previous widget if exists
+    if (turnstileWidgetId.current) {
+      try { win.turnstile.remove(turnstileWidgetId.current); } catch { /* ignore */ }
+      turnstileWidgetId.current = null;
+    }
+    setTurnstileToken(null);
+
+    turnstileWidgetId.current = win.turnstile.render(turnstileRef.current, {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (token: string) => setTurnstileToken(token),
+      'expired-callback': () => setTurnstileToken(null),
+      'error-callback': () => setTurnstileToken(null),
+      theme: 'dark',
+      size: 'flexible',
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen || !TURNSTILE_SITE_KEY) return;
+    // Wait for script to load then render
+    const interval = setInterval(() => {
+      if ((window as any).turnstile) {
+        clearInterval(interval);
+        renderTurnstile();
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isOpen, renderTurnstile]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Require Turnstile token if configured
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError(t('auth.captchaRequired', 'Please complete the verification'));
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       if (mode === 'login') {
-        await login(email, password);
+        await login(email, password, turnstileToken || undefined);
       } else {
-        await register(email, password);
+        await register(email, password, turnstileToken || undefined);
       }
       onClose();
       onSuccess?.();
     } catch (err: any) {
       setError(err.message || 'An error occurred');
+      // Reset Turnstile on failure so user can retry
+      renderTurnstile();
     } finally {
       setIsLoading(false);
     }
@@ -146,9 +206,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               </div>
             )}
 
+            {/* Cloudflare Turnstile (managed mode) */}
+            {TURNSTILE_SITE_KEY && (
+              <div ref={turnstileRef} className="flex justify-center my-2" />
+            )}
+
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || (!!TURNSTILE_SITE_KEY && !turnstileToken)}
               className="w-full btn-gradient text-white font-semibold py-3 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 text-sm mt-2"
             >
               {isLoading ? (
@@ -170,6 +235,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 onClick={() => {
                   setMode(mode === 'login' ? 'register' : 'login');
                   setError('');
+                  renderTurnstile();
                 }}
                 className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
               >

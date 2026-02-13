@@ -6,8 +6,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<void>;
+  register: (email: string, password: string, turnstileToken?: string) => Promise<void>;
   logout: () => void;
   clearError: () => void;
   refreshUser: () => Promise<void>;
@@ -52,11 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, turnstileToken?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { user } = await apiLogin(email, password);
+      const { user } = await apiLogin(email, password, turnstileToken);
       setUser(user);
     } catch (err: any) {
       setError(err.message || 'Login failed');
@@ -66,11 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (email: string, password: string) => {
+  const register = async (email: string, password: string, turnstileToken?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const { user } = await apiRegister(email, password);
+      const { user } = await apiRegister(email, password, turnstileToken);
       setUser(user);
     } catch (err: any) {
       setError(err.message || 'Registration failed');

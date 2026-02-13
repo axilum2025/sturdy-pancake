@@ -7,6 +7,31 @@ import { validate, registerSchema, loginSchema, changePasswordSchema, updateProf
 export const authRouter = Router();
 
 // ============================================================
+// Cloudflare Turnstile verification
+// ============================================================
+async function verifyTurnstile(token: string, ip?: string): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true; // skip if not configured (dev mode)
+
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret,
+        response: token,
+        ...(ip ? { remoteip: ip } : {}),
+      }),
+    });
+    const data = await res.json() as { success: boolean };
+    return data.success === true;
+  } catch (err) {
+    console.error('Turnstile verification failed:', err);
+    return false;
+  }
+}
+
+// ============================================================
 // GitHub OAuth Login — state store (short-lived, in-memory)
 // ============================================================
 const githubAuthStates = new Map<string, { createdAt: number }>();
@@ -137,7 +162,18 @@ authRouter.get('/github/callback', async (req: Request, res: Response) => {
  */
 authRouter.post('/register', validate(registerSchema), async (req: Request, res: Response) => {
   try {
-    const { email, password, githubId } = req.body;
+    const { email, password, githubId, turnstileToken } = req.body;
+
+    // Verify Turnstile (anti-bot)
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return res.status(400).json({ error: 'Captcha verification required' });
+      }
+      const ok = await verifyTurnstile(turnstileToken, req.ip);
+      if (!ok) {
+        return res.status(403).json({ error: 'Captcha verification failed. Please try again.' });
+      }
+    }
 
     const user = await userModel.create({ email, password, githubId });
     const token = generateToken(user);
@@ -162,7 +198,18 @@ authRouter.post('/register', validate(registerSchema), async (req: Request, res:
  */
 authRouter.post('/login', validate(loginSchema), async (req: Request, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, turnstileToken } = req.body;
+
+    // Verify Turnstile (anti-bot)
+    if (process.env.TURNSTILE_SECRET_KEY) {
+      if (!turnstileToken) {
+        return res.status(400).json({ error: 'Captcha verification required' });
+      }
+      const ok = await verifyTurnstile(turnstileToken, req.ip);
+      if (!ok) {
+        return res.status(403).json({ error: 'Captcha verification failed. Please try again.' });
+      }
+    }
 
     const user = await userModel.findByEmail(email);
     if (!user) {

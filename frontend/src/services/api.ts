@@ -73,16 +73,16 @@ export interface User {
   };
 }
 
-export const register = async (email: string, password: string): Promise<{ user: User; token: string }> => {
-  const response = await api.post('/auth/register', { email, password });
+export const register = async (email: string, password: string, turnstileToken?: string): Promise<{ user: User; token: string }> => {
+  const response = await api.post('/auth/register', { email, password, turnstileToken });
   if (response.data.token) {
     localStorage.setItem('authToken', response.data.token);
   }
   return response.data;
 };
 
-export const login = async (email: string, password: string): Promise<{ user: User; token: string }> => {
-  const response = await api.post('/auth/login', { email, password });
+export const login = async (email: string, password: string, turnstileToken?: string): Promise<{ user: User; token: string }> => {
+  const response = await api.post('/auth/login', { email, password, turnstileToken });
   if (response.data.token) {
     localStorage.setItem('authToken', response.data.token);
   }

@@ -117,7 +117,8 @@
     "signInLink": "Sign In",
     "oauthError": "Authentication failed",
     "redirecting": "Redirecting...",
-    "signingIn": "Signing in..."
+    "signingIn": "Signing in...",
+    "captchaRequired": "Please complete the verification"
   },
 
   "dashboard": {

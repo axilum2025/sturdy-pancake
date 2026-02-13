@@ -117,7 +117,8 @@
     "signInLink": "Se connecter",
     "oauthError": "Échec de l'authentification",
     "redirecting": "Redirection...",
-    "signingIn": "Connexion en cours..."
+    "signingIn": "Connexion en cours...",
+    "captchaRequired": "Veuillez compléter la vérification"
   },
 
   "dashboard": {
