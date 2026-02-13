@@ -25,20 +25,20 @@ function getStripe(): Stripe {
 // ----------------------------------------------------------
 export const PLANS = {
   free: { name: 'Free', price: 0, priceId: '' },
-  pro: {
-    name: 'Pro',
-    price: 19,
-    priceId: process.env.STRIPE_PRO_PRICE_ID || '',
+  agent: {
+    name: 'Agent Slot',
+    price: 3,
+    priceId: process.env.STRIPE_AGENT_PRICE_ID || '',
   },
 } as const;
 
 // ----------------------------------------------------------
-// Create Stripe Checkout Session
+// Create Stripe Checkout Session (per-agent pricing)
 // ----------------------------------------------------------
 export async function createCheckoutSession(
   userId: string,
   userEmail: string,
-  plan: 'pro',
+  quantity: number,
   successUrl: string,
   cancelUrl: string,
 ): Promise<{ url: string }> {
@@ -61,15 +61,15 @@ export async function createCheckoutSession(
     mode: 'subscription',
     line_items: [
       {
-        price: PLANS[plan].priceId,
-        quantity: 1,
+        price: PLANS.agent.priceId,
+        quantity,
       },
     ],
     success_url: successUrl,
     cancel_url: cancelUrl,
-    metadata: { userId, plan },
+    metadata: { userId, quantity: String(quantity) },
     subscription_data: {
-      metadata: { userId, plan },
+      metadata: { userId, quantity: String(quantity) },
     },
   });
 
@@ -112,23 +112,26 @@ export async function handleWebhookEvent(
   const event = stripe.webhooks.constructEvent(rawBody, signature, endpointSecret);
 
   switch (event.type) {
-    // Subscription created or updated
+    // Subscription created or updated — extract quantity for paid agent slots
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.userId;
       if (!userId) break;
 
-      const status = sub.status; // 'active' | 'past_due' | 'canceled' | 'trialing' etc.
-      const plan = (sub.metadata?.plan as UserTier) || 'pro';
+      const status = sub.status;
       const customerId = typeof sub.customer === 'string' ? sub.customer : sub.customer.id;
       const periodEnd = (sub as any).current_period_end
         ? new Date((sub as any).current_period_end * 1000).toISOString()
         : undefined;
 
+      // Extract quantity from subscription items (per-agent seats)
+      const quantity = (sub as any).items?.data?.[0]?.quantity || parseInt(sub.metadata?.quantity || '0', 10);
+
       if (status === 'active' || status === 'trialing') {
         await userModel.update(userId, {
-          tier: plan,
+          tier: quantity > 0 ? 'pro' : 'free',
+          paidAgentSlots: quantity,
           subscription: {
             status: status as any,
             stripeCustomerId: customerId,
@@ -149,7 +152,7 @@ export async function handleWebhookEvent(
       break;
     }
 
-    // Subscription deleted/canceled
+    // Subscription deleted/canceled — reset to free
     case 'customer.subscription.deleted': {
       const sub = event.data.object as Stripe.Subscription;
       const userId = sub.metadata?.userId;
@@ -157,6 +160,7 @@ export async function handleWebhookEvent(
 
       await userModel.update(userId, {
         tier: 'free',
+        paidAgentSlots: 0,
         subscription: {
           status: 'canceled',
           stripeCustomerId: typeof sub.customer === 'string' ? sub.customer : sub.customer.id,
@@ -172,12 +176,13 @@ export async function handleWebhookEvent(
       const userId = session.metadata?.userId;
       if (!userId) break;
 
-      const plan = (session.metadata?.plan as UserTier) || 'pro';
+      const quantity = parseInt(session.metadata?.quantity || '1', 10);
       const customerId = typeof session.customer === 'string' ? session.customer : (session.customer as any)?.id;
       const subId = typeof session.subscription === 'string' ? session.subscription : (session.subscription as any)?.id;
 
       await userModel.update(userId, {
-        tier: plan,
+        tier: 'pro',
+        paidAgentSlots: quantity,
         subscription: {
           status: 'active',
           stripeCustomerId: customerId || undefined,

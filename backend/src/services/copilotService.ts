@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { Octokit } from '@octokit/rest';
+import type { AgentConfig } from '../models/agent';
 
 // ============================================================
 // GiLo AI – GitHub Copilot Integration Service
@@ -95,6 +96,36 @@ export class CopilotService {
       client: this.openai,
       systemPrompt: this.buildSystemPrompt(projectContext),
       defaultModel: this.defaultModel,
+    };
+  }
+
+  // ----------------------------------------------------------
+  // Get an OpenAI client for a specific agent.
+  // If the agent has BYO LLM configured, creates a new client
+  // with the user's key & URL.  Otherwise returns our default.
+  // ----------------------------------------------------------
+  getClientForAgent(agentConfig: AgentConfig): {
+    client: OpenAI;
+    model: string;
+    isByo: boolean;
+  } {
+    if (agentConfig.customLlmKey?.trim()) {
+      const client = new OpenAI({
+        apiKey: agentConfig.customLlmKey.trim(),
+        baseURL: agentConfig.customLlmUrl?.trim() || 'https://api.openai.com/v1',
+      });
+      return {
+        client,
+        model: agentConfig.customLlmModel?.trim() || 'gpt-4o-mini',
+        isByo: true,
+      };
+    }
+
+    this.ensureInit();
+    return {
+      client: this.openai,
+      model: agentConfig.model || this.defaultModel,
+      isByo: false,
     };
   }
 

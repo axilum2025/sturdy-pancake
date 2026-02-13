@@ -2,25 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   CreditCard, Crown, Check, ArrowLeft, ExternalLink, Loader2,
-  Zap, AlertCircle, CheckCircle2
+  Zap, AlertCircle, CheckCircle2, Plus, Minus, Key
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../services/api';
-
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  currency: string;
-  interval: string;
-  features: string[];
-}
-
-const PLAN_ICONS: Record<string, typeof Zap> = {
-  free: Zap,
-  pro: Crown,
-};
 
 export default function Billing() {
   const { t, i18n } = useTranslation();
@@ -28,18 +14,22 @@ export default function Billing() {
   const [searchParams] = useSearchParams();
   const { user, refreshUser } = useAuth();
 
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [agentQuantity, setAgentQuantity] = useState(1);
 
   const isSuccess = searchParams.get('success') === 'true';
   const isCanceled = searchParams.get('canceled') === 'true';
 
+  const paidSlots = (user as any)?.paidAgentSlots || 0;
+  const maxAgents = 2 + paidSlots;
+  const hasPaidSlots = paidSlots > 0;
+  const subscription = user?.subscription;
+  const isSubscribed = hasPaidSlots && subscription?.status === 'active';
+
   useEffect(() => {
-    fetchPlans();
     if (isSuccess) {
       setSuccessMessage(t('billing.subscriptionActivated'));
       refreshUser?.();
@@ -49,22 +39,11 @@ export default function Billing() {
     }
   }, []);
 
-  const fetchPlans = async () => {
-    try {
-      const res = await api.get('/billing/plans');
-      setPlans(res.data.plans || []);
-    } catch (err: any) {
-      console.error('Failed to fetch plans:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCheckout = async (planId: string) => {
+  const handleCheckout = async () => {
     setCheckoutLoading(true);
     setError(null);
     try {
-      const res = await api.post('/billing/checkout', { plan: planId });
+      const res = await api.post('/billing/checkout', { quantity: agentQuantity });
       if (res.data.url) {
         window.location.href = res.data.url;
       }
@@ -88,13 +67,8 @@ export default function Billing() {
     }
   };
 
-  const currentTier = user?.tier || 'free';
-  const subscription = user?.subscription;
-  const isSubscribed = currentTier === 'pro' && subscription?.status === 'active';
-
   return (
     <div className="min-h-screen bg-t-page">
-      {/* Background */}
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
       <div className="fixed inset-0 bg-grid pointer-events-none opacity-40" />
 
@@ -117,13 +91,8 @@ export default function Billing() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`text-xs font-medium capitalize px-2.5 py-1 rounded-full border ${
-                currentTier === 'pro'
-                  ? 'bg-indigo-500/15 border-indigo-500/30 text-indigo-400'
-                  : 'bg-blue-500/15 border-blue-500/30 text-blue-400'
-              }`}>
-                {currentTier === 'pro' && <Crown className="w-3 h-3 inline mr-1" />}
-                {currentTier} plan
+              <span className="text-xs font-medium px-2.5 py-1 rounded-full border bg-blue-500/15 border-blue-500/30 text-blue-400">
+                {maxAgents} {t('billing.agentsTotal', 'agents')}
               </span>
             </div>
           </div>
@@ -131,192 +100,185 @@ export default function Billing() {
       </header>
 
       <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Success / Error banners */}
+        {/* Banners */}
         {successMessage && (
           <div className="mb-6 p-4 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center gap-3 animate-fade-in-up">
             <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
             <p className="text-sm text-green-300">{successMessage}</p>
-            <button onClick={() => setSuccessMessage(null)} className="ml-auto text-green-400/60 hover:text-green-400">
-              &times;
-            </button>
+            <button onClick={() => setSuccessMessage(null)} className="ml-auto text-green-400/60 hover:text-green-400">&times;</button>
           </div>
         )}
         {error && (
           <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center gap-3 animate-fade-in-up">
             <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
             <p className="text-sm text-red-300">{error}</p>
-            <button onClick={() => setError(null)} className="ml-auto text-red-400/60 hover:text-red-400">
-              &times;
-            </button>
+            <button onClick={() => setError(null)} className="ml-auto text-red-400/60 hover:text-red-400">&times;</button>
           </div>
         )}
 
-        {/* Current subscription info (for Pro users) */}
+        {/* Active subscription info */}
         {isSubscribed && (
           <div className="mb-8 glass-card rounded-2xl p-6 border border-indigo-500/20 animate-fade-in-up">
             <div className="flex items-start justify-between flex-wrap gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Crown className="w-5 h-5 text-indigo-400" />
-                  <h2 className="text-lg font-bold text-t-text">{t('billing.proActive')}</h2>
+                  <h2 className="text-lg font-bold text-t-text">
+                    {paidSlots} {t('billing.paidSlots', 'agents payants')} ({maxAgents} {t('billing.agentsTotal', 'au total')})
+                  </h2>
                 </div>
                 <p className="text-sm text-t-text/50">
                   {t('billing.subscriptionActive')}
                   {subscription?.currentPeriodEnd && (
-                    <> {t('billing.nextBilling')} <span className="text-t-text/70 font-medium">
+                    <> — {t('billing.nextBilling')} <span className="text-t-text/70 font-medium">
                       {new Date(subscription.currentPeriodEnd).toLocaleDateString(i18n.language === 'fr' ? 'fr-FR' : 'en-US', {
                         day: 'numeric', month: 'long', year: 'numeric'
                       })}
                     </span></>
                   )}
                 </p>
+                <p className="text-sm text-t-text/40 mt-1">
+                  {t('billing.monthlyTotal', 'Total mensuel')}: <span className="text-t-text/70 font-semibold">${paidSlots * 3}/mois</span>
+                </p>
               </div>
               <button
                 onClick={handlePortal}
                 disabled={portalLoading}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-t-overlay/[0.06] border border-t-overlay/15 hover:bg-t-overlay/10 hover:border-t-overlay/25 transition-all text-sm font-medium text-t-text/70"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-t-overlay/[0.06] border border-t-overlay/15 hover:bg-t-overlay/10 transition-all text-sm font-medium text-t-text/70"
               >
-                {portalLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <ExternalLink className="w-4 h-4" />
-                )}
+                {portalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
                 {t('billing.manageSubscription')}
               </button>
             </div>
           </div>
         )}
 
-        {/* Plans section title */}
-        <div className="text-center mb-8">
+        {/* Title */}
+        <div className="text-center mb-10">
           <h1 className="text-2xl sm:text-3xl font-bold text-t-text mb-2">
-            {isSubscribed ? t('billing.yourPlan') : t('billing.choosePlan')}
+            {t('billing.payPerAgent', 'Payez par agent')}
           </h1>
           <p className="text-sm text-t-text/40 max-w-lg mx-auto">
-            {isSubscribed
-              ? t('billing.proDescription')
-              : t('billing.freeDescription')
-            }
+            {t('billing.payPerAgentDesc', '2 agents gratuits inclus. Ajoutez des agents supplémentaires à $3/mois chacun.')}
           </p>
         </div>
 
-        {/* Plans grid */}
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="w-8 h-8 text-blue-400 animate-spin" />
+        {/* Plans grid: Free + Per-Agent */}
+        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {/* Free Plan */}
+          <div className="glass-card rounded-2xl p-6 sm:p-8 border border-t-overlay/10 animate-fade-in-up">
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-blue-500/10 border border-blue-500/20">
+                <Zap className="w-7 h-7 text-blue-400" />
+              </div>
+              <h3 className="text-xl font-bold text-t-text">Free</h3>
+              <div className="mt-3 flex items-baseline justify-center gap-1">
+                <span className="text-4xl font-bold text-t-text">$0</span>
+              </div>
+              <p className="text-xs text-t-text/40 mt-1">{t('billing.forever', 'Pour toujours')}</p>
+            </div>
+            <ul className="space-y-3 mb-8">
+              {[
+                t('billing.free2Agents', '2 agents inclus'),
+                'GPT-4.1 Nano',
+                t('billing.free200Msg', '200 messages/jour/agent'),
+                t('billing.free50Mb', '50 MB stockage'),
+                t('billing.freeCustomDomain', 'Domaine personnalisé (slug.gilo.dev)'),
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="mt-0.5 p-1 rounded-md bg-blue-500/10">
+                    <Check className="w-3.5 h-3.5 text-blue-400" />
+                  </div>
+                  <span className="text-sm text-t-text/70">{f}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="w-full py-3 rounded-xl text-sm font-medium text-center bg-blue-500/10 border border-blue-500/20 text-blue-300">
+              <Check className="w-4 h-4 inline mr-1.5" />
+              {t('billing.included', 'Inclus')}
+            </div>
           </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-            {plans.map((plan, planIdx) => {
-              const isPro = plan.id === 'pro';
-              const isCurrent = plan.id === currentTier;
-              const PlanIcon = PLAN_ICONS[plan.id] || Zap;
 
-              return (
-                <div
-                  key={plan.id}
-                  className={`relative glass-card rounded-2xl p-6 sm:p-8 transition-all duration-300 animate-fade-in-up ${
-                    isPro
-                      ? 'border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/5'
-                      : 'border border-t-overlay/10'
-                  } ${isCurrent ? 'ring-2 ring-blue-500/30' : ''}`}
-                  style={{ animationDelay: `${planIdx * 100}ms` }}
+          {/* Per-Agent Plan */}
+          <div className="relative glass-card rounded-2xl p-6 sm:p-8 border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/5 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 text-white shadow-lg shadow-indigo-500/30">
+                {t('billing.flexible', 'Flexible')}
+              </span>
+            </div>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30">
+                <Crown className="w-7 h-7 text-indigo-400" />
+              </div>
+              <h3 className="text-xl font-bold text-t-text">{t('billing.extraAgents', 'Agents supplémentaires')}</h3>
+              <div className="mt-3 flex items-baseline justify-center gap-1">
+                <span className="text-4xl font-bold text-t-text">$3</span>
+                <span className="text-sm text-t-text/40">/{t('billing.perAgentMonth', 'agent/mois')}</span>
+              </div>
+            </div>
+
+            <ul className="space-y-3 mb-6">
+              {[
+                t('billing.paidNanoMini', 'GPT-4.1 Nano + Mini'),
+                t('billing.paid500Msg', '500 messages/jour/agent'),
+                t('billing.paidByoLlm', 'BYO LLM (votre propre clé API)'),
+                t('billing.paidPriority', 'Support prioritaire'),
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="mt-0.5 p-1 rounded-md bg-indigo-500/10">
+                    <Check className="w-3.5 h-3.5 text-indigo-400" />
+                  </div>
+                  <span className="text-sm text-t-text/70">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Quantity Selector */}
+            <div className="mb-6 p-4 rounded-xl bg-t-overlay/[0.04] border border-t-overlay/10">
+              <label className="block text-xs text-t-text/50 mb-2">{t('billing.howMany', 'Combien d\'agents supplémentaires ?')}</label>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setAgentQuantity(Math.max(1, agentQuantity - 1))}
+                  className="p-2 rounded-lg bg-t-overlay/10 hover:bg-t-overlay/20 transition-all text-t-text/60"
                 >
-                  {/* Popular badge */}
-                  {isPro && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 text-white shadow-lg shadow-indigo-500/30">
-                        {t('billing.popular')}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Plan header */}
-                  <div className="text-center mb-6">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 ${
-                      isPro
-                        ? 'bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30'
-                        : 'bg-blue-500/10 border border-blue-500/20'
-                    }`}>
-                      <PlanIcon className={`w-7 h-7 ${isPro ? 'text-indigo-400' : 'text-blue-400'}`} />
-                    </div>
-                    <h3 className="text-xl font-bold text-t-text">{plan.name}</h3>
-                    <div className="mt-3 flex items-baseline justify-center gap-1">
-                      <span className="text-4xl font-bold text-t-text">${plan.price}</span>
-                      {plan.price > 0 && (
-                        <span className="text-sm text-t-text/40">{t('billing.perMonth')}</span>
-                      )}
-                    </div>
-                    {plan.price === 0 && (
-                      <p className="text-xs text-t-text/40 mt-1">{t('billing.forever')}</p>
-                    )}
-                  </div>
-
-                  {/* Features */}
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, i) => {
-                      return (
-                        <li key={i} className="flex items-start gap-3">
-                          <div className={`mt-0.5 p-1 rounded-md ${
-                            isPro ? 'bg-indigo-500/10' : 'bg-blue-500/10'
-                          }`}>
-                            <Check className={`w-3.5 h-3.5 ${isPro ? 'text-indigo-400' : 'text-blue-400'}`} />
-                          </div>
-                          <span className="text-sm text-t-text/70">{feature}</span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  {/* Action button */}
-                  <div className="mt-auto">
-                    {isCurrent ? (
-                      <div className={`w-full py-3 rounded-xl text-sm font-medium text-center border ${
-                        isPro
-                          ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-300'
-                          : 'bg-blue-500/10 border-blue-500/20 text-blue-300'
-                      }`}>
-                        <Check className="w-4 h-4 inline mr-1.5" />
-                        {t('billing.currentPlan')}
-                      </div>
-                    ) : isPro ? (
-                      <button
-                        onClick={() => handleCheckout('pro')}
-                        disabled={checkoutLoading}
-                        className="w-full py-3 rounded-xl text-sm font-semibold btn-gradient glow-blue flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        {checkoutLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <>
-                            <Crown className="w-4 h-4" />
-                            {t('billing.upgradePro')}
-                          </>
-                        )}
-                      </button>
-                    ) : isSubscribed ? (
-                      <button
-                        onClick={handlePortal}
-                        disabled={portalLoading}
-                        className="w-full py-3 rounded-xl text-sm font-medium bg-t-overlay/[0.06] border border-t-overlay/10 text-t-text/60 hover:bg-t-overlay/10 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-                      >
-                        {portalLoading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          t('billing.downgrade')
-                        )}
-                      </button>
-                    ) : (
-                      <div className="w-full py-3 rounded-xl text-sm font-medium text-center bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/40">
-                        {t('billing.currentPlan')}
-                      </div>
-                    )}
-                  </div>
+                  <Minus className="w-4 h-4" />
+                </button>
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-t-text">{agentQuantity}</span>
+                  <p className="text-xs text-t-text/40">{t('billing.extraAgentsLabel', 'agents en plus')}</p>
                 </div>
-              );
-            })}
+                <button
+                  onClick={() => setAgentQuantity(Math.min(48, agentQuantity + 1))}
+                  className="p-2 rounded-lg bg-t-overlay/10 hover:bg-t-overlay/20 transition-all text-t-text/60"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="mt-3 flex justify-between text-sm">
+                <span className="text-t-text/50">{t('billing.totalAgents', 'Total agents')}: <span className="text-t-text/80 font-medium">{2 + agentQuantity}</span></span>
+                <span className="text-indigo-400 font-semibold">${agentQuantity * 3}/{t('billing.month', 'mois')}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleCheckout}
+              disabled={checkoutLoading}
+              className="w-full py-3 rounded-xl text-sm font-semibold btn-gradient glow-blue flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {checkoutLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Crown className="w-4 h-4" />
+                  {isSubscribed
+                    ? t('billing.addAgents', 'Ajouter des agents')
+                    : t('billing.getStarted', 'Commencer — $' + (agentQuantity * 3) + '/mois')
+                  }
+                </>
+              )}
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Comparison Table */}
         <div className="mt-16 max-w-3xl mx-auto">
@@ -326,36 +288,49 @@ export default function Billing() {
               <thead>
                 <tr className="border-b border-t-overlay/10">
                   <th className="text-left px-6 py-4 text-t-text/50 font-medium">{t('billing.feature')}</th>
-                  <th className="text-center px-4 py-4 text-blue-400 font-semibold">Free</th>
+                  <th className="text-center px-4 py-4 text-blue-400 font-semibold">{t('billing.freeAgents', 'Agents gratuits')}</th>
                   <th className="text-center px-4 py-4 text-indigo-400 font-semibold">
-                    Pro
+                    {t('billing.paidAgentsLabel', 'Agents payants')}
                     <Crown className="w-3 h-3 inline ml-1" />
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  [t('billing.compAgents'), t('billing.compFree5'), t('billing.unlimited')],
-                  [t('billing.compMessages'), t('billing.compFreeMsg'), t('billing.compProMsg')],
-                  [t('billing.compStorage'), t('billing.compFreeStorage'), t('billing.compProStorage')],
-                  [t('billing.compKnowledge'), t('billing.compFreeKnowledge'), t('billing.unlimited')],
-                  [t('billing.compMcp'), t('billing.compFreeMcp'), t('billing.unlimited')],
-                  [t('billing.compWebhooks'), t('billing.compFreeWebhooks'), t('billing.unlimited')],
-                  [t('billing.compApiKeys'), t('billing.compFreeApiKeys'), t('billing.unlimited')],
-                  [t('billing.compCustomDomain'), <Check key="cd1" className="w-4 h-4 text-green-400 inline" />, <Check key="cd" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compWidget'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compStore'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compAnalytics'), '—', <Check key="a" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compSupport'), '—', <Check key="sp" className="w-4 h-4 text-green-400 inline" />],
-                ].map(([feature, free, pro], i) => (
+                  [t('billing.compModel', 'Modèle IA'), 'GPT-4.1 Nano', 'Nano + Mini'],
+                  [t('billing.compMessages', 'Messages/jour'), '200', '500'],
+                  [t('billing.compByoLlm', 'BYO LLM'), '—', <Check key="byo" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compCustomDomain', 'Custom domain'), <Check key="cd1" className="w-4 h-4 text-green-400 inline" />, <Check key="cd2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compWidget', 'Widget embed'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compStore', 'Store'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compKnowledge', 'Knowledge base'), <Check key="k1" className="w-4 h-4 text-green-400 inline" />, <Check key="k2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compWebhooks', 'Webhooks'), <Check key="wh1" className="w-4 h-4 text-green-400 inline" />, <Check key="wh2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compApi', 'API publique'), <Check key="a1" className="w-4 h-4 text-green-400 inline" />, <Check key="a2" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compSupport', 'Support prioritaire'), '—', <Check key="sp" className="w-4 h-4 text-green-400 inline" />],
+                ].map(([feature, free, paid], i) => (
                   <tr key={i} className={`border-b border-t-overlay/5 ${i % 2 === 0 ? 'bg-t-overlay/[0.02]' : ''}`}>
                     <td className="px-6 py-3 text-t-text/70">{feature}</td>
                     <td className="px-4 py-3 text-center text-t-text/50">{free}</td>
-                    <td className="px-4 py-3 text-center text-t-text/70 font-medium">{pro}</td>
+                    <td className="px-4 py-3 text-center text-t-text/70 font-medium">{paid}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+
+        {/* BYO LLM highlight */}
+        <div className="mt-12 max-w-3xl mx-auto glass-card rounded-2xl p-6 border border-amber-500/20 animate-fade-in-up">
+          <div className="flex items-start gap-4">
+            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+              <Key className="w-6 h-6 text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-t-text mb-1">BYO LLM — {t('billing.byoTitle', 'Apportez votre propre clé API')}</h3>
+              <p className="text-sm text-t-text/50 leading-relaxed">
+                {t('billing.byoDesc', 'Connectez votre propre clé OpenAI, Anthropic, Mistral ou tout fournisseur compatible. Coût GiLo = $0 sur le LLM. Vous payez directement votre fournisseur et gardez un contrôle total.')}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -365,20 +340,20 @@ export default function Billing() {
           <div className="space-y-3">
             {[
               {
-                q: t('billing.faq1q'),
-                a: t('billing.faq1a'),
+                q: t('billing.faq1q', 'Comment fonctionne la facturation ?'),
+                a: t('billing.faq1a', 'Vous avez 2 agents gratuits. Chaque agent supplémentaire coûte $3/mois. La facturation s\'adapte automatiquement au nombre d\'agents.'),
               },
               {
-                q: t('billing.faq2q'),
-                a: t('billing.faq2a'),
+                q: t('billing.faq2q', 'Puis-je annuler à tout moment ?'),
+                a: t('billing.faq2a', 'Oui, vous pouvez annuler ou réduire le nombre d\'agents à tout moment depuis le portail de gestion.'),
               },
               {
-                q: t('billing.faq3q'),
-                a: t('billing.faq3a'),
+                q: t('billing.faqByoQ', 'Qu\'est-ce que BYO LLM ?'),
+                a: t('billing.faqByoA', 'BYO LLM (Bring Your Own LLM) vous permet d\'utiliser votre propre clé API. GiLo ne fait que proxyer les requêtes — coût pour nous = $0, contrôle total pour vous.'),
               },
               {
-                q: t('billing.faq4q'),
-                a: t('billing.faq4a'),
+                q: t('billing.faq4q', 'Quels moyens de paiement acceptez-vous ?'),
+                a: t('billing.faq4a', 'Nous acceptons toutes les cartes bancaires via Stripe (Visa, Mastercard, etc.).'),
               },
             ].map((item, i) => (
               <details key={i} className="glass-card rounded-xl border border-t-overlay/10 group">
@@ -394,14 +369,12 @@ export default function Billing() {
           </div>
         </div>
 
-        {/* Footer CTA */}
-        {!isSubscribed && (
-          <div className="mt-16 text-center animate-fade-in-up">
-            <p className="text-sm text-t-text/30 mb-4">
-              {t('billing.contactUs')} <a href="mailto:support@gilo.dev" className="text-blue-400 hover:underline">support@gilo.dev</a>
-            </p>
-          </div>
-        )}
+        {/* Footer */}
+        <div className="mt-16 text-center animate-fade-in-up">
+          <p className="text-sm text-t-text/30 mb-4">
+            {t('billing.contactUs')} <a href="mailto:support@gilo.dev" className="text-blue-400 hover:underline">support@gilo.dev</a>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ export interface User {
   displayName?: string;
   githubId?: string;
   tier: UserTier;
+  /** Number of extra agent slots purchased ($3/agent/month) */
+  paidAgentSlots: number;
   subscription?: {
     status: SubscriptionStatus;
     stripeCustomerId?: string;
@@ -46,6 +48,9 @@ export interface UserResponse {
   email: string;
   displayName?: string;
   tier: UserTier;
+  paidAgentSlots: number;
+  /** Total agent limit: 2 free + paidAgentSlots */
+  maxAgents: number;
   quotas: User['quotas'];
   usage: {
     projectsCount: number;
@@ -102,7 +107,7 @@ export class UserModel {
     return row ? this.mapRow(row) : undefined;
   }
 
-  async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId' | 'displayName'>>): Promise<User> {
+  async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId' | 'displayName' | 'paidAgentSlots'>>): Promise<User> {
     const db = getDb();
     const [row] = await db.update(users)
       .set({ ...data, updatedAt: new Date() })
@@ -270,11 +275,14 @@ export class UserModel {
   }
 
   toResponse(user: User): UserResponse {
+    const paidSlots = user.paidAgentSlots || 0;
     return {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
       tier: user.tier,
+      paidAgentSlots: paidSlots,
+      maxAgents: 2 + paidSlots,
       quotas: user.quotas,
       usage: {
         projectsCount: user.usage.projectsCount,
@@ -293,6 +301,7 @@ export class UserModel {
       displayName: row.displayName ?? undefined,
       githubId: row.githubId ?? undefined,
       tier: row.tier as UserTier,
+      paidAgentSlots: row.paidAgentSlots ?? 0,
       subscription: row.subscription ?? undefined,
       quotas: row.quotas,
       usage: row.usage,

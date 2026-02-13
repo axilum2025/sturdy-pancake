@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette } from 'lucide-react';
+import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette, Key } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -35,17 +35,22 @@ interface AgentConfigData {
     accentColor: string;
     chatBackground: string;
   };
+  // BYO LLM
+  customLlmKey?: string;
+  customLlmUrl?: string;
+  customLlmModel?: string;
 }
 
 const ALL_MODELS = [
-  { id: 'openai/gpt-4.1-nano', labelKey: 'models.gpt41Nano', descKey: 'models.gpt41NanoDesc', tiers: ['free', 'pro'] },
-  { id: 'openai/gpt-4.1-mini', labelKey: 'models.gpt41Mini', descKey: 'models.gpt41MiniDesc', tiers: ['pro'] },
+  { id: 'openai/gpt-4.1-nano', labelKey: 'models.gpt41Nano', descKey: 'models.gpt41NanoDesc', tiers: ['free', 'pro', 'paid'] },
+  { id: 'openai/gpt-4.1-mini', labelKey: 'models.gpt41Mini', descKey: 'models.gpt41MiniDesc', tiers: ['pro', 'paid'] },
 ];
 
 export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const userTier = user?.tier || 'free';
+  const hasPaidSlots = (user as any)?.paidAgentSlots > 0 || user?.tier === 'pro';
+  const userTier = hasPaidSlots ? 'paid' : 'free';
   const AVAILABLE_MODELS = ALL_MODELS.filter(m => m.tiers.includes(userTier));
   const [config, setConfig] = useState<AgentConfigData>({
     model: 'openai/gpt-4.1-nano',
@@ -421,6 +426,59 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
                 <span>8192</span>
               </div>
             </div>
+
+            {/* BYO LLM — only for paid users */}
+            {hasPaidSlots && (
+              <div className="border border-t-overlay/10 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Key className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-medium text-t-text/70">{t('agentConfig.byoLlm', 'BYO LLM — Votre propre clé API')}</span>
+                </div>
+                <p className="text-xs text-t-text/35">
+                  {t('agentConfig.byoLlmDesc', 'Connectez votre propre fournisseur LLM (OpenAI, Anthropic, Mistral…). Coût = 0 pour GiLo.')}
+                </p>
+
+                <div>
+                  <label className="block text-xs text-t-text/50 mb-1">{t('agentConfig.apiKey', 'Clé API')}</label>
+                  <input
+                    type="password"
+                    value={config.customLlmKey || ''}
+                    onChange={(e) => setConfig({ ...config, customLlmKey: e.target.value })}
+                    placeholder="sk-..."
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/80 placeholder:text-t-text/20 focus:outline-none focus:border-blue-500/40"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-t-text/50 mb-1">{t('agentConfig.apiUrl', 'URL de l\'API')}</label>
+                  <input
+                    type="text"
+                    value={config.customLlmUrl || ''}
+                    onChange={(e) => setConfig({ ...config, customLlmUrl: e.target.value })}
+                    placeholder="https://api.openai.com/v1"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/80 placeholder:text-t-text/20 focus:outline-none focus:border-blue-500/40"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs text-t-text/50 mb-1">{t('agentConfig.modelName', 'Nom du modèle')}</label>
+                  <input
+                    type="text"
+                    value={config.customLlmModel || ''}
+                    onChange={(e) => setConfig({ ...config, customLlmModel: e.target.value })}
+                    placeholder="gpt-4o-mini"
+                    className="w-full px-3 py-2 text-sm rounded-lg bg-t-overlay/[0.04] border border-t-overlay/10 text-t-text/80 placeholder:text-t-text/20 focus:outline-none focus:border-blue-500/40"
+                  />
+                </div>
+
+                {config.customLlmKey && (
+                  <div className="flex items-center gap-2 text-xs text-amber-400/70">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                    {t('agentConfig.byoActive', 'BYO LLM actif — les modèles GiLo seront ignorés')}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 

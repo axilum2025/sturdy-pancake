@@ -8,6 +8,13 @@
       "when": 1770765399844,
       "tag": "0000_great_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770987582991,
+      "tag": "0001_quiet_william_stryker",
+      "breakpoints": true
     }
   ]
 }

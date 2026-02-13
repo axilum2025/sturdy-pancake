@@ -4,7 +4,7 @@
 // ============================================================
 
 import { Router, Request, Response } from 'express';
-import { Agent, enforceModelForTier } from '../models/agent';
+import { Agent, enforceModelForTier, isByoLlm } from '../models/agent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
 import { webhookModel } from '../models/webhook';
@@ -205,7 +205,8 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
     }
 
     const streamMode = streamParam !== false;
-    const { client } = copilotService.getClientInfo();
+    const byoLlm = isByoLlm(agent.config);
+    const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
 
     // Fire webhook on first message
     if (messages.length === 1) {
@@ -250,7 +251,7 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
 
     if (streamMode) {
       const stream = await client.chat.completions.create({
-        model: enforceModelForTier(agent.config.model, agent.tier || 'free'),
+        model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, agent.tier || 'free'),
         messages: openaiMessages,
         temperature: agent.config.temperature,
         max_tokens: Math.min(agent.config.maxTokens, 1024),
@@ -278,7 +279,7 @@ subdomainRouter.post('/chat', publicRateLimiter, async (req: Request, res: Respo
       res.end();
     } else {
       const completion = await client.chat.completions.create({
-        model: enforceModelForTier(agent.config.model, agent.tier || 'free'),
+        model: byoLlm ? resolvedModel : enforceModelForTier(agent.config.model, agent.tier || 'free'),
         messages: openaiMessages,
         temperature: agent.config.temperature,
         max_tokens: Math.min(agent.config.maxTokens, 1024),

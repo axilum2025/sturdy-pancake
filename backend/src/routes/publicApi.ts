@@ -4,7 +4,7 @@
 // ============================================================
 
 import { Router, Request, Response } from 'express';
-import { agentModel, enforceModelForTier } from '../models/agent';
+import { agentModel, enforceModelForTier, isByoLlm } from '../models/agent';
 import { webhookModel } from '../models/webhook';
 import { knowledgeService } from '../services/knowledgeService';
 import { conversationService } from '../services/conversationService';
@@ -68,11 +68,16 @@ publicApiRouter.post('/agents/:id/chat', validate(chatSchema), async (req: Reque
 
     const { messages, conversationId: incomingConvId } = req.body;
 
-    // Enforce tier-based model
-    agent.config.model = enforceModelForTier(agent.config.model, apiReq.agentTier || 'free');
+    // BYO LLM or enforce tier-based model
+    const byoLlm = isByoLlm(agent.config);
+    const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
+    if (!byoLlm) {
+      agent.config.model = enforceModelForTier(agent.config.model, apiReq.agentTier || 'free');
+    } else {
+      agent.config.model = resolvedModel;
+    }
 
     const streamMode = req.query.stream !== 'false';
-    const { client } = copilotService.getClientInfo();
 
     // Conversation persistence
     let conversationId = incomingConvId as string | undefined;

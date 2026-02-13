@@ -17,6 +17,7 @@ export const users = pgTable('users', {
   displayName: varchar('display_name', { length: 50 }),
   githubId: varchar('github_id', { length: 255 }),
   tier: varchar('tier', { length: 20 }).notNull().default('free'),
+  paidAgentSlots: integer('paid_agent_slots').notNull().default(0),
   subscription: jsonb('subscription').$type<{
     status: string;
     stripeCustomerId?: string;

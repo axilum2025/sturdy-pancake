@@ -7,7 +7,7 @@ import { agents } from '../db/schema';
 // ============================================================
 
 export type AgentStatus = 'draft' | 'active' | 'deployed';
-export type AgentTier = 'free' | 'pro';
+export type AgentTier = 'free' | 'pro' | 'paid';
 
 export interface AgentTool {
   id: string;
@@ -34,6 +34,10 @@ export interface AgentConfig {
     accentColor?: string;
     chatBackground?: string;
   };
+  // BYO LLM — user provides their own API key (cost = $0 for us)
+  customLlmKey?: string;
+  customLlmUrl?: string;
+  customLlmModel?: string;
 }
 
 export interface Agent {
@@ -85,9 +89,11 @@ const DEFAULT_CONFIG: AgentConfig = {
 
 // ----------------------------------------------------------
 // Tier-based model restrictions (cost optimisation)
+// Free = nano only, paid/pro = nano + mini, BYO LLM = anything
 // ----------------------------------------------------------
 export const TIER_ALLOWED_MODELS: Record<string, string[]> = {
   free: ['openai/gpt-4.1-nano'],
+  paid: ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
   pro:  ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
 };
 
@@ -102,26 +108,34 @@ export function enforceModelForTier(requestedModel: string, tier: string): strin
   return allowed[0];
 }
 
+/**
+ * Check if agent uses BYO LLM (user's own API key)
+ * When BYO LLM is active, we don't pay anything — no model restriction needed.
+ */
+export function isByoLlm(config: AgentConfig): boolean {
+  return !!(config.customLlmKey && config.customLlmKey.trim());
+}
+
 // ============================================================
 // Agent Model — PostgreSQL-backed
 // ============================================================
 
 export class AgentModel {
-  async create(userId: string, data: AgentCreateDTO, userTier: AgentTier): Promise<Agent> {
+  async create(userId: string, data: AgentCreateDTO, userTier: AgentTier, paidAgentSlots: number = 0): Promise<Agent> {
     const db = getDb();
 
-    // Check agent limit
+    // Check agent limit: 2 free + paidAgentSlots
     try {
       const userAgents = await db.select({ count: sql<number>`count(*)::int` })
         .from(agents)
         .where(eq(agents.userId, userId));
       const count = userAgents[0]?.count || 0;
-      const maxAgents = userTier === 'pro' ? 5 : 2;
+      const maxAgents = 2 + paidAgentSlots;
 
-      console.log(`[AgentModel] Count check: ${count}/${maxAgents} for tier ${userTier}`);
+      console.log(`[AgentModel] Count check: ${count}/${maxAgents} (free: 2, paid slots: ${paidAgentSlots})`);
 
       if (count >= maxAgents) {
-        throw new Error(`Agent limit reached. Maximum ${maxAgents} agents for ${userTier} tier.`);
+        throw new Error(`Agent limit reached (${maxAgents}). Add more agent slots ($3/agent/month) to create more.`);
       }
     } catch (err: any) {
       console.error('[AgentModel] Quota check failed:', err);

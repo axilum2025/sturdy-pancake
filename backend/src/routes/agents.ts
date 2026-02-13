@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { agentModel, AgentCreateDTO, enforceModelForTier } from '../models/agent';
+import { agentModel, AgentCreateDTO, enforceModelForTier, isByoLlm } from '../models/agent';
 import { storeModel } from '../models/storeAgent';
 import { copilotService, CopilotMessage } from '../services/copilotService';
 import { knowledgeService } from '../services/knowledgeService';
@@ -81,11 +81,12 @@ agentsRouter.post('/', validate(createAgentSchema), async (req: Request, res: Re
     if (!userId) return res.status(401).json({ error: 'Authentication required' });
 
     const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+    const paidAgentSlots = (req as AuthenticatedRequest).user?.paidAgentSlots || 0;
     const { name, description, config } = req.body as AgentCreateDTO & { config?: any };
 
-    console.log('[Agents] Processing creation:', { name, userTier });
+    console.log('[Agents] Processing creation:', { name, userTier, paidAgentSlots });
 
-    const agent = await agentModel.create(userId, { name, description, config }, userTier);
+    const agent = await agentModel.create(userId, { name, description, config }, userTier, paidAgentSlots);
     console.log('[Agents] Agent created successfully:', agent.id);
     res.status(201).json(agentModel.toResponse(agent));
   } catch (error: any) {
@@ -207,12 +208,16 @@ agentsRouter.post('/:id/chat', validate(chatSchema), async (req: Request, res: R
     const agent = (await agentModel.findById(req.params.id))!;
     const { messages, conversationId: incomingConvId } = req.body;
 
-    // Enforce tier-based model at chat time
-    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
-    agent.config.model = enforceModelForTier(agent.config.model, userTier);
-
+    // BYO LLM or platform model
     const chatStartTime = Date.now();
-    const { client } = copilotService.getClientInfo();
+    const byoLlm = isByoLlm(agent.config);
+    const { client, model: resolvedModel } = copilotService.getClientForAgent(agent.config);
+    if (!byoLlm) {
+      const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+      agent.config.model = enforceModelForTier(agent.config.model, userTier);
+    } else {
+      agent.config.model = resolvedModel;
+    }
 
     // Conversation persistence: get or create
     let conversationId = incomingConvId as string | undefined;

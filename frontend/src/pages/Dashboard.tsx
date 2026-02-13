@@ -135,7 +135,8 @@ export default function Dashboard() {
     );
   }
 
-  const agentsMax = user?.tier === 'pro' ? 5 : 2;
+  const paidSlots = (user as any)?.paidAgentSlots || 0;
+  const agentsMax = 2 + paidSlots;
   const agentsProgress = (projects.length / agentsMax) * 100;
   
   const totalConversations = projects.reduce((sum, a) => sum + (a.totalConversations || 0), 0);
@@ -279,16 +280,15 @@ export default function Dashboard() {
                 <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.tier')}</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold capitalize text-t-text mb-2">
-                {user?.tier}
+                {paidSlots > 0 ? 'Pro' : 'Free'}
               </p>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                user?.tier === 'pro' ? 'bg-indigo-500/20 text-indigo-300' : 
+                paidSlots > 0 ? 'bg-indigo-500/20 text-indigo-300' : 
                 'bg-blue-500/20 text-blue-300'
               }`}>
-                {user?.tier === 'pro' && <Crown className="w-3 h-3" />}
-                {user?.tier === 'team' && <Zap className="w-3 h-3" />}
-                {user?.tier === 'free' && <Sparkles className="w-3 h-3" />}
-                {user?.tier?.toUpperCase()}
+                {paidSlots > 0 && <Crown className="w-3 h-3" />}
+                {paidSlots === 0 && <Sparkles className="w-3 h-3" />}
+                {paidSlots > 0 ? `${paidSlots} PAID` : 'FREE'}
               </div>
             </div>
           </div>

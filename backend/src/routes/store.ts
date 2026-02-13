@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
-import { agentModel, enforceModelForTier } from '../models/agent';
+import { agentModel, enforceModelForTier, isByoLlm } from '../models/agent';
+import { copilotService } from '../services/copilotService';
 import { userModel } from '../models/user';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
 import { validate, publishAgentSchema, rateAgentSchema } from '../middleware/validation';
@@ -319,87 +320,42 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
 
     // Build the full messages array with system prompt
     const fullMessages = [
-      { role: 'system', content: listing.configSnapshot.systemPrompt },
-      ...messages,
+      { role: 'system' as const, content: listing.configSnapshot.systemPrompt },
+      ...messages.map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ];
 
-    // Try to call OpenAI-compatible API
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-      // Fallback: echo response
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-      const fallback = `Je suis **${listing.name}**. ${listing.configSnapshot.welcomeMessage}\n\n_(API key non configurée — réponse de démonstration)_`;
-      res.write(`data: ${JSON.stringify({ content: fallback, done: false })}\n\n`);
-      res.write(`data: ${JSON.stringify({ content: '', done: true })}\n\n`);
-      res.end();
-      return;
-    }
+    // BYO LLM or platform model
+    const config = listing.configSnapshot;
+    const byoLlm = isByoLlm(config as any);
+    const { client, model: resolvedModel } = copilotService.getClientForAgent(config as any);
+    const modelToUse = byoLlm ? resolvedModel : enforceModelForTier(config.model, 'free');
 
     // SSE streaming response
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const apiResponse = await fetch('https://models.github.ai/inference/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        model: enforceModelForTier(listing.configSnapshot.model, 'free'),
+    try {
+      const stream = await client.chat.completions.create({
+        model: modelToUse,
         messages: fullMessages,
-        temperature: listing.configSnapshot.temperature,
-        max_tokens: Math.min(listing.configSnapshot.maxTokens, 1024),
+        temperature: config.temperature,
+        max_tokens: Math.min(config.maxTokens, 1024),
         stream: true,
-      }),
-    });
+      });
 
-    if (!apiResponse.ok) {
-      const errText = await apiResponse.text();
-      res.write(`data: ${JSON.stringify({ content: `Erreur API: ${errText}`, done: true })}\n\n`);
-      res.end();
-      return;
-    }
-
-    const reader = (apiResponse.body as any)?.getReader?.();
-    if (!reader) {
-      res.write(`data: ${JSON.stringify({ content: 'Streaming non disponible', done: true })}\n\n`);
-      res.end();
-      return;
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') {
-            res.write(`data: ${JSON.stringify({ content: '', done: true })}\n\n`);
-          } else {
-            try {
-              const parsed = JSON.parse(data);
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                res.write(`data: ${JSON.stringify({ content, done: false })}\n\n`);
-              }
-            } catch {
-              // skip malformed
-            }
-          }
+      for await (const chunk of stream) {
+        const content = chunk.choices?.[0]?.delta?.content;
+        const finishReason = chunk.choices?.[0]?.finish_reason;
+        if (content) {
+          res.write(`data: ${JSON.stringify({ content, done: false })}\n\n`);
+        }
+        if (finishReason) {
+          res.write(`data: ${JSON.stringify({ content: '', done: true })}\n\n`);
         }
       }
+    } catch (apiError: any) {
+      res.write(`data: ${JSON.stringify({ content: `Erreur API: ${apiError.message}`, done: true })}\n\n`);
     }
 
     res.end();
@@ -445,7 +401,7 @@ storeRouter.post('/:id/remix', async (req: Request, res: Response) => {
           enabled: true,
         })),
       },
-    }, user?.tier || 'free');
+    }, user?.tier || 'free', user?.paidAgentSlots || 0);
 
     // Increment remix count on original
     await storeModel.incrementRemix(listing.id);

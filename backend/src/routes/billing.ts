@@ -15,8 +15,35 @@ export const billingRouter = Router();
 billingRouter.get('/plans', (req: Request, res: Response) => {
   res.json({
     plans: [
-      { id: 'free', name: 'Free', price: 0, currency: 'usd', interval: 'month', features: ['2 agents', 'GPT-4.1 Nano', '200 messages/day', '50 MB storage', 'Custom domain'] },
-      { id: 'pro', name: 'Pro', price: 19, currency: 'usd', interval: 'month', features: ['5 agents', 'GPT-4.1 Nano + Mini', '2,000 messages/day', '500 MB storage', 'Custom domain', 'Priority support'] },
+      {
+        id: 'free',
+        name: 'Free',
+        price: 0,
+        currency: 'usd',
+        interval: 'month',
+        features: [
+          '2 agents included',
+          'GPT-4.1 Nano',
+          '200 messages/day/agent',
+          '50 MB storage',
+          'Custom domain (slug.gilo.dev)',
+        ],
+      },
+      {
+        id: 'agent',
+        name: 'Extra Agent',
+        price: 3,
+        currency: 'usd',
+        interval: 'month',
+        unit: 'per agent',
+        features: [
+          '$3/agent/month',
+          'GPT-4.1 Nano + Mini',
+          '500 messages/day/agent',
+          'BYO LLM (your own API key)',
+          'Priority support',
+        ],
+      },
     ],
   });
 });
@@ -28,10 +55,11 @@ billingRouter.post('/checkout', authMiddleware, async (req: Request, res: Respon
   try {
     const userId = (req as AuthenticatedRequest).userId;
     const userEmail = (req as AuthenticatedRequest).user?.email;
-    const { plan } = req.body;
+    const { quantity } = req.body;
 
-    if (!plan || plan !== 'pro') {
-      return res.status(400).json({ error: 'Invalid plan. Available: pro' });
+    const agentCount = parseInt(quantity, 10);
+    if (!agentCount || agentCount < 1 || agentCount > 50) {
+      return res.status(400).json({ error: 'Invalid quantity. Must be 1-50 agent slots.' });
     }
 
     if (!userEmail) {
@@ -42,7 +70,7 @@ billingRouter.post('/checkout', authMiddleware, async (req: Request, res: Respon
     const { url } = await billingService.createCheckoutSession(
       userId,
       userEmail,
-      plan,
+      agentCount,
       `${frontendUrl}/billing?success=true`,
       `${frontendUrl}/billing?canceled=true`,
     );
