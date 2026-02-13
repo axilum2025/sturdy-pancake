@@ -175,13 +175,13 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${
               user.tier === 'pro' ? 'from-indigo-500 to-purple-600' : 'from-blue-500 to-indigo-500'
-            } flex items-center justify-center text-white font-bold text-sm shadow-lg`}>
+            } flex items-center justify-center text-white font-bold text-sm shadow-lg flex-shrink-0`}>
               {getInitials(user.email)}
             </div>
-            <div>
-              <p className="text-t-text font-semibold">{user.displayName || user.email}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-t-text font-semibold truncate">{user.displayName || user.email}</p>
               {user.displayName && (
-                <p className="text-t-text/40 text-xs">{user.email}</p>
+                <p className="text-t-text/40 text-xs truncate">{user.email}</p>
               )}
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-medium capitalize ${
@@ -230,7 +230,7 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
                   <Mail className="w-4 h-4 text-blue-400" />
                   <span className="text-t-text/50 text-sm">{t('profile.email')}</span>
                 </div>
-                <p className="text-t-text font-medium ml-7">{user.email}</p>
+                <p className="text-t-text font-medium ml-7 break-all">{user.email}</p>
               </div>
 
               {/* Display Name / Pseudo */}

@@ -181,9 +181,9 @@ export default function Dashboard() {
                 <CreditCard className="w-4 h-4 text-indigo-400 group-hover:scale-110 transition-transform" />
                 <span className="text-sm font-medium text-indigo-300 hidden sm:inline">Billing</span>
               </button>
-              <div className="flex items-center gap-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-t-text/90 font-medium text-sm">{user?.email}</p>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="text-right hidden sm:block min-w-0 max-w-[200px]">
+                  <p className="text-t-text/90 font-medium text-sm truncate">{user?.email}</p>
                   <div className="flex items-center justify-end gap-2">
                     <span className={`text-xs font-medium capitalize ${
                       user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
