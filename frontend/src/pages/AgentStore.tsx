@@ -337,14 +337,14 @@ function AgentIcon({
         </span>
       </button>
 
-      {/* Admin delete badge */}
+      {/* Admin delete badge — always visible for admin */}
       {isAdmin && !isConfirming && (
         <button
           onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-          className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-red-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-red-600 shadow-lg z-10"
+          className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 shadow-lg shadow-red-500/30 z-10 transition-transform hover:scale-110 border-2 border-t-page"
           title="Supprimer du store"
         >
-          <Trash2 className="w-3 h-3" />
+          <Trash2 className="w-3.5 h-3.5" />
         </button>
       )}
 

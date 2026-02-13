@@ -63,6 +63,47 @@ storeRouter.get('/categories', (req: Request, res: Response) => {
 });
 
 // ============================================================
+// GET /api/store/admin/check — Check if current user is admin
+// (MUST be before /:id to avoid route collision)
+// ============================================================
+storeRouter.get('/admin/check', async (req: Request, res: Response) => {
+  try {
+    const user = (req as AuthenticatedRequest).user;
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const isAdmin = !!(adminEmail && user && user.email === adminEmail);
+    res.json({ isAdmin });
+  } catch (error: any) {
+    res.json({ isAdmin: false });
+  }
+});
+
+// ============================================================
+// DELETE /api/store/admin/:id — Admin-only: remove any agent from store
+// (MUST be before DELETE /:id to avoid route collision)
+// ============================================================
+storeRouter.delete('/admin/:id', async (req: Request, res: Response) => {
+  try {
+    const user = (req as AuthenticatedRequest).user;
+    if (!user) return res.status(401).json({ error: 'Authentication required' });
+
+    const adminEmail = process.env.ADMIN_EMAIL;
+    if (!adminEmail || user.email !== adminEmail) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const listing = await storeModel.findById(req.params.id);
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    await storeModel.delete(req.params.id);
+    res.json({ message: 'Removed from store by admin' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================================
 // GET /api/store/:id — Get full detail of a store agent
 // ============================================================
 storeRouter.get('/:id', async (req: Request, res: Response) => {
@@ -371,45 +412,6 @@ storeRouter.post('/:id/regenerate-token', async (req: Request, res: Response) =>
 
     const newToken = await storeModel.regenerateToken(listing.id);
     res.json({ accessToken: newToken });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================================
-// GET /api/store/admin/check — Check if current user is admin
-// ============================================================
-storeRouter.get('/admin/check', async (req: Request, res: Response) => {
-  try {
-    const user = (req as AuthenticatedRequest).user;
-    const adminEmail = process.env.ADMIN_EMAIL;
-    const isAdmin = !!(adminEmail && user && user.email === adminEmail);
-    res.json({ isAdmin });
-  } catch (error: any) {
-    res.json({ isAdmin: false });
-  }
-});
-
-// ============================================================
-// DELETE /api/store/admin/:id — Admin-only: remove any agent from store
-// ============================================================
-storeRouter.delete('/admin/:id', async (req: Request, res: Response) => {
-  try {
-    const user = (req as AuthenticatedRequest).user;
-    if (!user) return res.status(401).json({ error: 'Authentication required' });
-
-    const adminEmail = process.env.ADMIN_EMAIL;
-    if (!adminEmail || user.email !== adminEmail) {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-
-    const listing = await storeModel.findById(req.params.id);
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-
-    await storeModel.delete(req.params.id);
-    res.json({ message: 'Removed from store by admin' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
