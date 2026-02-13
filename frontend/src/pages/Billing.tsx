@@ -342,7 +342,7 @@ export default function Billing() {
                   [t('billing.compMcp'), t('billing.compFreeMcp'), t('billing.unlimited')],
                   [t('billing.compWebhooks'), t('billing.compFreeWebhooks'), t('billing.unlimited')],
                   [t('billing.compApiKeys'), t('billing.compFreeApiKeys'), t('billing.unlimited')],
-                  [t('billing.compCustomDomain'), '—', <Check key="cd" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compCustomDomain'), <Check key="cd1" className="w-4 h-4 text-green-400 inline" />, <Check key="cd" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compWidget'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compStore'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compAnalytics'), '—', <Check key="a" className="w-4 h-4 text-green-400 inline" />],
