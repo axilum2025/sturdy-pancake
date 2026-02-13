@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { listAgents, createAgent, deleteAgent, getAgentTemplates, Agent, AgentTemplate } from '../services/api';
 import AuthModal from '../components/AuthModal';
+import UserProfileModal from '../components/UserProfileModal';
 import ProjectCard from '../components/ProjectCard';
 
 export default function Dashboard() {
@@ -21,6 +22,7 @@ export default function Dashboard() {
   const [deleteTarget, setDeleteTarget] = useState<Agent | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -189,13 +191,18 @@ export default function Dashboard() {
                     )}
                   </div>
                 </div>
-                <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${getTierColor(user?.tier || 'free')} flex items-center justify-center text-white font-bold text-xs sm:text-sm ${getTierGlow(user?.tier || 'free')}`}>
+                <button
+                  onClick={() => setShowProfile(true)}
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br ${getTierColor(user?.tier || 'free')} flex items-center justify-center text-white font-bold text-xs sm:text-sm ${getTierGlow(user?.tier || 'free')} cursor-pointer hover:scale-110 hover:shadow-lg transition-all duration-200 ring-2 ring-transparent hover:ring-blue-400/30`}
+                  title={t('profile.openProfile')}
+                >
                   {getInitials(user?.email || 'U')}
-                </div>
+                </button>
               </div>
               <button
                 onClick={logout}
                 className="p-2 rounded-lg bg-t-overlay/5 border border-t-overlay/10 hover:bg-t-overlay/10 hover:border-t-overlay/20 transition-all duration-200"
+                title={t('profile.logout')}
               >
                 <LogOut className="w-4 h-4 text-t-text/60" />
               </button>
@@ -490,6 +497,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* User Profile Modal */}
+      <UserProfileModal isOpen={showProfile} onClose={() => setShowProfile(false)} />
     </div>
   );
 }

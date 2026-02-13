@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { userModel } from '../models/user';
 import { authMiddleware, generateToken, AuthenticatedRequest } from '../middleware/auth';
-import { validate, registerSchema, loginSchema } from '../middleware/validation';
+import { validate, registerSchema, loginSchema, changePasswordSchema } from '../middleware/validation';
 
 export const authRouter = Router();
 
@@ -114,6 +114,36 @@ authRouter.post('/downgrade', authMiddleware, async (req: Request, res: Response
 // ============================================================
 // RGPD / GDPR Endpoints
 // ============================================================
+
+/**
+ * POST /api/auth/change-password
+ * Change user password (requires current password confirmation)
+ */
+authRouter.post('/change-password', authMiddleware, validate(changePasswordSchema), async (req: Request, res: Response) => {
+  try {
+    const user = (req as AuthenticatedRequest).user;
+    const { currentPassword, newPassword } = req.body;
+
+    const valid = await userModel.verifyPassword(user, currentPassword);
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password and update
+    const bcrypt = await import('bcryptjs');
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    const { getDb } = await import('../db');
+    const { users } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    const db = getDb();
+    await db.update(users).set({ passwordHash, updatedAt: new Date() }).where(eq(users.id, user.id));
+
+    res.json({ message: 'Password changed successfully' });
+  } catch (error: any) {
+    console.error('Change password error:', error.message);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
 
 /**
  * GET /api/auth/export

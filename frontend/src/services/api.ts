@@ -100,6 +100,21 @@ export const upgradeToPro = async (stripeCustomerId?: string, subscriptionId?: s
   return response.data;
 };
 
+// ============ GDPR / Account Management ============
+
+export const exportUserData = async (): Promise<Blob> => {
+  const response = await api.get('/auth/export', { responseType: 'blob' });
+  return response.data;
+};
+
+export const deleteAccount = async (password: string): Promise<void> => {
+  await api.delete('/auth/account', { data: { password } });
+};
+
+export const changePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  await api.post('/auth/change-password', { currentPassword, newPassword });
+};
+
 // ============ Projects ============
 
 export interface TechStack {
