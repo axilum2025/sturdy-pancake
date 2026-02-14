@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette, Key, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
+import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, updateAgentTool, addToolToAgent, CatalogueTool, CatalogueCategory } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useStudioStore } from '../store/studioStore';
 import KnowledgePanel from './KnowledgePanel';
@@ -163,7 +163,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     }
   };
 
-  const addHttpTool = () => {
+  const addHttpTool = async () => {
     if (!newToolName.trim() || !newToolUrl.trim()) return;
     const tool: AgentTool = {
       id: `http-${Date.now()}`,
@@ -182,7 +182,13 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
         auth: { type: 'none' },
       },
     };
-    setConfig({ ...config, tools: [...config.tools, tool] });
+    // Persist to backend first
+    try {
+      const data = await addToolToAgent(agentId, tool as unknown as Record<string, unknown>);
+      setConfig({ ...config, tools: [...config.tools, (data.tool || tool) as unknown as AgentTool] });
+    } catch {
+      setConfig({ ...config, tools: [...config.tools, tool] });
+    }
     setNewToolName('');
     setNewToolDesc('');
     setNewToolUrl('');
@@ -190,7 +196,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     setShowAddTool(false);
   };
 
-  const addTool = () => {
+  const addTool = async () => {
     if (!newToolName.trim()) return;
     const tool: AgentTool = {
       id: `custom-${Date.now()}`,
@@ -200,7 +206,14 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
       enabled: true,
       parameters: { type: 'object', properties: {} },
     };
-    setConfig({ ...config, tools: [...config.tools, tool] });
+    // Persist to backend first, then update local state
+    try {
+      const data = await addToolToAgent(agentId, tool as unknown as Record<string, unknown>);
+      setConfig({ ...config, tools: [...config.tools, (data.tool || tool) as unknown as AgentTool] });
+    } catch {
+      // Fallback: still add locally
+      setConfig({ ...config, tools: [...config.tools, tool] });
+    }
     setNewToolName('');
     setNewToolDesc('');
     setShowAddTool(false);
@@ -215,11 +228,26 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     setConfig({ ...config, tools: config.tools.filter((t) => t.id !== toolId) });
   };
 
-  const toggleTool = (toolId: string) => {
+  const toggleTool = async (toolId: string) => {
+    const tool = config.tools.find((t) => t.id === toolId);
+    if (!tool) return;
+    const newEnabled = !tool.enabled;
+    // Optimistic local update
     setConfig({
       ...config,
-      tools: config.tools.map((t) => (t.id === toolId ? { ...t, enabled: !t.enabled } : t)),
+      tools: config.tools.map((t) => (t.id === toolId ? { ...t, enabled: newEnabled } : t)),
     });
+    // Persist to backend
+    try {
+      await updateAgentTool(agentId, toolId, { enabled: newEnabled });
+    } catch (e) {
+      console.error('Failed to persist tool toggle:', e);
+      // Revert on failure
+      setConfig((prev) => ({
+        ...prev,
+        tools: prev.tools.map((t) => (t.id === toolId ? { ...t, enabled: !newEnabled } : t)),
+      }));
+    }
   };
 
   const tabs = [

@@ -398,11 +398,11 @@ export default function ChatPanel() {
                 fullContent += chunk.content;
                 // Suppress the <!--GILO_APPLY_CONFIG:...--> and <!--GILO_SAVE_CREDENTIALS:...--> blocks from display
                 if (suppressingConfig) continue;
-                if (fullContent.includes('<!--GILO_APPLY_CONFIG:') || fullContent.includes('<!--GILO_SAVE_CREDENTIALS:')) {
+                if (/<!--\s*GILO_APPLY_CONFIG\s*:/.test(fullContent) || /<!--\s*GILO_SAVE_CREDENTIALS\s*:/.test(fullContent)) {
                   suppressingConfig = true;
                   const cleanContent = fullContent
-                    .replace(/<!--GILO_APPLY_CONFIG:[\s\S]*$/g, '')
-                    .replace(/<!--GILO_SAVE_CREDENTIALS:[\s\S]*$/g, '')
+                    .replace(/<!--\s*GILO_APPLY_CONFIG\s*:[\s\S]*$/g, '')
+                    .replace(/<!--\s*GILO_SAVE_CREDENTIALS\s*:[\s\S]*$/g, '')
                     .trim();
                   setMessages((prev) =>
                     prev.map((m) =>
@@ -492,8 +492,11 @@ export default function ChatPanel() {
               ? {
                   ...m,
                   content: m.content
-                    .replace(/<!--GILO_APPLY_CONFIG:[\s\S]*?-->/g, '')
-                    .replace(/<!--GILO_SAVE_CREDENTIALS:[\s\S]*?-->/g, '')
+                    .replace(/<!--\s*GILO_APPLY_CONFIG\s*:[\s\S]*?-->/g, '')
+                    .replace(/<!--\s*GILO_SAVE_CREDENTIALS\s*:[\s\S]*?-->/g, '')
+                    // Also strip incomplete blocks (truncated before -->)
+                    .replace(/<!--\s*GILO_APPLY_CONFIG\s*:[\s\S]*$/g, '')
+                    .replace(/<!--\s*GILO_SAVE_CREDENTIALS\s*:[\s\S]*$/g, '')
                     .trim(),
                   isStreaming: false,
                 }

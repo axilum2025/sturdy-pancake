@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Plus, Power, PowerOff, Trash2, Check, X, Download, Globe, Terminal, Key } from 'lucide-react';
+import { Settings, Plus, Power, PowerOff, Trash2, Check, X, Download, Globe, Terminal, Key, Wrench, FileText, MessageSquare, ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE } from '../services/api';
 
@@ -32,6 +32,28 @@ interface MCPSettingsProps {
   onClose: () => void;
 }
 
+interface MCPDiscoveredTool {
+  name: string;
+  description?: string;
+  inputSchema: Record<string, unknown>;
+  serverId: string;
+}
+
+interface MCPDiscoveredResource {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  serverId: string;
+}
+
+interface MCPDiscoveredPrompt {
+  name: string;
+  description?: string;
+  arguments?: Array<{ name: string; description?: string; required?: boolean }>;
+  serverId: string;
+}
+
 export default function MCPSettings({ onClose }: MCPSettingsProps) {
   const { t } = useTranslation();
   const [servers, setServers] = useState<MCPServer[]>([]);
@@ -53,6 +75,14 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
     env: '',
   });
 
+  // Tools, Resources, Prompts state
+  const [mcpTools, setMcpTools] = useState<MCPDiscoveredTool[]>([]);
+  const [mcpResources, setMcpResources] = useState<MCPDiscoveredResource[]>([]);
+  const [mcpPrompts, setMcpPrompts] = useState<MCPDiscoveredPrompt[]>([]);
+  const [showToolsSection, setShowToolsSection] = useState(true);
+  const [showResourcesSection, setShowResourcesSection] = useState(true);
+  const [showPromptsSection, setShowPromptsSection] = useState(true);
+
   const getAuthHeaders = (): Record<string, string> => {
     const token = localStorage.getItem('authToken');
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -63,7 +93,34 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
   useEffect(() => {
     fetchServers();
     fetchTemplates();
+    fetchMCPDiscovery();
   }, []);
+
+  const fetchMCPDiscovery = async () => {
+    const headers = getAuthHeaders();
+    // Fetch tools, resources, prompts in parallel
+    try {
+      const [toolsRes, resourcesRes, promptsRes] = await Promise.allSettled([
+        fetch(`${API_BASE}/api/mcp/tools`, { headers }),
+        fetch(`${API_BASE}/api/mcp/resources`, { headers }),
+        fetch(`${API_BASE}/api/mcp/prompts`, { headers }),
+      ]);
+      if (toolsRes.status === 'fulfilled' && toolsRes.value.ok) {
+        const data = await toolsRes.value.json();
+        setMcpTools(Array.isArray(data) ? data : []);
+      }
+      if (resourcesRes.status === 'fulfilled' && resourcesRes.value.ok) {
+        const data = await resourcesRes.value.json();
+        setMcpResources(Array.isArray(data) ? data : []);
+      }
+      if (promptsRes.status === 'fulfilled' && promptsRes.value.ok) {
+        const data = await promptsRes.value.json();
+        setMcpPrompts(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Error fetching MCP discovery:', err);
+    }
+  };
 
   const fetchServers = async () => {
     try {
@@ -109,6 +166,8 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
       });
       
       fetchServers();
+      // Refresh tools/resources/prompts after connect/disconnect
+      setTimeout(() => fetchMCPDiscovery(), 500);
     } catch (error) {
       console.error('Error toggling server:', error);
     }
@@ -479,6 +538,167 @@ export default function MCPSettings({ onClose }: MCPSettingsProps) {
             ))}
           </div>
         )}
+
+        {/* ====== MCP Tools Section ====== */}
+        <div className="border border-t-overlay/10 rounded-xl overflow-hidden">
+          <button
+            onClick={() => setShowToolsSection(!showToolsSection)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-t-overlay/[0.03] hover:bg-t-overlay/[0.06] transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-blue-400" />
+              <span className="text-sm font-medium text-t-text/70">Tools</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300">
+                {mcpTools.length}
+              </span>
+            </div>
+            {showToolsSection ? <ChevronDown className="w-4 h-4 text-t-text/30" /> : <ChevronRight className="w-4 h-4 text-t-text/30" />}
+          </button>
+          {showToolsSection && (
+            <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
+              {mcpTools.length === 0 ? (
+                <p className="text-xs text-t-text/30 text-center py-4">
+                  Aucun outil MCP découvert. Connectez un serveur pour voir ses outils.
+                </p>
+              ) : (
+                mcpTools.map((tool, idx) => {
+                  const serverName = servers.find(s => s.id === tool.serverId)?.name || tool.serverId;
+                  return (
+                    <div key={`${tool.serverId}-${tool.name}-${idx}`} className="flex items-start gap-3 p-2.5 rounded-lg bg-t-overlay/[0.02] border border-t-overlay/5">
+                      <Wrench className="w-3.5 h-3.5 text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-t-text/80 font-mono">{tool.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-t-overlay/10 text-t-text/35">{serverName}</span>
+                        </div>
+                        {tool.description && (
+                          <p className="text-xs text-t-text/35 mt-0.5">{tool.description}</p>
+                        )}
+                        {(() => {
+                          const props = (tool.inputSchema as any)?.properties;
+                          if (!props || typeof props !== 'object') return null;
+                          const keys = Object.keys(props).slice(0, 5);
+                          if (keys.length === 0) return null;
+                          return (
+                            <div className="flex gap-1 mt-1 flex-wrap">
+                              {keys.map((p: string) => (
+                                <span key={p} className="text-[9px] px-1 py-0.5 rounded bg-t-overlay/5 text-t-text/25 font-mono">{p}</span>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </div>
+                      <div className="w-2 h-2 rounded-full bg-green-400 mt-1.5 flex-shrink-0" title="Active" />
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ====== MCP Resources Section ====== */}
+        <div className="border border-t-overlay/10 rounded-xl overflow-hidden">
+          <button
+            onClick={() => setShowResourcesSection(!showResourcesSection)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-t-overlay/[0.03] hover:bg-t-overlay/[0.06] transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-green-400" />
+              <span className="text-sm font-medium text-t-text/70">Resources</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-500/20 text-green-300">
+                {mcpResources.length}
+              </span>
+            </div>
+            {showResourcesSection ? <ChevronDown className="w-4 h-4 text-t-text/30" /> : <ChevronRight className="w-4 h-4 text-t-text/30" />}
+          </button>
+          {showResourcesSection && (
+            <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
+              {mcpResources.length === 0 ? (
+                <p className="text-xs text-t-text/30 text-center py-4">
+                  Aucune ressource MCP découverte. Connectez un serveur pour voir ses ressources.
+                </p>
+              ) : (
+                mcpResources.map((resource, idx) => {
+                  const serverName = servers.find(s => s.id === resource.serverId)?.name || resource.serverId;
+                  return (
+                    <div key={`${resource.serverId}-${resource.uri}-${idx}`} className="flex items-start gap-3 p-2.5 rounded-lg bg-t-overlay/[0.02] border border-t-overlay/5">
+                      <FileText className="w-3.5 h-3.5 text-green-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-t-text/80">{resource.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-t-overlay/10 text-t-text/35">{serverName}</span>
+                        </div>
+                        <p className="text-xs text-t-text/25 font-mono mt-0.5 truncate">{resource.uri}</p>
+                        {resource.description && (
+                          <p className="text-xs text-t-text/35 mt-0.5">{resource.description}</p>
+                        )}
+                        {resource.mimeType && (
+                          <span className="text-[9px] px-1 py-0.5 rounded bg-t-overlay/5 text-t-text/25 mt-1 inline-block">{resource.mimeType}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* ====== MCP Prompts Section ====== */}
+        <div className="border border-t-overlay/10 rounded-xl overflow-hidden">
+          <button
+            onClick={() => setShowPromptsSection(!showPromptsSection)}
+            className="w-full flex items-center justify-between px-4 py-3 bg-t-overlay/[0.03] hover:bg-t-overlay/[0.06] transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-amber-400" />
+              <span className="text-sm font-medium text-t-text/70">Prompts</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300">
+                {mcpPrompts.length}
+              </span>
+            </div>
+            {showPromptsSection ? <ChevronDown className="w-4 h-4 text-t-text/30" /> : <ChevronRight className="w-4 h-4 text-t-text/30" />}
+          </button>
+          {showPromptsSection && (
+            <div className="p-3 space-y-2 max-h-60 overflow-y-auto">
+              {mcpPrompts.length === 0 ? (
+                <p className="text-xs text-t-text/30 text-center py-4">
+                  Aucun prompt MCP découvert. Connectez un serveur pour voir ses prompts.
+                </p>
+              ) : (
+                mcpPrompts.map((prompt, idx) => {
+                  const serverName = servers.find(s => s.id === prompt.serverId)?.name || prompt.serverId;
+                  return (
+                    <div key={`${prompt.serverId}-${prompt.name}-${idx}`} className="flex items-start gap-3 p-2.5 rounded-lg bg-t-overlay/[0.02] border border-t-overlay/5">
+                      <MessageSquare className="w-3.5 h-3.5 text-amber-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-t-text/80">{prompt.name}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-t-overlay/10 text-t-text/35">{serverName}</span>
+                        </div>
+                        {prompt.description && (
+                          <p className="text-xs text-t-text/35 mt-0.5">{prompt.description}</p>
+                        )}
+                        {prompt.arguments && prompt.arguments.length > 0 && (
+                          <div className="flex gap-1 mt-1 flex-wrap">
+                            {prompt.arguments.map(arg => (
+                              <span key={arg.name} className={`text-[9px] px-1 py-0.5 rounded font-mono ${
+                                arg.required ? 'bg-amber-500/10 text-amber-400/60' : 'bg-t-overlay/5 text-t-text/25'
+                              }`}>
+                                {arg.name}{arg.required ? '*' : ''}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Footer hint */}
         <div className="mt-4 p-3 rounded-xl bg-t-overlay/[0.02] border border-t-overlay/5">

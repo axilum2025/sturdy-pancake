@@ -85,7 +85,7 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       model: enforceModelForTier(model || defaultModel, (req as AuthenticatedRequest).user?.tier || 'free'),
       messages: openaiMessages,
       temperature: temperature ?? 0.4,
-      max_tokens: maxTokens ?? 2048,
+      max_tokens: maxTokens ?? 4096,
       stream: true,
     });
 
@@ -121,17 +121,31 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     }
 
     // Detect and apply GILO_APPLY_CONFIG block
-    const configMatch = fullAssistantContent.match(/<!--GILO_APPLY_CONFIG:([\s\S]*?)-->/);
+    const configMatch = fullAssistantContent.match(/<!--\s*GILO_APPLY_CONFIG\s*:([\s\S]*?)-->/);
     if (configMatch && agentId && agentId !== 'new-project') {
       try {
-        const configData = JSON.parse(configMatch[1].trim());
+        // Sanitise common LLM JSON mistakes before parsing
+        let rawJson = configMatch[1].trim();
+        // Remove trailing commas before } or ]
+        rawJson = rawJson.replace(/,\s*([\]}])/g, '$1');
+        // Remove markdown code-fence wrappers if the LLM wrapped the JSON
+        rawJson = rawJson.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+
+        const configData = JSON.parse(rawJson);
         const updates: Record<string, any> = {};
         if (configData.systemPrompt) updates.systemPrompt = configData.systemPrompt;
         if (configData.temperature !== undefined) updates.temperature = configData.temperature;
         if (configData.maxTokens !== undefined) updates.maxTokens = configData.maxTokens;
         if (configData.welcomeMessage) updates.welcomeMessage = configData.welcomeMessage;
         if (configData.language) updates.language = configData.language;
-        if (Array.isArray(configData.tools)) updates.tools = configData.tools;
+        if (Array.isArray(configData.tools)) {
+          // Ensure every tool has enabled:true if not explicitly set
+          updates.tools = configData.tools.map((t: any) => ({
+            ...t,
+            enabled: t.enabled !== false, // default to true
+            id: t.id || `tool-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          }));
+        }
 
         if (Object.keys(updates).length > 0) {
           await agentModel.updateConfig(agentId, updates);
@@ -140,6 +154,23 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
         }
       } catch (e: any) {
         console.error('[Copilot] Failed to auto-apply config:', e.message);
+        // Try a lenient fallback: extract just the tools array
+        try {
+          const toolsMatch = configMatch[1].match(/"tools"\s*:\s*(\[[\s\S]*?\])/);
+          if (toolsMatch) {
+            let toolsJson = toolsMatch[1].replace(/,\s*([\]}])/g, '$1');
+            const tools = JSON.parse(toolsJson).map((t: any) => ({
+              ...t,
+              enabled: t.enabled !== false,
+              id: t.id || `tool-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            }));
+            await agentModel.updateConfig(agentId, { tools });
+            console.log('[Copilot] Fallback: applied tools to agent', agentId, tools.length);
+            res.write(`data: ${JSON.stringify({ type: 'config_applied', fields: ['tools'] })}\n\n`);
+          }
+        } catch (fallbackErr: any) {
+          console.error('[Copilot] Fallback tools parse also failed:', fallbackErr.message);
+        }
       }
     }
 

@@ -390,6 +390,58 @@ export const deleteMCPServer = async (serverId: string) => {
   return response.data;
 };
 
+export interface MCPToolInfo {
+  name: string;
+  description?: string;
+  inputSchema: Record<string, unknown>;
+  serverId: string;
+}
+
+export interface MCPResourceInfo {
+  uri: string;
+  name: string;
+  description?: string;
+  mimeType?: string;
+  serverId: string;
+}
+
+export interface MCPPromptInfo {
+  name: string;
+  description?: string;
+  arguments?: Array<{ name: string; description?: string; required?: boolean }>;
+  serverId: string;
+}
+
+export const getMCPTools = async (): Promise<MCPToolInfo[]> => {
+  const response = await api.get('/mcp/tools');
+  return response.data;
+};
+
+export const getMCPResources = async (): Promise<MCPResourceInfo[]> => {
+  const response = await api.get('/mcp/resources');
+  return response.data;
+};
+
+export const getMCPPrompts = async (): Promise<MCPPromptInfo[]> => {
+  const response = await api.get('/mcp/prompts');
+  return response.data;
+};
+
+export const connectMCPServer = async (serverId: string) => {
+  const response = await api.post(`/mcp/servers/${serverId}/connect`);
+  return response.data;
+};
+
+export const disconnectMCPServer = async (serverId: string) => {
+  const response = await api.post(`/mcp/servers/${serverId}/disconnect`);
+  return response.data;
+};
+
+export const toggleMCPServer = async (serverId: string, enabled: boolean) => {
+  const response = await api.patch(`/mcp/servers/${serverId}`, { enabled });
+  return response.data;
+};
+
 // ============ Copilot (GitHub Copilot Integration) ============
 
 export interface CopilotMessage {
