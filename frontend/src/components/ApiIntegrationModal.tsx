@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield, Globe, MessageSquare } from 'lucide-react';
+import { X, Copy, Check, Key, Trash2, Code2, RefreshCw, AlertTriangle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createApiKey, listApiKeys, revokeApiKey, ApiKeyResponse } from '../services/api';
 
@@ -172,11 +172,11 @@ chat("Hello!").then(console.log);`;
     }
   };
 
-  const tabs: { id: CodeLang; label: string; icon: string }[] = [
-    { id: 'curl', label: 'cURL', icon: '🔧' },
-    { id: 'python', label: 'Python', icon: '🐍' },
-    { id: 'javascript', label: 'JavaScript', icon: '🌐' },
-    { id: 'nodejs', label: 'Node.js', icon: '💚' },
+  const tabs: { id: CodeLang; label: string }[] = [
+    { id: 'curl', label: 'cURL' },
+    { id: 'python', label: 'Python' },
+    { id: 'javascript', label: 'JavaScript' },
+    { id: 'nodejs', label: 'Node.js' },
   ];
 
   const snippet = getCodeSnippet(activeTab);
@@ -229,7 +229,6 @@ chat("Hello!").then(console.log);`;
             <div>
               <label className="text-sm font-medium text-t-text/70 mb-2 block">{t('apiIntegration.endpoint')}</label>
               <div className="flex items-center gap-2 p-3 rounded-xl bg-t-overlay/5 border border-t-overlay/10">
-                <Terminal className="w-4 h-4 text-green-400 flex-shrink-0" />
                 <code className="text-sm text-green-400 font-mono flex-1 break-all">{endpoint}</code>
                 <button
                   onClick={() => copyToClipboard(endpoint, 'snippet')}
@@ -244,7 +243,6 @@ chat("Hello!").then(console.log);`;
                 <div className="mt-2">
                   <label className="text-xs font-medium text-t-text/50 mb-1 block">{t('apiIntegration.subdomainUrl')}</label>
                   <div className="flex items-center gap-2 p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/15">
-                    <Globe className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                     <code className="text-sm text-indigo-400 font-mono flex-1 break-all">{subdomainUrl}</code>
                     <button
                       onClick={() => copyToClipboard(subdomainUrl, 'snippet')}
@@ -319,7 +317,6 @@ chat("Hello!").then(console.log);`;
                       className="flex items-center justify-between p-3 rounded-xl bg-t-overlay/5 border border-t-overlay/10"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <Shield className="w-4 h-4 text-blue-400 flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-t-text truncate">{key.name}</p>
                           <div className="flex items-center gap-3 text-xs text-t-text/40">
@@ -364,7 +361,6 @@ chat("Hello!").then(console.log);`;
                         : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'
                     }`}
                   >
-                    <span className="hidden md:inline">{tab.icon}</span>
                     {tab.label}
                   </button>
                 ))}
@@ -399,8 +395,7 @@ chat("Hello!").then(console.log);`;
 
             {/* Widget Embed */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <MessageSquare className="w-4 h-4 text-emerald-400" />
+              <div className="mb-3">
                 <label className="text-sm font-medium text-t-text/70">{t('apiIntegration.widgetEmbed', 'Widget Embed')}</label>
               </div>
               <p className="text-xs text-t-text/50 mb-3">
