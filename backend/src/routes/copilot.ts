@@ -39,7 +39,7 @@ copilotRouter.post('/chat', validate(chatSchema), async (req: Request, res: Resp
 // ----------------------------------------------------------
 copilotRouter.post('/stream', async (req: Request, res: Response) => {
   try {
-    const { messages, model, temperature, maxTokens, projectContext, conversationId: incomingConvId } = req.body;
+    const { messages, model, temperature, maxTokens, projectContext, conversationId: incomingConvId, uiLanguage } = req.body;
 
     const userId = (req as AuthenticatedRequest).userId;
     const agentId = projectContext?.projectId;
@@ -53,7 +53,7 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       } catch { /* ignore — config enrichment is optional */ }
     }
 
-    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext, agentConfig);
+    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext, agentConfig, uiLanguage, messages as CopilotMessage[]);
 
     // Conversation persistence (when tied to an agent)
     let conversationId: string | undefined;
@@ -140,6 +140,26 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
         }
       } catch (e: any) {
         console.error('[Copilot] Failed to auto-apply config:', e.message);
+      }
+    }
+
+    // Detect and handle GILO_SAVE_CREDENTIALS block
+    const credMatch = fullAssistantContent.match(/<!--GILO_SAVE_CREDENTIALS:([\s\S]*?)-->/);
+    if (credMatch && agentId && agentId !== 'new-project' && userId) {
+      try {
+        const credData = JSON.parse(credMatch[1].trim());
+        if (Array.isArray(credData.credentials)) {
+          const { credentialService } = await import('../services/credentialService');
+          for (const cred of credData.credentials) {
+            if (cred.service && cred.key && cred.value && cred.value !== 'MASKED') {
+              await credentialService.saveCredential(agentId, userId, cred.service, cred.key, cred.value);
+            }
+          }
+          console.log('[Copilot] Saved credentials for agent', agentId, credData.credentials.length);
+          res.write(`data: ${JSON.stringify({ type: 'credentials_saved', count: credData.credentials.length })}\n\n`);
+        }
+      } catch (e: any) {
+        console.error('[Copilot] Failed to save credentials:', e.message);
       }
     }
 

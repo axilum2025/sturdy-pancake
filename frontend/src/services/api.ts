@@ -404,6 +404,7 @@ export interface CopilotChatRequest {
   maxTokens?: number;
   stream?: boolean;
   conversationId?: string;
+  uiLanguage?: string;
   projectContext?: {
     projectId: string;
     techStack?: string[];
@@ -498,6 +499,34 @@ export const getRepoInfo = async (owner: string, repo: string) => {
 export const getRepoTree = async (owner: string, repo: string, branch?: string) => {
   const response = await api.post('/copilot/repo/tree', { owner, repo, branch });
   return response.data;
+};
+
+// ============ Secure Credentials ============
+
+export interface CredentialEntry {
+  id: string;
+  service: string;
+  key: string;
+  maskedValue: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** List all credentials for an agent (masked values) */
+export const listCredentials = async (agentId: string): Promise<{ credentials: CredentialEntry[] }> => {
+  const response = await api.get(`/agents/${agentId}/credentials`);
+  return response.data;
+};
+
+/** Save a credential (encrypted server-side) */
+export const saveCredential = async (agentId: string, service: string, key: string, value: string): Promise<CredentialEntry> => {
+  const response = await api.post(`/agents/${agentId}/credentials`, { service, key, value });
+  return response.data;
+};
+
+/** Delete a credential */
+export const deleteCredential = async (agentId: string, credentialId: string): Promise<void> => {
+  await api.delete(`/agents/${agentId}/credentials/${credentialId}`);
 };
 
 // ============ Conversations (History) ============

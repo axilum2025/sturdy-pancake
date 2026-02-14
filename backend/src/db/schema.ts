@@ -343,6 +343,21 @@ export const agentAlerts = pgTable('agent_alerts', {
 });
 
 // ============================================================
+// Agent Credentials (encrypted API keys & secrets)
+// ============================================================
+
+export const agentCredentials = pgTable('agent_credentials', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  agentId: uuid('agent_id').notNull().references(() => agents.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  service: varchar('service', { length: 255 }).notNull(), // e.g. 'openai', 'stripe', 'custom'
+  key: varchar('key', { length: 255 }).notNull(), // e.g. 'api_key', 'secret_key'
+  encryptedValue: text('encrypted_value').notNull(), // AES-256-GCM encrypted
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ============================================================
 // Integrations (OAuth / API Key connections per agent)
 // ============================================================
 
@@ -402,6 +417,7 @@ export const agentsRelations = relations(agents, ({ one, many }) => ({
   logs: many(agentLogs),
   alerts: many(agentAlerts),
   integrations: many(integrations),
+  credentials: many(agentCredentials),
 }));
 
 export const storeAgentsRelations = relations(storeAgents, ({ one, many }) => ({
@@ -465,4 +481,9 @@ export const agentAlertsRelations = relations(agentAlerts, ({ one }) => ({
 export const integrationsRelations = relations(integrations, ({ one }) => ({
   agent: one(agents, { fields: [integrations.agentId], references: [agents.id] }),
   user: one(users, { fields: [integrations.userId], references: [users.id] }),
+}));
+
+export const agentCredentialsRelations = relations(agentCredentials, ({ one }) => ({
+  agent: one(agents, { fields: [agentCredentials.agentId], references: [agents.id] }),
+  user: one(users, { fields: [agentCredentials.userId], references: [users.id] }),
 }));

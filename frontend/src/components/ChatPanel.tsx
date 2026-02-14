@@ -14,6 +14,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile, getConversations, getConversationMessages, getAgent } from '../services/api';
 import { useStudioStore } from '../store/studioStore';
 
@@ -395,11 +396,14 @@ export default function ChatPanel() {
               const chunk = JSON.parse(payload);
               if (chunk.type === 'content' && chunk.content) {
                 fullContent += chunk.content;
-                // Suppress the <!--GILO_APPLY_CONFIG:...--> block from display
+                // Suppress the <!--GILO_APPLY_CONFIG:...--> and <!--GILO_SAVE_CREDENTIALS:...--> blocks from display
                 if (suppressingConfig) continue;
-                if (fullContent.includes('<!--GILO_APPLY_CONFIG:')) {
+                if (fullContent.includes('<!--GILO_APPLY_CONFIG:') || fullContent.includes('<!--GILO_SAVE_CREDENTIALS:')) {
                   suppressingConfig = true;
-                  const cleanContent = fullContent.replace(/<!--GILO_APPLY_CONFIG:[\s\S]*$/g, '').trim();
+                  const cleanContent = fullContent
+                    .replace(/<!--GILO_APPLY_CONFIG:[\s\S]*$/g, '')
+                    .replace(/<!--GILO_SAVE_CREDENTIALS:[\s\S]*$/g, '')
+                    .trim();
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMsgId
@@ -457,6 +461,10 @@ export default function ChatPanel() {
                 triggerConfigRefresh();
                 setConfigApplied(true);
                 setTimeout(() => setConfigApplied(false), 4000);
+              } else if (chunk.type === 'credentials_saved' && chunk.count) {
+                // Credentials saved securely on the backend
+                setConfigApplied(true);
+                setTimeout(() => setConfigApplied(false), 4000);
               } else if (chunk.type === 'error') {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -477,13 +485,16 @@ export default function ChatPanel() {
           }
         }
       } finally {
-        // Strip <!--GILO_APPLY_CONFIG:...--> from displayed content and mark done
+        // Strip <!--GILO_APPLY_CONFIG:...--> and <!--GILO_SAVE_CREDENTIALS:...--> from displayed content and mark done
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantMsgId
               ? {
                   ...m,
-                  content: m.content.replace(/<!--GILO_APPLY_CONFIG:[\s\S]*?-->/g, '').trim(),
+                  content: m.content
+                    .replace(/<!--GILO_APPLY_CONFIG:[\s\S]*?-->/g, '')
+                    .replace(/<!--GILO_SAVE_CREDENTIALS:[\s\S]*?-->/g, '')
+                    .trim(),
                   isStreaming: false,
                 }
               : m,
@@ -568,6 +579,7 @@ export default function ChatPanel() {
         messages: conversationHistory,
         stream: true,
         conversationId: conversationIdRef.current,
+        uiLanguage: i18n.language?.split('-')[0] || 'fr',
         projectContext: projectId
           ? { projectId, techStack: ['React', 'Tailwind', 'Vite'] }
           : undefined,

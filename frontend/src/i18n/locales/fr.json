@@ -432,7 +432,29 @@
     "apiKey": "Clé API",
     "apiUrl": "URL de l'API",
     "modelName": "Nom du modèle",
-    "byoActive": "BYO LLM actif — les modèles GiLo seront ignorés"
+    "byoActive": "BYO LLM actif — les modèles GiLo seront ignorés",
+    "credentials": "Credentials"
+  },
+
+  "credentials": {
+    "title": "Coffre-fort de credentials",
+    "add": "Ajouter un credential",
+    "securityTitle": "Stockage chiffré de bout en bout",
+    "securityDesc": "Tous les credentials sont chiffrés avec AES-256-GCM avant le stockage. Les clés ne sont jamais stockées en clair et ne sont déchiffrées côté serveur que lorsque votre agent en a besoin.",
+    "fillAllFields": "Veuillez remplir tous les champs",
+    "saved": "Credential sauvegardé en sécurité",
+    "saveError": "Erreur lors de la sauvegarde du credential",
+    "deleteError": "Erreur lors de la suppression du credential",
+    "service": "Service",
+    "serviceName": "Nom du service (ex: mon_api)",
+    "keyType": "Type de credential",
+    "keyPlaceholder": "Nom de la clé (ex: api_key)",
+    "valuePlaceholder": "sk-... ou valeur secrète",
+    "saveEncrypted": "Sauvegarder chiffré",
+    "empty": "Aucun credential stocké",
+    "emptyDesc": "Ajoutez des clés API et des secrets pour les outils de votre agent",
+    "delete": "Supprimer le credential",
+    "summary": "Résumé des credentials"
   },
 
   "appearance": {

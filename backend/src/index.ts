@@ -28,6 +28,7 @@ import { alertsRouter } from './routes/alerts';
 import { subdomainRouter } from './routes/subdomain';
 import { integrationsRouter } from './routes/integrations';
 import { billingRouter } from './routes/billing';
+import { credentialsRouter } from './routes/credentials';
 import { authMiddleware, optionalAuth } from './middleware/auth';
 import { apiKeyAuth } from './middleware/apiKeyAuth';
 import { rateLimiter } from './middleware/rateLimiter';
@@ -147,6 +148,7 @@ async function main() {
   app.use('/api', authMiddleware, analyticsRouter);
   app.use('/api/agents', authMiddleware, alertsRouter);
   app.use('/api/integrations', authMiddleware, integrationsRouter);
+  app.use('/api/agents', authMiddleware, credentialsRouter);
 
   // API documentation endpoint
   app.get('/api', (req: Request, res: Response) => {

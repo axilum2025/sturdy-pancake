@@ -432,7 +432,29 @@
     "apiKey": "API Key",
     "apiUrl": "API URL",
     "modelName": "Model name",
-    "byoActive": "BYO LLM active — GiLo models will be ignored"
+    "byoActive": "BYO LLM active — GiLo models will be ignored",
+    "credentials": "Credentials"
+  },
+
+  "credentials": {
+    "title": "Credential Vault",
+    "add": "Add Credential",
+    "securityTitle": "End-to-End Encrypted Storage",
+    "securityDesc": "All credentials are encrypted with AES-256-GCM before storage. Keys are never stored in plaintext and are only decrypted server-side when needed by your agent.",
+    "fillAllFields": "Please fill all fields",
+    "saved": "Credential saved securely",
+    "saveError": "Failed to save credential",
+    "deleteError": "Failed to delete credential",
+    "service": "Service",
+    "serviceName": "Service name (e.g. my_api)",
+    "keyType": "Credential Type",
+    "keyPlaceholder": "Key name (e.g. api_key)",
+    "valuePlaceholder": "sk-... or secret value",
+    "saveEncrypted": "Save Encrypted",
+    "empty": "No credentials stored yet",
+    "emptyDesc": "Add API keys and secrets for your agent's tools",
+    "delete": "Delete credential",
+    "summary": "Credentials Summary"
   },
 
   "appearance": {

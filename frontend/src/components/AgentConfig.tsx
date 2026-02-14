@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette, Key } from 'lucide-react';
+import { Settings, Save, X, Cpu, MessageSquare, Wrench, Plus, Trash2, ToggleLeft, ToggleRight, Thermometer, Zap, BookOpen, Globe, Code, Package, Link2, Palette, Key, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { API_BASE, getToolCatalogue, addBuiltinTool, removeToolFromAgent, CatalogueTool, CatalogueCategory } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { useStudioStore } from '../store/studioStore';
 import KnowledgePanel from './KnowledgePanel';
 import IntegrationsPanel from './IntegrationsPanel';
 import AppearancePanel from './AppearancePanel';
+import CredentialVault from './CredentialVault';
 
 interface AgentConfigProps {
   agentId: string;
@@ -71,7 +72,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge' | 'integrations' | 'appearance'>('prompt');
+  const [activeTab, setActiveTab] = useState<'prompt' | 'model' | 'tools' | 'knowledge' | 'integrations' | 'credentials' | 'appearance'>('prompt');
   const [showAddTool, setShowAddTool] = useState(false);
   const [catalogue, setCatalogue] = useState<CatalogueTool[]>([]);
   const [catalogueCategories, setCatalogueCategories] = useState<CatalogueCategory[]>([]);
@@ -227,6 +228,7 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
     { id: 'tools' as const, label: t('agentConfig.tools'), icon: Wrench },
     { id: 'knowledge' as const, label: 'Knowledge', icon: BookOpen },
     { id: 'integrations' as const, label: t('agentConfig.integrations'), icon: Link2 },
+    { id: 'credentials' as const, label: t('agentConfig.credentials', 'Credentials'), icon: Shield },
     { id: 'appearance' as const, label: t('agentConfig.appearance'), icon: Palette },
   ];
 
@@ -726,6 +728,10 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
 
         {activeTab === 'integrations' && (
           <IntegrationsPanel agentId={agentId} />
+        )}
+
+        {activeTab === 'credentials' && (
+          <CredentialVault agentId={agentId} />
         )}
 
         {activeTab === 'appearance' && (

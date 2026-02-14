@@ -19,6 +19,8 @@ export interface CopilotChatRequest {
   temperature?: number;
   maxTokens?: number;
   stream?: boolean;
+  /** Detected UI language from the frontend (i18n) */
+  uiLanguage?: string;
   /** Optional project context injected as system prompt */
   projectContext?: {
     projectId: string;
@@ -86,7 +88,7 @@ export class CopilotService {
   // ----------------------------------------------------------
   // Expose client info for direct route usage
   // ----------------------------------------------------------
-  getClientInfo(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig): {
+  getClientInfo(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig, uiLanguage?: string, messages?: CopilotMessage[]): {
     client: OpenAI;
     systemPrompt: string;
     defaultModel: string;
@@ -94,7 +96,7 @@ export class CopilotService {
     this.ensureInit();
     return {
       client: this.openai,
-      systemPrompt: this.buildSystemPrompt(projectContext, agentConfig),
+      systemPrompt: this.buildSystemPrompt(projectContext, agentConfig, uiLanguage, messages),
       defaultModel: this.defaultModel,
     };
   }
@@ -130,20 +132,88 @@ export class CopilotService {
   }
 
   // ----------------------------------------------------------
+  // Detect user language from messages
+  // ----------------------------------------------------------
+  private detectLanguage(messages: CopilotMessage[], uiLanguage?: string): string {
+    // Priority 1: explicit UI language from frontend
+    if (uiLanguage && ['fr', 'en', 'es', 'de', 'pt', 'it', 'ar', 'zh', 'ja', 'ko'].includes(uiLanguage)) {
+      return uiLanguage;
+    }
+    // Priority 2: detect from last user message
+    const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+    if (lastUserMsg?.content) {
+      const text = lastUserMsg.content.toLowerCase();
+      // Simple heuristic patterns for language detection
+      const patterns: Record<string, RegExp[]> = {
+        fr: [/\b(bonjour|salut|merci|comment|je|nous|vous|pour|avec|dans|les|des|est|une|mon|que|créer|ajouter|configurer|outils)\b/i],
+        en: [/\b(hello|hi|thanks|please|how|the|and|for|with|create|add|configure|tools|help|want|need|build)\b/i],
+        es: [/\b(hola|gracias|por favor|cómo|crear|añadir|configurar|herramientas|ayuda|quiero|necesito)\b/i],
+        de: [/\b(hallo|danke|bitte|wie|erstellen|hinzufügen|konfigurieren|werkzeuge|hilfe|möchte|brauche)\b/i],
+        pt: [/\b(olá|obrigado|por favor|como|criar|adicionar|configurar|ferramentas|ajuda|quero|preciso)\b/i],
+        it: [/\b(ciao|grazie|per favore|come|creare|aggiungere|configurare|strumenti|aiuto|voglio|ho bisogno)\b/i],
+        ar: [/[\u0600-\u06FF]/],
+        zh: [/[\u4e00-\u9fff]/],
+        ja: [/[\u3040-\u30ff\u31f0-\u31ff]/],
+        ko: [/[\uac00-\ud7af]/],
+      };
+      for (const [lang, regexes] of Object.entries(patterns)) {
+        if (regexes.some(r => r.test(text))) return lang;
+      }
+    }
+    return 'fr'; // default
+  }
+
+  // ----------------------------------------------------------
   // Build the GiLo AI system prompt
   // ----------------------------------------------------------
-  private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig): string {
-    let system = `Tu es GiLo AI, un assistant expert en création d'agents IA, intégré dans la plateforme GiLo AI Agent Builder.
-Tu aides les utilisateurs à concevoir, configurer et déployer des agents IA conversationnels.
-Quand un utilisateur décrit un agent, tu génères :
-1. Un system prompt optimisé pour l'agent
-2. La liste des outils/intégrations recommandés (MCP servers)
-3. Les paramètres de configuration (modèle, température, max tokens)
-4. Des exemples de conversations pour tester l'agent
-Réponds toujours en français sauf si l'utilisateur écrit dans une autre langue.
+  private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig, uiLanguage?: string, messages?: CopilotMessage[]): string {
+    const detectedLang = this.detectLanguage(messages || [], uiLanguage);
+
+    const langInstructions: Record<string, string> = {
+      fr: 'Réponds TOUJOURS en français.',
+      en: 'ALWAYS respond in English.',
+      es: 'Responde SIEMPRE en español.',
+      de: 'Antworte IMMER auf Deutsch.',
+      pt: 'Responda SEMPRE em português.',
+      it: 'Rispondi SEMPRE in italiano.',
+      ar: 'أجب دائماً باللغة العربية.',
+      zh: '始终用中文回答。',
+      ja: '常に日本語で回答してください。',
+      ko: '항상 한국어로 답변하세요.',
+    };
+
+    const langInstruction = langInstructions[detectedLang] || langInstructions['fr'];
+
+    let system = `Tu es GiLo AI, un assistant expert Full-Stack End-to-End Agent Builder, intégré dans la plateforme GiLo AI.
+${langInstruction}
+Détecte automatiquement la langue de l'utilisateur à partir de ses messages et réponds dans CETTE MÊME langue.
+
+=== CAPACITÉS FULL-STACK END-TO-END ===
+Tu es capable de guider l'utilisateur à travers TOUTE la chaîne de création d'un agent IA :
+
+1. **Conception** : Définir le rôle, la personnalité, le ton et le public cible
+2. **Configuration du modèle** : Choix du LLM (GPT-4.1-nano, GPT-4.1-mini, BYO LLM), température, max tokens
+3. **System Prompt** : Génération d'un prompt optimisé et structuré (100-300 mots)
+4. **Outils & Intégrations** : Configuration d'outils builtin, HTTP actions, MCP servers
+5. **Base de connaissances** : Conseils pour l'upload de documents, scraping d'URLs
+6. **API & Endpoints** : Génération de tableaux pour configurer les endpoints et clés API
+7. **Sécurité** : Gestion sécurisée des credentials (chiffrement AES-256-GCM)
+8. **Déploiement** : Widget embed, API REST, sous-domaine personnalisé
+9. **Monitoring** : Analytics, logs, alertes
+10. **Publication** : Publication dans le Store GiLo
+
+=== GÉNÉRATION DE TABLEAUX API/ENDPOINTS ===
+Quand l'utilisateur veut configurer des endpoints ou des clés API, génère un tableau Markdown structuré :
+
+| Nom | Type | Endpoint/URL | Méthode | Auth Type | Clé API | Statut |
+|-----|------|-------------|---------|-----------|---------|--------|
+| Mon API | REST | https://api.example.com/v1 | POST | Bearer | ●●●●●●●● | ✅ Actif |
+
+Puis propose d'appliquer cette configuration automatiquement via le bloc <!--GILO_APPLY_CONFIG:...-->.
+
 Quand tu génères du code ou des configurations, entoure-les de blocs \`\`\` avec le langage approprié.
 Sois concis et direct dans tes réponses.
-Utilise le format JSON pour les configurations d'agent.`;
+Les clés API et secrets doivent TOUJOURS être masqués dans les réponses visibles (utilise ●●●●● ou ***).`;
 
     if (projectContext) {
       system += `\n\nContexte de l'agent en cours de création:`;
@@ -197,19 +267,49 @@ OUTILS DISPONIBLES (inclure seulement les pertinents) :
 RÈGLES pour le systemPrompt généré :
 - 100 à 300 mots, avec des instructions numérotées
 - Adapté au ton et au contexte décrits par l'utilisateur
-- En français sauf si l'utilisateur écrit en anglais
+- DANS LA LANGUE détectée de l'utilisateur
 
 RÈGLES pour le welcomeMessage :
 - Court (1-2 phrases), accueillant, en rapport avec le rôle de l'agent
+- DANS LA LANGUE détectée de l'utilisateur
+
+=== AJOUT D'OUTILS VIA CONVERSATION ===
+Quand l'utilisateur demande d'ajouter des outils ou des API :
+1. Demande quels outils spécifiques il veut (type, URL, auth)
+2. Génère un TABLEAU récapitulatif en Markdown :
+
+| # | Nom de l'outil | Type | Endpoint | Méthode | Auth | Description |
+|---|---------------|------|----------|---------|------|-------------|
+| 1 | get_weather | HTTP | https://api.weather.com/v1 | GET | API Key | Météo en temps réel |
+| 2 | send_notification | HTTP | https://api.notify.io/send | POST | Bearer | Envoi de notifications |
+
+3. Demande confirmation à l'utilisateur
+4. Applique via <!--GILO_APPLY_CONFIG:{"tools":[...]}-->
+
+=== CONFIGURATION DE CREDENTIALS (SÉCURISÉ) ===
+Quand l'utilisateur veut configurer ses clés API ou secrets :
+1. Génère un tableau pour qu'il sache quelles infos fournir :
+
+| Service | Champ | Valeur | Sécurisé |
+|---------|-------|--------|----------|
+| OpenAI | API Key | sk-●●●●●●●●●● | 🔒 Chiffré AES-256 |
+| Stripe | Secret Key | sk_●●●●●●●●●● | 🔒 Chiffré AES-256 |
+
+2. Explique que les credentials sont stockés avec chiffrement AES-256-GCM
+3. JAMAIS afficher les clés en clair — toujours masquer avec ●●●●● ou ***
+4. Utilise <!--GILO_SAVE_CREDENTIALS:{"credentials":[{"service":"...","key":"...","value":"MASKED"}]}--> pour signaler la sauvegarde
 
 FORMAT DE RÉPONSE quand tu appliques la config :
 1. D'abord, un résumé en langage naturel : "✅ J'ai configuré votre agent ! Voici ce que j'ai mis en place :"
 2. Liste à puces des choix faits (rôle, ton, langue, outils activés) — en texte simple, PAS de JSON
-3. Ensuite, propose les prochaines étapes :
+3. Si des outils/API sont configurés, un TABLEAU récapitulatif
+4. Ensuite, propose les prochaines étapes :
    - Tester dans le Playground (icône 👁️)
    - Ajuster la configuration (icône ⚙️)
+   - Ajouter des outils/API (icône 🔧)
+   - Configurer la base de connaissances (icône 📚)
    - Déployer (icône 🚀)
-4. TOUT À LA FIN, le bloc caché <!--GILO_APPLY_CONFIG:...-->
+5. TOUT À LA FIN, le bloc caché <!--GILO_APPLY_CONFIG:...-->
 
 EXEMPLE DE BONNE RÉPONSE :
 "✅ Votre agent est configuré ! Voici ce que j'ai mis en place :\n- **Rôle** : Assistant support client\n- **Ton** : Professionnel\n- **Langue** : Anglais\n- **Outils** : Heure actuelle, Calculatrice\n- **Message d'accueil** : Hello! How can I help you today?\n\nVous pouvez maintenant le tester dans le Playground 👁️"
@@ -225,9 +325,25 @@ Afficher un bloc de code JSON avec systemPrompt, temperature, tools, etc.
       system += `\n- Température: ${agentConfig.temperature}`;
       system += `\n- System Prompt: ${agentConfig.systemPrompt?.substring(0, 200)}...`;
       system += `\n- Outils: ${agentConfig.tools?.map(t => t.name).join(', ') || 'aucun'}`;
-      system += `\n\nSi l'utilisateur demande des modifications de config, tu peux générer un bloc:
-<!--GILO_APPLY_CONFIG:{"systemPrompt":"...", ...}-->
-pour appliquer automatiquement les changements.`;
+      system += `\n\n=== MODIFICATIONS DE CONFIG ===
+Si l'utilisateur demande des modifications, tu peux :
+1. Modifier les paramètres (modèle, température, prompt, outils)
+2. Ajouter/supprimer des outils avec un TABLEAU récapitulatif
+3. Configurer des endpoints API avec un TABLEAU structuré :
+
+| Outil | Type | URL | Méthode | Auth |
+|-------|------|-----|---------|------|
+| ... | HTTP | ... | POST | Bearer |
+
+4. Génère le bloc caché pour appliquer :
+<!--GILO_APPLY_CONFIG:{"systemPrompt":"...", "tools":[...], ...}-->
+
+=== CREDENTIALS SÉCURISÉS ===
+Si l'utilisateur veut sauvegarder des clés API :
+- Génère un tableau montrant les champs nécessaires
+- Signale que le stockage est chiffré AES-256-GCM
+- NE JAMAIS afficher les clés en clair
+- Utilise <!--GILO_SAVE_CREDENTIALS:{"credentials":[...]}-->`;
     }
 
     return system;
@@ -240,7 +356,7 @@ pour appliquer automatiquement les changements.`;
     this.ensureInit();
 
     const messages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'system', content: this.buildSystemPrompt(request.projectContext) },
+      { role: 'system', content: this.buildSystemPrompt(request.projectContext, undefined, request.uiLanguage, request.messages) },
       ...request.messages.map((m) => ({
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
@@ -281,7 +397,7 @@ pour appliquer automatiquement les changements.`;
     this.ensureInit();
 
     const messages: OpenAI.ChatCompletionMessageParam[] = [
-      { role: 'system', content: this.buildSystemPrompt(request.projectContext) },
+      { role: 'system', content: this.buildSystemPrompt(request.projectContext, undefined, request.uiLanguage, request.messages) },
       ...request.messages.map((m) => ({
         role: m.role as 'system' | 'user' | 'assistant',
         content: m.content,
