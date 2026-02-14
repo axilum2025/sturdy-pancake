@@ -9,7 +9,6 @@ import {
   Circle,
   RotateCw,
   AlertCircle,
-  Key,
   Eye,
   EyeOff,
   Trash2,
@@ -1326,16 +1325,8 @@ export default function ChatPanel() {
             }}
             placeholder={t('chat.placeholder')}
             rows={4}
-            className="w-full text-t-text px-12 py-3 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
+            className="w-full text-t-text px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
           />
-          {/* Key button to open credential modal */}
-          <button
-            onClick={() => setShowCredentialModal(true)}
-            className="absolute left-5 md:left-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text/40 hover:text-t-text/70 flex items-center justify-center hover:bg-t-overlay/10 transition-colors"
-            title={t('credentials.title', 'Clés & Credentials')}
-          >
-            <Key className="w-4 h-4" />
-          </button>
           <button
             onClick={handleSend}
             disabled={!message.trim() || isTyping}
