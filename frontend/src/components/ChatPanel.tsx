@@ -914,13 +914,14 @@ export default function ChatPanel() {
 
   // ---- Send ----
 
-  const handleSend = async () => {
-    if (!message.trim()) return;
+  const handleSend = async (directMessage?: string) => {
+    const text = directMessage || message;
+    if (!text.trim()) return;
 
     const userMsg: ChatMessage = {
       id: generateId(),
       role: 'user',
-      content: message,
+      content: text,
       timestamp: new Date(),
     };
 
@@ -945,7 +946,7 @@ export default function ChatPanel() {
     addTimelineEvent({
       id: `tl-${userMsg.id}`,
       type: 'planning',
-      message: message.length > 80 ? message.slice(0, 80) + '…' : message,
+      message: text.length > 80 ? text.slice(0, 80) + '…' : text,
       timestamp: new Date(),
       status: 'completed',
     });
@@ -1130,7 +1131,7 @@ export default function ChatPanel() {
               {quickActions.map((action) => (
                 <button
                   key={action.label}
-                  onClick={() => setMessage(action.prompt)}
+                  onClick={() => handleSend(action.prompt)}
                   className="glass-card bg-t-overlay/5 hover:bg-t-overlay/10 border border-t-overlay/10 hover:border-t-overlay/20 rounded-lg px-3 py-2 text-xs text-t-text/70 hover:text-t-text transition-all duration-200 text-left"
                 >
                   {action.label}
@@ -1216,13 +1217,13 @@ export default function ChatPanel() {
             {configApplied && (
               <>
                 <button
-                  onClick={() => setMessage('/review')}
+                  onClick={() => handleSend('/review')}
                   className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
                 >
                   {t('chat.suggestReview')}
                 </button>
                 <button
-                  onClick={() => setMessage(t('chat.suggestTestPrompt'))}
+                  onClick={() => handleSend(t('chat.suggestTestPrompt'))}
                   className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
                 >
                   {t('chat.suggestTest')}
@@ -1230,13 +1231,13 @@ export default function ChatPanel() {
               </>
             )}
             <button
-              onClick={() => setMessage('/suggest-tools')}
+              onClick={() => handleSend('/suggest-tools')}
               className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
             >
               {t('chat.suggestTools')}
             </button>
             <button
-              onClick={() => setMessage('/status')}
+              onClick={() => handleSend('/status')}
               className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
             >
               {t('chat.suggestStatus')}
@@ -1328,7 +1329,7 @@ export default function ChatPanel() {
             className="w-full text-t-text px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
           />
           <button
-            onClick={handleSend}
+            onClick={() => handleSend()}
             disabled={!message.trim() || isTyping}
             className="absolute right-5 md:right-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text flex items-center justify-center disabled:opacity-50 hover:bg-t-overlay/10 transition-colors"
           >
