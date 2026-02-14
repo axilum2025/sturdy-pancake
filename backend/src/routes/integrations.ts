@@ -104,29 +104,29 @@ integrationsRouter.get('/:provider/callback', async (req: Request, res: Response
 
     // Check for OAuth error
     if (oauthError) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://gilo.dev'}/?integrationError=${encodeURIComponent(oauthError as string)}`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net'}/?integrationError=${encodeURIComponent(oauthError as string)}`);
     }
 
     if (!code || !state) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://gilo.dev'}/?integrationError=missing_params`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net'}/?integrationError=missing_params`);
     }
 
     // Validate state
     const stateData = oauthStates.get(state as string);
     if (!stateData) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://gilo.dev'}/?integrationError=invalid_state`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net'}/?integrationError=invalid_state`);
     }
     oauthStates.delete(state as string);
 
     // Check state expiry (10 min)
     if (Date.now() - stateData.createdAt > 10 * 60 * 1000) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://gilo.dev'}/?integrationError=state_expired`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net'}/?integrationError=state_expired`);
     }
 
     // Get provider adapter
     const provider = getProvider(providerId);
     if (!provider) {
-      return res.redirect(`${process.env.FRONTEND_URL || 'https://gilo.dev'}/?integrationError=unknown_provider`);
+      return res.redirect(`${process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net'}/?integrationError=unknown_provider`);
     }
 
     // Exchange code for tokens
@@ -176,11 +176,11 @@ integrationsRouter.get('/:provider/callback', async (req: Request, res: Response
     }
 
     // Redirect back to frontend with success
-    const frontendUrl = process.env.FRONTEND_URL || 'https://gilo.dev';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net';
     res.redirect(`${frontendUrl}/?integrationSuccess=${providerId}&agentId=${stateData.agentId}`);
   } catch (error: any) {
     console.error('OAuth callback error:', error);
-    const frontendUrl = process.env.FRONTEND_URL || 'https://gilo.dev';
+    const frontendUrl = process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net';
     res.redirect(`${frontendUrl}/?integrationError=${encodeURIComponent(error.message)}`);
   }
 });

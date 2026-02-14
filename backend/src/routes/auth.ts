@@ -83,7 +83,7 @@ authRouter.get('/github', (_req: Request, res: Response) => {
  * Exchanges code for token, finds or creates user, returns JWT via frontend redirect.
  */
 authRouter.get('/github/callback', async (req: Request, res: Response) => {
-  const frontendUrl = process.env.FRONTEND_URL || 'https://gilo.dev';
+  const frontendUrl = process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net';
 
   try {
     const { code, state, error: oauthError } = req.query;
@@ -421,7 +421,7 @@ authRouter.post('/forgot-password', async (req: Request, res: Response) => {
     if (user) {
       const token = crypto.randomBytes(32).toString('hex');
       passwordResetTokens.set(token, { userId: user.id, createdAt: Date.now() });
-      const frontendUrl = process.env.FRONTEND_URL || 'https://gilo.dev';
+      const frontendUrl = process.env.FRONTEND_URL || 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net';
       const resetUrl = `${frontendUrl}/auth/reset-password?token=${token}`;
       await sendResetEmail(email, resetUrl);
     }
