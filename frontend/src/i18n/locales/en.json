@@ -389,6 +389,17 @@
     "tasksRunning": "Agent working…",
     "analysing": "Analyzing request",
     "generating": "Generating response",
+    "steps": {
+      "analysing": "Analyzing request",
+      "languageDetect": "Detecting language",
+      "loadContext": "Loading agent context",
+      "buildPrompt": "Building system prompt",
+      "callLlm": "Calling AI model",
+      "saveConversation": "Saving conversation",
+      "extractConfig": "Extracting configuration",
+      "applyConfig": "Applying configuration",
+      "saveCredentials": "Saving credentials securely"
+    },
     "connectionError": "Copilot connection error",
     "quickSupport": "Support Agent",
     "quickSupportPrompt": "Create a customer support agent that answers FAQs, checks a knowledge base, and escalates to humans if needed.",

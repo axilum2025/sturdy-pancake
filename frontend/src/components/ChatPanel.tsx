@@ -168,6 +168,7 @@ function AgentTaskList({
   const done = tasks.filter((tk) => tk.status === 'done').length;
   const total = tasks.length;
   const allDone = done === total && total > 0;
+  const runningTask = tasks.find((tk) => tk.status === 'running');
 
   return (
     <div className="mt-2 rounded-lg bg-t-overlay/[0.02] overflow-hidden">
@@ -180,9 +181,16 @@ function AgentTaskList({
         ) : (
           <ChevronDown className="w-4 h-4 text-t-text/40" />
         )}
-        <span className="text-xs font-medium text-t-text/70">
-          {allDone ? t('chat.tasksDone') : t('chat.tasksRunning')}
-        </span>
+        {!allDone && runningTask ? (
+          <span className="text-xs font-medium text-blue-300 flex items-center gap-1.5">
+            <RotateCw className="w-3 h-3 animate-spin" />
+            {runningTask.label}
+          </span>
+        ) : (
+          <span className="text-xs font-medium text-t-text/70">
+            {allDone ? t('chat.tasksDone') : t('chat.tasksRunning')}
+          </span>
+        )}
         <span className="ml-auto text-[10px] text-t-text/30 tabular-nums">
           {done}/{total}
         </span>
@@ -364,6 +372,18 @@ export default function ChatPanel() {
     [projectId, updateTasks, triggerFileRefresh, addTimelineEvent, updateTimelineEvent],
   );
 
+  // Step label mapping (step id → i18n key)
+  const stepLabels: Record<string, string> = {
+    language_detect: 'chat.steps.languageDetect',
+    load_context: 'chat.steps.loadContext',
+    build_prompt: 'chat.steps.buildPrompt',
+    call_llm: 'chat.steps.callLlm',
+    save_conversation: 'chat.steps.saveConversation',
+    extract_config: 'chat.steps.extractConfig',
+    apply_config: 'chat.steps.applyConfig',
+    save_credentials: 'chat.steps.saveCredentials',
+  };
+
   // ---- SSE reader ----
 
   const readCopilotStream = useCallback(
@@ -465,6 +485,31 @@ export default function ChatPanel() {
                 // Credentials saved securely on the backend
                 setConfigApplied(true);
                 setTimeout(() => setConfigApplied(false), 4000);
+              } else if (chunk.type === 'step' && chunk.step) {
+                // Granular progress steps from the backend
+                const stepId = chunk.step as string;
+                const stepStatus = chunk.status as 'running' | 'done' | 'error';
+                const stepDetail = chunk.detail as string | undefined;
+                const label = stepLabels[stepId] ? t(stepLabels[stepId]) : stepId;
+                const taskKey = `step-${stepId}`;
+
+                updateTasks(assistantMsgId, (tasks) => {
+                  const existing = tasks.find((tk) => tk.id === taskKey);
+                  if (existing) {
+                    // Update the existing step's status
+                    return tasks.map((tk) =>
+                      tk.id === taskKey
+                        ? { ...tk, status: stepStatus, detail: stepDetail || tk.detail }
+                        : tk,
+                    );
+                  } else {
+                    // Add new step task
+                    return [
+                      ...tasks,
+                      { id: taskKey, label, status: stepStatus, detail: stepDetail },
+                    ];
+                  }
+                });
               } else if (chunk.type === 'error') {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -505,7 +550,7 @@ export default function ChatPanel() {
         );
       }
     },
-    [triggerConfigRefresh],
+    [triggerConfigRefresh, updateTasks, t, stepLabels],
   );
 
   // ---- Send ----
@@ -521,7 +566,7 @@ export default function ChatPanel() {
     };
 
     const assistantMsgId = generateId();
-    const analyseTaskId = mkTaskId();
+    const analyseTaskId = 'step-analysing';
     const assistantMsg: ChatMessage = {
       id: assistantMsgId,
       role: 'assistant',
@@ -529,7 +574,7 @@ export default function ChatPanel() {
       timestamp: new Date(),
       isStreaming: true,
       tasks: [
-        { id: analyseTaskId, label: t('chat.analysing'), status: 'running' },
+        { id: analyseTaskId, label: t('chat.steps.analysing'), status: 'running' },
       ],
     };
 
@@ -549,7 +594,7 @@ export default function ChatPanel() {
     addTimelineEvent({
       id: `tl-${analyseTaskId}`,
       type: 'planning',
-      message: t('chat.analysing'),
+      message: t('chat.steps.analysing'),
       timestamp: new Date(),
       status: 'running',
     });
@@ -562,21 +607,13 @@ export default function ChatPanel() {
     try {
       abortControllerRef.current = new AbortController();
 
-      const genTaskId = mkTaskId();
-      updateTasks(assistantMsgId, (tasks) => [
-        { ...tasks[0], status: 'done' },
-        { id: genTaskId, label: t('chat.generating'), status: 'running' },
-      ]);
+      // Mark analysing done, steps will be added dynamically by SSE step events
+      updateTasks(assistantMsgId, (tasks) =>
+        tasks.map((tk) => (tk.id === analyseTaskId ? { ...tk, status: 'done' } : tk)),
+      );
 
-      // Timeline: analyse done, generation started
+      // Timeline: analyse done
       updateTimelineEvent(`tl-${analyseTaskId}`, { status: 'completed' });
-      addTimelineEvent({
-        id: `tl-${genTaskId}`,
-        type: 'generation',
-        message: t('chat.generating'),
-        timestamp: new Date(),
-        status: 'running',
-      });
 
       const response = await copilotChatStream({
         messages: conversationHistory,
@@ -591,13 +628,10 @@ export default function ChatPanel() {
       await readCopilotStream(response, assistantMsgId);
 
       updateTasks(assistantMsgId, (tasks) =>
-        tasks.map((t) =>
-          t.status === 'running' ? { ...t, status: 'done' } : t,
+        tasks.map((tk) =>
+          tk.status === 'running' ? { ...tk, status: 'done' } : tk,
         ),
       );
-
-      // Timeline: generation done
-      updateTimelineEvent(`tl-${genTaskId}`, { status: 'completed' });
 
       // Get final content & extract files
       const finalContent = await new Promise<string>((resolve) => {

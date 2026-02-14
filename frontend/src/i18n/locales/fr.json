@@ -389,6 +389,17 @@
     "tasksRunning": "Agent en cours…",
     "analysing": "Analyse de la demande",
     "generating": "Génération de la réponse",
+    "steps": {
+      "analysing": "Analyse de la demande",
+      "languageDetect": "Détection de la langue",
+      "loadContext": "Chargement du contexte agent",
+      "buildPrompt": "Construction du prompt système",
+      "callLlm": "Appel au modèle IA",
+      "saveConversation": "Sauvegarde de la conversation",
+      "extractConfig": "Extraction de la configuration",
+      "applyConfig": "Application de la configuration",
+      "saveCredentials": "Sauvegarde des credentials"
+    },
     "connectionError": "Erreur de connexion au Copilot",
     "quickSupport": "Agent Support",
     "quickSupportPrompt": "Crée un agent de support client qui répond aux questions fréquentes, consulte une FAQ et escalade vers un humain si besoin.",

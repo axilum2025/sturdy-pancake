@@ -44,7 +44,17 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     const userId = (req as AuthenticatedRequest).userId;
     const agentId = projectContext?.projectId;
 
-    // Fetch agent config if we have a real agent ID
+    // Helper: emit an SSE step event so the frontend can show granular progress
+    const emitStep = (step: string, status: 'running' | 'done' | 'error' = 'running', detail?: string) => {
+      if (res.headersSent) {
+        res.write(`data: ${JSON.stringify({ type: 'step', step, status, detail })}\n\n`);
+      }
+    };
+
+    // --- Step: detect language ---
+    // (happens inside getClientInfo, but we signal it before)
+
+    // --- Step: load agent config ---
     let agentConfig: import('../models/agent').AgentConfig | undefined;
     if (agentId && agentId !== 'new-project') {
       try {
@@ -53,6 +63,7 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       } catch { /* ignore — config enrichment is optional */ }
     }
 
+    // --- Step: build system prompt (includes language detection) ---
     const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext, agentConfig, uiLanguage, messages as CopilotMessage[]);
 
     // Conversation persistence (when tied to an agent)
@@ -81,8 +92,10 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       })),
     ];
 
+    const resolvedModel = enforceModelForTier(model || defaultModel, (req as AuthenticatedRequest).user?.tier || 'free');
+
     const stream = await client.chat.completions.create({
-      model: enforceModelForTier(model || defaultModel, (req as AuthenticatedRequest).user?.tier || 'free'),
+      model: resolvedModel,
       messages: openaiMessages,
       temperature: temperature ?? 0.4,
       max_tokens: maxTokens ?? 4096,
@@ -100,6 +113,12 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       res.write(`data: ${JSON.stringify({ type: 'conversation', conversationId })}\n\n`);
     }
 
+    // Step events for the frontend
+    emitStep('language_detect', 'done');
+    emitStep('load_context', 'done', agentConfig ? 'Agent config loaded' : undefined);
+    emitStep('build_prompt', 'done');
+    emitStep('call_llm', 'running', resolvedModel);
+
     let fullAssistantContent = '';
     for await (const chunk of stream) {
       const content = chunk.choices?.[0]?.delta?.content;
@@ -115,13 +134,20 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       }
     }
 
+    emitStep('call_llm', 'done');
+
     // Save assistant response
     if (conversationId && fullAssistantContent) {
+      emitStep('save_conversation', 'running');
       conversationService.addMessage(conversationId, 'assistant', fullAssistantContent).catch(() => {});
+      emitStep('save_conversation', 'done');
     }
 
     // Detect and apply GILO_APPLY_CONFIG block
     const configMatch = fullAssistantContent.match(/<!--\s*GILO_APPLY_CONFIG\s*:([\s\S]*?)-->/);
+    if (configMatch) {
+      emitStep('extract_config', 'running');
+    }
     if (configMatch && agentId && agentId !== 'new-project') {
       try {
         // Sanitise common LLM JSON mistakes before parsing
@@ -148,12 +174,16 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
         }
 
         if (Object.keys(updates).length > 0) {
+          emitStep('extract_config', 'done');
+          emitStep('apply_config', 'running', Object.keys(updates).join(', '));
           await agentModel.updateConfig(agentId, updates);
           console.log('[Copilot] Auto-applied config to agent', agentId, Object.keys(updates));
+          emitStep('apply_config', 'done', Object.keys(updates).join(', '));
           res.write(`data: ${JSON.stringify({ type: 'config_applied', fields: Object.keys(updates) })}\n\n`);
         }
       } catch (e: any) {
         console.error('[Copilot] Failed to auto-apply config:', e.message);
+        emitStep('extract_config', 'error', e.message);
         // Try a lenient fallback: extract just the tools array
         try {
           const toolsMatch = configMatch[1].match(/"tools"\s*:\s*(\[[\s\S]*?\])/);
@@ -178,6 +208,7 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     const credMatch = fullAssistantContent.match(/<!--GILO_SAVE_CREDENTIALS:([\s\S]*?)-->/);
     if (credMatch && agentId && agentId !== 'new-project' && userId) {
       try {
+        emitStep('save_credentials', 'running');
         const credData = JSON.parse(credMatch[1].trim());
         if (Array.isArray(credData.credentials)) {
           const { credentialService } = await import('../services/credentialService');
@@ -187,6 +218,7 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
             }
           }
           console.log('[Copilot] Saved credentials for agent', agentId, credData.credentials.length);
+          emitStep('save_credentials', 'done', `${credData.credentials.length} credentials`);
           res.write(`data: ${JSON.stringify({ type: 'credentials_saved', count: credData.credentials.length })}\n\n`);
         }
       } catch (e: any) {
