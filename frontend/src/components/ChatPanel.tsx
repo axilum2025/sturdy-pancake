@@ -855,20 +855,42 @@ export default function ChatPanel() {
                 updateTasks(assistantMsgId, (tasks) => {
                   const existing = tasks.find((tk) => tk.id === taskKey);
                   if (existing) {
-                    // Update the existing step's status
                     return tasks.map((tk) =>
                       tk.id === taskKey
                         ? { ...tk, status: stepStatus, detail: stepDetail || tk.detail }
                         : tk,
                     );
                   } else {
-                    // Add new step task
                     return [
                       ...tasks,
                       { id: taskKey, label, status: stepStatus, detail: stepDetail },
                     ];
                   }
                 });
+
+                // Sync step to Timeline (History) panel
+                const stepTimelineType = (['extract_config', 'apply_config', 'save_credentials'].includes(stepId)
+                  ? 'generation'
+                  : ['load_context', 'build_prompt'].includes(stepId)
+                    ? 'planning'
+                    : stepId === 'call_llm' ? 'generation'
+                    : stepId === 'save_conversation' ? 'complete'
+                    : 'planning') as 'planning' | 'generation' | 'complete';
+                const tlStatus = stepStatus === 'done' ? 'completed' : stepStatus;
+                const tlId = `tl-${taskKey}`;
+
+                if (stepStatus === 'running') {
+                  addTimelineEvent({
+                    id: tlId,
+                    type: stepTimelineType,
+                    message: label,
+                    timestamp: new Date(),
+                    status: 'running',
+                    detail: stepDetail,
+                  });
+                } else {
+                  updateTimelineEvent(tlId, { status: tlStatus as any, detail: stepDetail });
+                }
               } else if (chunk.type === 'error') {
                 setMessages((prev) =>
                   prev.map((m) =>
@@ -909,7 +931,7 @@ export default function ChatPanel() {
         );
       }
     },
-    [triggerConfigRefresh, updateTasks, t, stepLabels],
+    [triggerConfigRefresh, updateTasks, addTimelineEvent, updateTimelineEvent, t, stepLabels],
   );
 
   // ---- Send ----
