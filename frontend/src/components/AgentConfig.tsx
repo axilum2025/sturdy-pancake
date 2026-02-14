@@ -358,8 +358,8 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
               </p>
               <div className="flex gap-2">
                 {[
-                  { id: 'fr' as const, label: '🇫🇷 Français' },
-                  { id: 'en' as const, label: '🇬🇧 English' },
+                  { id: 'fr' as const, label: 'Français' },
+                  { id: 'en' as const, label: 'English' },
                 ].map((lang) => (
                   <button
                     key={lang.id}
