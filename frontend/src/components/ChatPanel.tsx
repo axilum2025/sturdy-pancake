@@ -9,19 +9,10 @@ import {
   Circle,
   RotateCw,
   AlertCircle,
-  Command,
-  Search,
-  Settings,
-  Star,
-  HelpCircle,
-  Wrench,
   Key,
-  Lock,
   Eye,
   EyeOff,
-  Plus,
   Trash2,
-  Shield,
   X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -332,10 +323,7 @@ function CredentialModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-t-overlay/10">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-t-text/50" />
             <h2 className="text-base font-semibold text-t-text">{t('credentials.title', 'Clés & Credentials')}</h2>
-            <Lock className="w-3 h-3 text-t-text/40" />
-            <span className="text-[9px] text-t-text/30 font-mono">AES-256</span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors">
             <X className="w-4 h-4" />
@@ -346,7 +334,6 @@ function CredentialModal({
         {requestedKeys && requestedKeys.length > 0 && (
           <div className="mx-5 mt-3 p-2.5 rounded-lg bg-t-overlay/[0.06] border border-t-overlay/15">
             <p className="text-xs text-t-text/50">
-              <Key className="w-3 h-3 inline mr-1" />
               GiLo AI a besoin de : <strong>{requestedKeys.join(', ')}</strong>
             </p>
           </div>
@@ -430,7 +417,6 @@ function CredentialModal({
                   className="flex-1 btn-gradient px-3 py-2 text-sm rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   {saving && <RotateCw className="w-3 h-3 animate-spin" />}
-                  <Lock className="w-3 h-3" />
                   {t('credentials.saveEncrypted', 'Sauvegarder')}
                 </button>
               </div>
@@ -440,7 +426,6 @@ function CredentialModal({
               onClick={() => setShowAdd(true)}
               className="w-full btn-outline-glow px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-2"
             >
-              <Plus className="w-3 h-3" />
               {t('credentials.add', 'Ajouter une clé')}
             </button>
           )}
@@ -450,14 +435,12 @@ function CredentialModal({
             <div className="text-center py-4 text-xs text-t-text/30 animate-pulse">Chargement...</div>
           ) : credentials.length === 0 && !showAdd ? (
             <div className="text-center py-6 bg-t-overlay/[0.02] rounded-xl border border-dashed border-t-overlay/10">
-              <Key className="w-8 h-8 mx-auto mb-2 text-t-text/15" />
               <p className="text-sm text-t-text/30">{t('credentials.empty', 'Aucune clé stockée')}</p>
             </div>
           ) : (
             <div className="space-y-1.5">
               {credentials.map((cred) => (
                 <div key={cred.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-t-overlay/[0.04] border border-t-overlay/10">
-                  <Key className="w-4 h-4 text-t-text/40 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-t-text/80 capitalize">{cred.service}</span>
@@ -486,15 +469,14 @@ interface SlashCommand {
   command: string;
   label: string;
   description: string;
-  icon: typeof Command;
 }
 
 const SLASH_COMMANDS: SlashCommand[] = [
-  { command: '/review', label: 'Review', description: 'Analyse la config et suggère des améliorations', icon: Search },
-  { command: '/optimize', label: 'Optimize', description: 'Optimise le system prompt automatiquement', icon: Star },
-  { command: '/suggest-tools', label: 'Suggest Tools', description: 'Suggère des outils pertinents', icon: Wrench },
-  { command: '/status', label: 'Status', description: 'Résumé complet de l\'état de l\'agent', icon: Settings },
-  { command: '/help', label: 'Help', description: 'Liste toutes les commandes disponibles', icon: HelpCircle },
+  { command: '/review', label: 'Review', description: 'Analyse la config et suggère des améliorations' },
+  { command: '/optimize', label: 'Optimize', description: 'Optimise le system prompt automatiquement' },
+  { command: '/suggest-tools', label: 'Suggest Tools', description: 'Suggère des outils pertinents' },
+  { command: '/status', label: 'Status', description: 'Résumé complet de l\'état de l\'agent' },
+  { command: '/help', label: 'Help', description: 'Liste toutes les commandes disponibles' },
 ];
 
 // ============================================================
@@ -553,7 +535,6 @@ function SlashCommandMenu({
         <span className="text-[10px] text-t-text/40 uppercase tracking-wider font-medium">Commandes</span>
       </div>
       {filtered.map((cmd, i) => {
-        const Icon = cmd.icon;
         return (
           <button
             key={cmd.command}
@@ -563,7 +544,6 @@ function SlashCommandMenu({
               i === selectedIndex ? 'bg-t-overlay/10 text-t-text/80' : 'text-t-text/70 hover:bg-t-overlay/5'
             }`}
           >
-            <Icon className="w-3.5 h-3.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <span className="text-xs font-medium">{cmd.command}</span>
               <span className="text-[10px] text-t-text/40 ml-2">{cmd.description}</span>
