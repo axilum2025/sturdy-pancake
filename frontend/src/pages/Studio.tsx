@@ -127,7 +127,7 @@ export default function Studio() {
         </button>
         <button
           onClick={() => setShowCredentials(!showCredentials)}
-          className={`w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center transition-all duration-300 ${showCredentials ? 'text-amber-400 bg-amber-500/10' : 'text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'}`}
+          className={`w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center transition-all duration-300 ${showCredentials ? 'text-t-text bg-t-overlay/10' : 'text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'}`}
           title={t('credentials.title', 'Clés & Credentials')}
         >
           <Key className="w-5 h-5" />
@@ -183,7 +183,7 @@ export default function Studio() {
             </button>
             <button
               onClick={() => setShowCredentials(!showCredentials)}
-              className={`p-2 rounded-lg transition-colors ${showCredentials ? 'bg-amber-500/20 text-amber-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
+              className={`p-2 rounded-lg transition-colors ${showCredentials ? 'bg-t-overlay/15 text-t-text' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
               title={t('credentials.title', 'Clés & Credentials')}
             >
               <Key className="w-4 h-4" />
@@ -327,7 +327,7 @@ export default function Studio() {
             <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[45%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
               <div className="flex items-center justify-between px-5 py-4 border-b border-t-overlay/10 flex-shrink-0">
                 <h2 className="text-base font-semibold text-t-text flex items-center gap-2">
-                  <Key className="w-5 h-5 text-amber-400" />
+                  <Key className="w-5 h-5 text-t-text/50" />
                   {t('credentials.title', 'Clés & Credentials')}
                 </h2>
                 <button

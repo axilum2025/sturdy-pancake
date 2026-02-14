@@ -121,9 +121,9 @@ function AgentTaskIcon({ status }: { status: AgentTask['status'] }) {
     case 'pending':
       return <Circle className="w-3.5 h-3.5 text-t-text/30" />;
     case 'running':
-      return <RotateCw className="w-3.5 h-3.5 text-blue-400 animate-spin" />;
+      return <RotateCw className="w-3.5 h-3.5 text-t-text/50 animate-spin" />;
     case 'done':
-      return <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />;
+      return <CheckCircle2 className="w-3.5 h-3.5 text-t-text/40" />;
     case 'error':
       return <AlertCircle className="w-3.5 h-3.5 text-red-400" />;
   }
@@ -142,12 +142,12 @@ function AgentTaskItem({ task }: { task: AgentTask }) {
         <span
           className={`text-xs flex-1 ${
             task.status === 'done'
-              ? 'text-t-text/50'
+              ? 'text-t-text/40'
               : task.status === 'running'
-              ? 'text-blue-300'
+              ? 'text-t-text/60'
               : task.status === 'error'
               ? 'text-red-300'
-              : 'text-t-text/60'
+              : 'text-t-text/50'
           }`}
         >
           {task.label}
@@ -195,8 +195,8 @@ function AgentTaskList({
           <ChevronDown className="w-4 h-4 text-t-text/40" />
         )}
         {!allDone && runningTask ? (
-          <span className="text-xs font-medium text-blue-300 flex items-center gap-1.5">
-            <RotateCw className="w-3 h-3 animate-spin" />
+          <span className="text-xs font-medium text-t-text/60 flex items-center gap-1.5">
+            <RotateCw className="w-3 h-3 animate-spin text-t-text/50" />
             {runningTask.label}
           </span>
         ) : (
@@ -210,7 +210,7 @@ function AgentTaskList({
         <div className="w-12 h-1 rounded-full bg-t-overlay/10 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              allDone ? 'bg-green-400' : 'bg-blue-400'
+              allDone ? 'bg-t-text/40' : 'bg-t-text/30'
             }`}
             style={{ width: `${total ? (done / total) * 100 : 0}%` }}
           />
@@ -332,10 +332,10 @@ function CredentialModal({
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-t-overlay/10">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-amber-400" />
+            <Shield className="w-5 h-5 text-t-text/50" />
             <h2 className="text-base font-semibold text-t-text">{t('credentials.title', 'Clés & Credentials')}</h2>
-            <Lock className="w-3 h-3 text-green-400" />
-            <span className="text-[9px] text-green-400/60 font-mono">AES-256</span>
+            <Lock className="w-3 h-3 text-t-text/40" />
+            <span className="text-[9px] text-t-text/30 font-mono">AES-256</span>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors">
             <X className="w-4 h-4" />
@@ -344,8 +344,8 @@ function CredentialModal({
 
         {/* Requested keys banner */}
         {requestedKeys && requestedKeys.length > 0 && (
-          <div className="mx-5 mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-            <p className="text-xs text-amber-300">
+          <div className="mx-5 mt-3 p-2.5 rounded-lg bg-t-overlay/[0.06] border border-t-overlay/15">
+            <p className="text-xs text-t-text/50">
               <Key className="w-3 h-3 inline mr-1" />
               GiLo AI a besoin de : <strong>{requestedKeys.join(', ')}</strong>
             </p>
@@ -359,7 +359,7 @@ function CredentialModal({
             <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-300">{error}</div>
           )}
           {success && (
-            <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-xs text-green-300">{success}</div>
+            <div className="p-2 rounded-lg bg-t-overlay/[0.06] border border-t-overlay/15 text-xs text-t-text/50">{success}</div>
           )}
 
           {/* Add form */}
@@ -378,7 +378,7 @@ function CredentialModal({
                       }}
                       className={`flex flex-col items-center gap-1 p-2 rounded-lg text-center transition-all border ${
                         selectedService === svc.id
-                          ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
+                          ? 'bg-t-overlay/15 border-t-overlay/30 text-t-text/80'
                           : 'bg-t-overlay/[0.02] border-t-overlay/5 text-t-text/40 hover:text-t-text/60'
                       }`}
                     >
@@ -392,7 +392,7 @@ function CredentialModal({
                 <input
                   value={customServiceName}
                   onChange={(e) => setCustomServiceName(e.target.value)}
-                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-t-overlay/30 border border-t-overlay/10"
                   placeholder="Nom du service"
                 />
               )}
@@ -400,7 +400,7 @@ function CredentialModal({
               <input
                 value={credKey}
                 onChange={(e) => setCredKey(e.target.value)}
-                className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+                className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-t-overlay/30 border border-t-overlay/10"
                 placeholder="Nom de la clé (ex: api_key)"
               />
 
@@ -409,7 +409,7 @@ function CredentialModal({
                   type={showValue ? 'text' : 'password'}
                   value={credValue}
                   onChange={(e) => setCredValue(e.target.value)}
-                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 pr-10 rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 pr-10 rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-t-overlay/30 border border-t-overlay/10"
                   placeholder="sk-... ou valeur secrète"
                 />
                 <button
@@ -457,11 +457,11 @@ function CredentialModal({
             <div className="space-y-1.5">
               {credentials.map((cred) => (
                 <div key={cred.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-t-overlay/[0.04] border border-t-overlay/10">
-                  <Key className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <Key className="w-4 h-4 text-t-text/40 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium text-t-text/80 capitalize">{cred.service}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70">{cred.key}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-t-overlay/10 text-t-text/50">{cred.key}</span>
                     </div>
                     <p className="text-[10px] text-t-text/35 font-mono mt-0.5">{cred.maskedValue}</p>
                   </div>
@@ -502,16 +502,16 @@ const SLASH_COMMANDS: SlashCommand[] = [
 // ============================================================
 
 function ConfigScoreBadge({ score }: { score: number }) {
-  const color = score >= 80 ? 'text-green-400' : score >= 50 ? 'text-amber-400' : 'text-red-400';
-  const bgColor = score >= 80 ? 'bg-green-400/10' : score >= 50 ? 'bg-amber-400/10' : 'bg-red-400/10';
-  const borderColor = score >= 80 ? 'border-green-400/20' : score >= 50 ? 'border-amber-400/20' : 'border-red-400/20';
+  const color = score >= 80 ? 'text-t-text/60' : score >= 50 ? 'text-t-text/50' : 'text-t-text/40';
+  const bgColor = 'bg-t-overlay/[0.06]';
+  const borderColor = 'border-t-overlay/15';
 
   return (
     <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} border ${borderColor}`}>
       <div className="w-8 h-1 rounded-full bg-black/20 overflow-hidden">
         <div
           className={`h-full rounded-full transition-all duration-700 ${
-            score >= 80 ? 'bg-green-400' : score >= 50 ? 'bg-amber-400' : 'bg-red-400'
+            score >= 80 ? 'bg-t-text/50' : score >= 50 ? 'bg-t-text/35' : 'bg-t-text/20'
           }`}
           style={{ width: `${score}%` }}
         />
@@ -560,7 +560,7 @@ function SlashCommandMenu({
             onClick={() => onSelect(cmd.command)}
             onMouseEnter={() => setSelectedIndex(i)}
             className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors ${
-              i === selectedIndex ? 'bg-blue-500/10 text-blue-300' : 'text-t-text/70 hover:bg-t-overlay/5'
+              i === selectedIndex ? 'bg-t-overlay/10 text-t-text/80' : 'text-t-text/70 hover:bg-t-overlay/5'
             }`}
           >
             <Icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -1095,7 +1095,7 @@ export default function ChatPanel() {
     <div className="h-full flex flex-col relative">
       {/* Config applied toast */}
       {configApplied && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-green-500/90 text-white text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in-up flex items-center gap-2">
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 bg-t-overlay/80 text-t-text text-sm px-4 py-2 rounded-lg shadow-lg animate-fade-in-up flex items-center gap-2 border border-t-overlay/20">
           <span>✅</span> Configuration appliquée avec succès !
         </div>
       )}
@@ -1179,7 +1179,7 @@ export default function ChatPanel() {
                 <div
                   className={`rounded-lg overflow-hidden ${
                     msg.role === 'user'
-                      ? 'p-3 glass-card bg-blue-500/10 border-blue-500/20'
+                      ? 'p-3 glass-card bg-t-overlay/[0.06] border-t-overlay/15'
                       : 'py-1'
                   }`}
                 >
@@ -1189,7 +1189,7 @@ export default function ChatPanel() {
                         {msg.content || (msg.isStreaming ? '...' : '')}
                       </ReactMarkdown>
                       {msg.isStreaming && (
-                        <span className="inline-block w-2 h-4 bg-indigo-400 animate-pulse ml-1" />
+                        <span className="inline-block w-2 h-4 bg-t-text/40 animate-pulse ml-1" />
                       )}
                     </div>
                   ) : (
@@ -1221,7 +1221,7 @@ export default function ChatPanel() {
                       title={t('common.copy')}
                     >
                       {copiedMessageId === msg.id ? (
-                        <Check className="w-3.5 h-3.5 text-green-400" />
+                        <Check className="w-3.5 h-3.5 text-t-text/50" />
                       ) : (
                         <Copy className="w-3.5 h-3.5 text-t-text/50" />
                       )}
@@ -1238,13 +1238,13 @@ export default function ChatPanel() {
               <>
                 <button
                   onClick={() => setMessage('/review')}
-                  className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
+                  className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
                 >
                   {t('chat.suggestReview')}
                 </button>
                 <button
                   onClick={() => setMessage(t('chat.suggestTestPrompt'))}
-                  className="text-[10px] px-2.5 py-1 rounded-full bg-green-500/10 text-green-300 border border-green-500/20 hover:bg-green-500/20 transition-colors"
+                  className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
                 >
                   {t('chat.suggestTest')}
                 </button>
@@ -1252,13 +1252,13 @@ export default function ChatPanel() {
             )}
             <button
               onClick={() => setMessage('/suggest-tools')}
-              className="text-[10px] px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
+              className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
             >
               {t('chat.suggestTools')}
             </button>
             <button
               onClick={() => setMessage('/status')}
-              className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+              className="text-[10px] px-2.5 py-1 rounded-full bg-t-overlay/[0.06] text-t-text/50 border border-t-overlay/15 hover:bg-t-overlay/10 hover:text-t-text/70 transition-colors"
             >
               {t('chat.suggestStatus')}
             </button>
@@ -1267,18 +1267,18 @@ export default function ChatPanel() {
 
         {isTyping && messages[messages.length - 1]?.content === '' && (
           <div className="flex animate-fade-in-up justify-start">
-            <div className="glass-card bg-indigo-500/10 border-indigo-500/20 px-4 py-3 rounded-lg">
+            <div className="glass-card bg-t-overlay/[0.06] border-t-overlay/15 px-4 py-3 rounded-lg">
               <div className="flex gap-1">
                 <div
-                  className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-t-text/40 rounded-full animate-bounce"
                   style={{ animationDelay: '0ms' }}
                 />
                 <div
-                  className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-t-text/40 rounded-full animate-bounce"
                   style={{ animationDelay: '150ms' }}
                 />
                 <div
-                  className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                  className="w-2 h-2 bg-t-text/40 rounded-full animate-bounce"
                   style={{ animationDelay: '300ms' }}
                 />
               </div>
@@ -1351,7 +1351,7 @@ export default function ChatPanel() {
           {/* Key button to open credential modal */}
           <button
             onClick={() => setShowCredentialModal(true)}
-            className="absolute left-5 md:left-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text/40 hover:text-amber-400 flex items-center justify-center hover:bg-t-overlay/10 transition-colors"
+            className="absolute left-5 md:left-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text/40 hover:text-t-text/70 flex items-center justify-center hover:bg-t-overlay/10 transition-colors"
             title={t('credentials.title', 'Clés & Credentials')}
           >
             <Key className="w-4 h-4" />
