@@ -10,6 +10,12 @@ import {
   Circle,
   RotateCw,
   AlertCircle,
+  Command,
+  Search,
+  Settings,
+  Star,
+  HelpCircle,
+  Wrench,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -215,6 +221,103 @@ function AgentTaskList({
 }
 
 // ============================================================
+// Slash commands definition
+// ============================================================
+
+interface SlashCommand {
+  command: string;
+  label: string;
+  description: string;
+  icon: typeof Command;
+}
+
+const SLASH_COMMANDS: SlashCommand[] = [
+  { command: '/review', label: 'Review', description: 'Analyse la config et suggère des améliorations', icon: Search },
+  { command: '/optimize', label: 'Optimize', description: 'Optimise le system prompt automatiquement', icon: Star },
+  { command: '/suggest-tools', label: 'Suggest Tools', description: 'Suggère des outils pertinents', icon: Wrench },
+  { command: '/status', label: 'Status', description: 'Résumé complet de l\'état de l\'agent', icon: Settings },
+  { command: '/help', label: 'Help', description: 'Liste toutes les commandes disponibles', icon: HelpCircle },
+];
+
+// ============================================================
+// Config score component
+// ============================================================
+
+function ConfigScoreBadge({ score }: { score: number }) {
+  const color = score >= 80 ? 'text-green-400' : score >= 50 ? 'text-amber-400' : 'text-red-400';
+  const bgColor = score >= 80 ? 'bg-green-400/10' : score >= 50 ? 'bg-amber-400/10' : 'bg-red-400/10';
+  const borderColor = score >= 80 ? 'border-green-400/20' : score >= 50 ? 'border-amber-400/20' : 'border-red-400/20';
+
+  return (
+    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium ${color} ${bgColor} border ${borderColor}`}>
+      <div className="w-8 h-1 rounded-full bg-black/20 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${
+            score >= 80 ? 'bg-green-400' : score >= 50 ? 'bg-amber-400' : 'bg-red-400'
+          }`}
+          style={{ width: `${score}%` }}
+        />
+      </div>
+      <span>{score}%</span>
+    </div>
+  );
+}
+
+// ============================================================
+// Slash command autocomplete component
+// ============================================================
+
+function SlashCommandMenu({
+  filter,
+  onSelect,
+  visible,
+}: {
+  filter: string;
+  onSelect: (cmd: string) => void;
+  visible: boolean;
+}) {
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const filtered = SLASH_COMMANDS.filter(
+    (c) =>
+      c.command.toLowerCase().includes(filter.toLowerCase()) ||
+      c.label.toLowerCase().includes(filter.toLowerCase()),
+  );
+
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [filter]);
+
+  if (!visible || filtered.length === 0) return null;
+
+  return (
+    <div className="absolute bottom-full left-0 right-0 mb-1 mx-3 bg-t-bg/95 backdrop-blur-xl border border-t-overlay/20 rounded-lg shadow-xl overflow-hidden z-50">
+      <div className="px-2 py-1.5 border-b border-t-overlay/10">
+        <span className="text-[10px] text-t-text/40 uppercase tracking-wider font-medium">Commandes</span>
+      </div>
+      {filtered.map((cmd, i) => {
+        const Icon = cmd.icon;
+        return (
+          <button
+            key={cmd.command}
+            onClick={() => onSelect(cmd.command)}
+            onMouseEnter={() => setSelectedIndex(i)}
+            className={`flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors ${
+              i === selectedIndex ? 'bg-blue-500/10 text-blue-300' : 'text-t-text/70 hover:bg-t-overlay/5'
+            }`}
+          >
+            <Icon className="w-3.5 h-3.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <span className="text-xs font-medium">{cmd.command}</span>
+              <span className="text-[10px] text-t-text/40 ml-2">{cmd.description}</span>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ============================================================
 // Main component
 // ============================================================
 
@@ -227,6 +330,9 @@ export default function ChatPanel() {
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [collapsedTasks, setCollapsedTasks] = useState<Record<string, boolean>>({});
   const [configApplied, setConfigApplied] = useState(false);
+  const [configScore, setConfigScore] = useState<number | null>(null);
+  const [showSlashMenu, setShowSlashMenu] = useState(false);
+  const [slashFilter, setSlashFilter] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const conversationIdRef = useRef<string | undefined>(undefined);
@@ -376,6 +482,7 @@ export default function ChatPanel() {
   const stepLabels: Record<string, string> = {
     language_detect: 'chat.steps.languageDetect',
     load_context: 'chat.steps.loadContext',
+    thinking: 'chat.steps.thinking',
     build_prompt: 'chat.steps.buildPrompt',
     call_llm: 'chat.steps.callLlm',
     save_conversation: 'chat.steps.saveConversation',
@@ -477,10 +584,14 @@ export default function ChatPanel() {
                 );
               } else if (chunk.type === 'conversation' && chunk.conversationId) {
                 conversationIdRef.current = chunk.conversationId;
+              } else if (chunk.type === 'config_score' && chunk.score !== undefined) {
+                setConfigScore(chunk.score);
               } else if (chunk.type === 'config_applied' && chunk.fields) {
                 triggerConfigRefresh();
                 setConfigApplied(true);
                 setTimeout(() => setConfigApplied(false), 4000);
+                // Bump config score after successful apply
+                setConfigScore((prev) => prev !== null ? Math.min(100, prev + 20) : 60);
               } else if (chunk.type === 'credentials_saved' && chunk.count) {
                 // Credentials saved securely on the backend
                 setConfigApplied(true);
@@ -723,6 +834,7 @@ export default function ChatPanel() {
       <div className="px-4 py-3 border-b border-transparent flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold gradient-text">GiLo AI</h2>
+          {configScore !== null && <ConfigScoreBadge score={configScore} />}
         </div>
         <div className="flex items-center gap-2">
           <div
@@ -851,6 +963,40 @@ export default function ChatPanel() {
             </div>
           ))}
 
+        {/* Smart suggestion chips - show after conversation when not typing */}
+        {!isTyping && messages.length > 1 && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.isStreaming && (
+          <div className="flex flex-wrap gap-1.5 animate-fade-in-up mt-1">
+            {configApplied && (
+              <>
+                <button
+                  onClick={() => setMessage('/review')}
+                  className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
+                >
+                  🔍 {t('chat.suggestReview')}
+                </button>
+                <button
+                  onClick={() => setMessage(t('chat.suggestTestPrompt'))}
+                  className="text-[10px] px-2.5 py-1 rounded-full bg-green-500/10 text-green-300 border border-green-500/20 hover:bg-green-500/20 transition-colors"
+                >
+                  👁️ {t('chat.suggestTest')}
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => setMessage('/suggest-tools')}
+              className="text-[10px] px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
+            >
+              🔧 {t('chat.suggestTools')}
+            </button>
+            <button
+              onClick={() => setMessage('/status')}
+              className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+            >
+              📊 {t('chat.suggestStatus')}
+            </button>
+          </div>
+        )}
+
         {isTyping && messages[messages.length - 1]?.content === '' && (
           <div className="flex animate-fade-in-up justify-start">
             <div className="glass-card bg-indigo-500/10 border-indigo-500/20 px-4 py-3 rounded-lg">
@@ -886,14 +1032,50 @@ export default function ChatPanel() {
           </button>
         )}
         <div className="relative md:rounded-lg rounded-t-2xl rounded-b-none bg-t-overlay/[0.04] md:bg-transparent border-t border-t-overlay/[0.04] md:border-t-0 px-3 pt-2 landscape-panel pb-[env(safe-area-inset-bottom,8px)] md:p-0">
+          {/* Slash command autocomplete */}
+          <SlashCommandMenu
+            filter={slashFilter}
+            visible={showSlashMenu}
+            onSelect={(cmd) => {
+              setMessage(cmd + ' ');
+              setShowSlashMenu(false);
+              setSlashFilter('');
+            }}
+          />
           <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={(e) =>
-              e.key === 'Enter' &&
-              !e.shiftKey &&
-              (e.preventDefault(), handleSend())
-            }
+            onChange={(e) => {
+              const val = e.target.value;
+              setMessage(val);
+              // Detect slash command typing
+              if (val.startsWith('/') && !val.includes(' ')) {
+                setShowSlashMenu(true);
+                setSlashFilter(val);
+              } else {
+                setShowSlashMenu(false);
+                setSlashFilter('');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                setShowSlashMenu(false);
+                handleSend();
+              } else if (e.key === 'Escape') {
+                setShowSlashMenu(false);
+              } else if (e.key === 'Tab' && showSlashMenu) {
+                e.preventDefault();
+                // Auto-complete first matching command
+                const filtered = SLASH_COMMANDS.filter(
+                  (c) => c.command.toLowerCase().includes(slashFilter.toLowerCase()),
+                );
+                if (filtered.length > 0) {
+                  setMessage(filtered[0].command + ' ');
+                  setShowSlashMenu(false);
+                  setSlashFilter('');
+                }
+              }
+            }}
             placeholder={t('chat.placeholder')}
             rows={4}
             className="w-full text-t-text px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"

@@ -5,6 +5,8 @@ import { agentModel } from '../models/agent';
 import { AuthenticatedRequest } from '../middleware/auth';
 import { validate, chatSchema, copilotStreamSchema } from '../middleware/validation';
 import { enforceModelForTier } from '../models/agent';
+import { knowledgeService } from '../services/knowledgeService';
+import { credentialService } from '../services/credentialService';
 import OpenAI from 'openai';
 
 export const copilotRouter = Router();
@@ -56,15 +58,64 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
 
     // --- Step: load agent config ---
     let agentConfig: import('../models/agent').AgentConfig | undefined;
+    let agentMeta: { name?: string; status?: string; totalConversations?: number; totalMessages?: number; deployedAt?: Date } = {};
     if (agentId && agentId !== 'new-project') {
       try {
         const agent = await agentModel.findById(agentId);
-        if (agent) agentConfig = agent.config;
+        if (agent) {
+          agentConfig = agent.config;
+          agentMeta = {
+            name: agent.name,
+            status: agent.status,
+            totalConversations: agent.totalConversations,
+            totalMessages: agent.totalMessages,
+            deployedAt: agent.deployedAt,
+          };
+        }
       } catch { /* ignore — config enrichment is optional */ }
     }
 
+    // --- Step: enrich context with knowledge, credentials, MCP ---
+    let enrichedContext: {
+      knowledgeStats?: { documents: number; chunks: number; totalTokens: number };
+      credentialsCount?: number;
+      mcpServers?: string[];
+      agentMeta?: typeof agentMeta;
+      configScore?: number;
+    } = {};
+
+    if (agentId && agentId !== 'new-project') {
+      try {
+        // Knowledge base stats
+        const kbStats = await knowledgeService.getStats(agentId).catch(() => null);
+        if (kbStats) enrichedContext.knowledgeStats = kbStats;
+
+        // Credentials count
+        if (userId) {
+          const creds = await credentialService.listCredentials(agentId).catch(() => []);
+          enrichedContext.credentialsCount = creds.length;
+        }
+
+        enrichedContext.agentMeta = agentMeta;
+
+        // Calculate config completeness score
+        if (agentConfig) {
+          let score = 0;
+          const defaultPrompt = 'Tu es un assistant IA utile et concis';
+          if (agentConfig.systemPrompt && !agentConfig.systemPrompt.startsWith(defaultPrompt)) score += 20;
+          if (agentConfig.welcomeMessage && agentConfig.welcomeMessage !== 'Bonjour ! Comment puis-je vous aider ?') score += 10;
+          if (agentConfig.tools && agentConfig.tools.filter(t => t.enabled).length > 0) score += 20;
+          if (enrichedContext.knowledgeStats && enrichedContext.knowledgeStats.documents > 0) score += 20;
+          if (agentConfig.model && agentConfig.model !== 'openai/gpt-4.1-nano') score += 10;
+          if (agentConfig.appearance?.accentColor || agentConfig.appearance?.theme) score += 10;
+          if (agentMeta.status === 'deployed') score += 10;
+          enrichedContext.configScore = score;
+        }
+      } catch { /* enrichment is best-effort */ }
+    }
+
     // --- Step: build system prompt (includes language detection) ---
-    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext, agentConfig, uiLanguage, messages as CopilotMessage[]);
+    const { client, systemPrompt, defaultModel } = copilotService.getClientInfo(projectContext, agentConfig, uiLanguage, messages as CopilotMessage[], enrichedContext);
 
     // Conversation persistence (when tied to an agent)
     let conversationId: string | undefined;
@@ -94,6 +145,21 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
 
     const resolvedModel = enforceModelForTier(model || defaultModel, (req as AuthenticatedRequest).user?.tier || 'free');
 
+    // --- Analyze user intent for thinking display ---
+    const lastUserMsg = messages?.[messages.length - 1]?.content?.toLowerCase() || '';
+    let thinkingDetail = '';
+    if (lastUserMsg.startsWith('/review')) thinkingDetail = 'Analyzing agent configuration...';
+    else if (lastUserMsg.startsWith('/optimize')) thinkingDetail = 'Optimizing system prompt...';
+    else if (lastUserMsg.startsWith('/suggest-tools')) thinkingDetail = 'Matching tools to agent role...';
+    else if (lastUserMsg.startsWith('/status')) thinkingDetail = 'Gathering agent status...';
+    else if (lastUserMsg.startsWith('/help')) thinkingDetail = 'Loading available commands...';
+    else if (/\b(outil|tool|api|endpoint|http|webhook)\b/i.test(lastUserMsg)) thinkingDetail = 'Analyzing tool requirements...';
+    else if (/\b(prompt|instruction|role|personnalité|personality)\b/i.test(lastUserMsg)) thinkingDetail = 'Analyzing prompt requirements...';
+    else if (/\b(deploy|déployer|publish|publier)\b/i.test(lastUserMsg)) thinkingDetail = 'Checking deployment readiness...';
+    else if (/\b(knowledge|connaissance|document|rag|upload)\b/i.test(lastUserMsg)) thinkingDetail = 'Analyzing knowledge base needs...';
+    else if (/\b(crée|créer|create|build|construire|nouveau|new)\b/i.test(lastUserMsg)) thinkingDetail = 'Planning agent configuration...';
+    else thinkingDetail = 'Understanding request context...';
+
     const stream = await client.chat.completions.create({
       model: resolvedModel,
       messages: openaiMessages,
@@ -116,8 +182,15 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     // Step events for the frontend
     emitStep('language_detect', 'done');
     emitStep('load_context', 'done', agentConfig ? 'Agent config loaded' : undefined);
+    emitStep('thinking', 'running', thinkingDetail);
     emitStep('build_prompt', 'done');
+    emitStep('thinking', 'done', thinkingDetail);
     emitStep('call_llm', 'running', resolvedModel);
+
+    // Emit enriched context info
+    if (enrichedContext.configScore !== undefined) {
+      res.write(`data: ${JSON.stringify({ type: 'config_score', score: enrichedContext.configScore })}\n\n`);
+    }
 
     let fullAssistantContent = '';
     for await (const chunk of stream) {

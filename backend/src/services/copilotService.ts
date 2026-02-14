@@ -88,7 +88,7 @@ export class CopilotService {
   // ----------------------------------------------------------
   // Expose client info for direct route usage
   // ----------------------------------------------------------
-  getClientInfo(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig, uiLanguage?: string, messages?: CopilotMessage[]): {
+  getClientInfo(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig, uiLanguage?: string, messages?: CopilotMessage[], enrichedContext?: Record<string, any>): {
     client: OpenAI;
     systemPrompt: string;
     defaultModel: string;
@@ -96,7 +96,7 @@ export class CopilotService {
     this.ensureInit();
     return {
       client: this.openai,
-      systemPrompt: this.buildSystemPrompt(projectContext, agentConfig, uiLanguage, messages),
+      systemPrompt: this.buildSystemPrompt(projectContext, agentConfig, uiLanguage, messages, enrichedContext),
       defaultModel: this.defaultModel,
     };
   }
@@ -166,7 +166,7 @@ export class CopilotService {
   // ----------------------------------------------------------
   // Build the GiLo AI system prompt
   // ----------------------------------------------------------
-  private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig, uiLanguage?: string, messages?: CopilotMessage[]): string {
+  private buildSystemPrompt(projectContext?: CopilotChatRequest['projectContext'], agentConfig?: import('../models/agent').AgentConfig, uiLanguage?: string, messages?: CopilotMessage[], enrichedContext?: Record<string, any>): string {
     const detectedLang = this.detectLanguage(messages || [], uiLanguage);
 
     const langInstructions: Record<string, string> = {
@@ -324,8 +324,61 @@ Afficher un bloc de code JSON avec systemPrompt, temperature, tools, etc.
       system += `\n- Modèle: ${agentConfig.model}`;
       system += `\n- Température: ${agentConfig.temperature}`;
       system += `\n- System Prompt: ${agentConfig.systemPrompt?.substring(0, 200)}...`;
-      system += `\n- Outils: ${agentConfig.tools?.map(t => t.name).join(', ') || 'aucun'}`;
-      system += `\n\n=== MODIFICATIONS DE CONFIG ===
+      system += `\n- Outils activés: ${agentConfig.tools?.filter(t => t.enabled).map(t => `${t.name} (${t.type})`).join(', ') || 'aucun'}`;
+      system += `\n- Outils désactivés: ${agentConfig.tools?.filter(t => !t.enabled).map(t => t.name).join(', ') || 'aucun'}`;
+
+      // Enriched context
+      if (enrichedContext) {
+        if (enrichedContext.agentMeta) {
+          const meta = enrichedContext.agentMeta;
+          system += `\n- Nom de l'agent: ${meta.name || 'Non défini'}`;
+          system += `\n- Statut: ${meta.status || 'draft'}`;
+          system += `\n- Conversations totales: ${meta.totalConversations || 0}`;
+          system += `\n- Messages totaux: ${meta.totalMessages || 0}`;
+          if (meta.deployedAt) system += `\n- Déployé le: ${new Date(meta.deployedAt).toLocaleDateString()}`;
+        }
+        if (enrichedContext.knowledgeStats) {
+          const kb = enrichedContext.knowledgeStats;
+          system += `\n- Base de connaissances: ${kb.documents} documents, ${kb.chunks} chunks, ${kb.totalTokens} tokens`;
+        } else {
+          system += `\n- Base de connaissances: vide (aucun document)`;
+        }
+        if (enrichedContext.credentialsCount !== undefined) {
+          system += `\n- Credentials stockés: ${enrichedContext.credentialsCount}`;
+        }
+        if (enrichedContext.configScore !== undefined) {
+          system += `\n- Score de complétion config: ${enrichedContext.configScore}%`;
+        }
+      }
+
+      system += `\n\n=== COMMANDES SLASH ===
+L'utilisateur peut utiliser des commandes slash. Si tu détectes une commande slash dans le message, exécute-la :
+
+/review — Analyse la configuration actuelle de l'agent et suggère des améliorations concrètes.
+  Examine : system prompt (qualité, longueur, structure), outils configurés, température, modèle, base de connaissances.
+  Donne un score de qualité /10 et des suggestions prioritaires.
+
+/optimize — Réécris et optimise le system prompt actuel pour de meilleures performances.
+  Garde le même rôle mais améliore la structure, les instructions et la clarté.
+  Applique automatiquement via <!--GILO_APPLY_CONFIG:...-->
+
+/suggest-tools — Analyse le rôle de l'agent et suggère des outils pertinents à ajouter.
+  Présente dans un TABLEAU avec nom, type, description et utilité.
+
+/status — Affiche un résumé complet de l'état de l'agent :
+  Config, outils, base de connaissances, déploiement, analytics.
+  Montre un score de complétion et les prochaines étapes recommandées.
+
+/help — Liste toutes les commandes disponibles avec leurs descriptions.
+
+=== PROACTIVITÉ ===
+Après chaque modification de config appliquée, suggère TOUJOURS les prochaines étapes pertinentes.
+Analyse le score de complétion et recommande les actions manquantes.
+Si l'agent n'a pas de base de connaissances, suggère d'en ajouter une.
+Si l'agent n'a pas d'outils, suggère les plus pertinents pour son rôle.
+Si l'agent n'est pas déployé, rappelle de le déployer quand il est prêt.
+
+=== MODIFICATIONS DE CONFIG ===
 Si l'utilisateur demande des modifications, tu peux :
 1. Modifier les paramètres (modèle, température, prompt, outils)
 2. Ajouter/supprimer des outils avec un TABLEAU récapitulatif

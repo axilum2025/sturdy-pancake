@@ -1,7 +1,7 @@
 # GiLo AI — Agent Builder : Roadmap des Phases de Développement
 
 > **État actuel** : Phase 1–7 ✅ + Phase 9 ✅ + Phase 10 (en cours) ✅
-> **Dernière mise à jour** : 14 février 2026
+> **Dernière mise à jour** : 15 février 2026
 
 ---
 
@@ -56,8 +56,9 @@
 - **Billing** : plans, checkout Stripe, portal, webhook handler
 - **Tools** : catalogue 16 built-in, community marketplace, import OpenAPI, test HTTP
 - **MCP** : 12 templates, servers CRUD, connect/disconnect, tools/resources/prompts execution
-- **Copilot** : chat, stream SSE, generate, review, repo info/tree
+- **Copilot** : chat, stream SSE, generate, review, repo info/tree, slash commands, thinking display, config score
 - **Integrations** : OAuth providers (Google implémenté), API key auth
+- **Credential Vault** : chiffrement AES-256-GCM, CRUD credentials sécurisé
 - **Deploy** : CRUD déploiements par projet
 - **Subdomain** : `{slug}.gilo.dev` → chat HTML + API
 - **Widget** : `/widget.js` embeddable avec CORS * (chat bubble)
@@ -68,7 +69,7 @@
 - `billingService.ts` — Stripe checkout, portal, webhook handler
 - `chunker.ts` — découpage texte en chunks avec overlap
 - `conversationService.ts` — CRUD conversations + messages PostgreSQL
-- `copilotService.ts` — interface GitHub Models API (GPT-4.1)
+- `copilotService.ts` — interface GitHub Models API (GPT-4.1), détection de 10 langues, commandes slash, contexte enrichi
 - `deploymentService.ts` — gestion déploiements
 - `documentParser.ts` — parsing PDF/DOCX/CSV/JSON
 - `embeddingService.ts` — embeddings text-embedding-3-small
@@ -113,6 +114,19 @@
 - Playground intégré pour tester les agents
 - Dashboard avec stats et création rapide
 - Copilot Chat avec streaming SSE
+- **GiLo AI Intelligence** :
+  - [x] Détection automatique de la langue (10 langues)
+  - [x] Full-stack end-to-end agent builder (conception → déploiement)
+  - [x] Génération de tableaux API/Endpoints Markdown
+  - [x] Credential Vault chiffré AES-256-GCM
+  - [x] 9 étapes granulaires SSE (language_detect, load_context, thinking, build_prompt, call_llm, save_conversation, extract_config, apply_config, save_credentials)
+  - [x] Commandes slash (/review, /optimize, /suggest-tools, /status, /help) avec autocomplete UI
+  - [x] Contexte enrichi (knowledge stats, credentials count, config score, agent meta)
+  - [x] Score de complétion de configuration (badge en temps réel)
+  - [x] Étape "Thinking" avec analyse contextuelle de l'intent
+  - [x] Suggestions intelligentes (chips d'action post-réponse)
+  - [x] Auto-save persistant des tools configurés par GiLo
+  - [x] Support MCP servers dans panneau Tools/Resources/Prompts
 
 ### ✅ Phase 2.5 — Agent Store (core)
 - [x] Page `/store` — grille d'icônes d'agents (style écran d'accueil mobile)
@@ -247,6 +261,10 @@
 ### ✅ Récemment complété (Haute/Moyenne)
 | Tâche | Phase |
 |-------|-------|
+| ~~GiLo AI Intelligence: slash commands, config score, thinking, enriched context~~ | 2 |
+| ~~GiLo AI: granular SSE step indicators (9 steps)~~ | 2 |
+| ~~Fix tool persistence + MCP panel display~~ | 6 |
+| ~~GiLo AI: language detection, credential vault, table generation~~ | 2 |
 | ~~Redis cache + rate limiter persistent~~ | 10 |
 | ~~Page Billing frontend (plans, checkout, portal)~~ | 9 |
 | ~~OAuth GitHub provider~~ | 3 |
@@ -308,6 +326,10 @@
 
 | Date | Commit | Description |
 |------|--------|-------------|
+| 15 fév 2026 | *en cours* | GiLo AI intelligence: slash commands, config score, thinking display, enriched context, smart suggestions |
+| 15 fév 2026 | `b9c9197` | GiLo AI granular step indicators (9 SSE steps) |
+| 15 fév 2026 | `29cdb67` | Fix tool persistence + MCP panel display |
+| 15 fév 2026 | `502bcfe` | GiLo AI: language detection, credential vault, table generation, full-stack builder |
 | 14 fév 2026 | *en cours* | Forgot/reset password + auto-open auth modal |
 | 13 fév 2026 | `9d29793` | Long email overflow fix |
 | 13 fév 2026 | `9e700a0` | Cloudflare Turnstile captcha anti-bot |
@@ -326,4 +348,4 @@
 
 ---
 
-*Dernière mise à jour : 14 février 2026*
+*Dernière mise à jour : 15 février 2026*
