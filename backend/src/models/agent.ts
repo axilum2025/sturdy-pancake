@@ -91,24 +91,26 @@ const DEFAULT_CONFIG: AgentConfig = {
 
 // ----------------------------------------------------------
 // Tier-based model restrictions (cost optimisation)
-// Free = nano only, paid/pro = nano + mini, BYO LLM = anything
+// Free = nano only, paid/pro = nano + mini, BYO = own key only (no GiLo models)
 // ----------------------------------------------------------
 export const TIER_ALLOWED_MODELS: Record<string, string[]> = {
   free: ['openai/gpt-4.1-nano'],
   paid: ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
   pro:  ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
-  byo:  ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
+  byo:  [],  // BYO tier = user's own API key only, no GiLo-provided models
 };
 
 export function getAllowedModels(tier: string): string[] {
   return TIER_ALLOWED_MODELS[tier] || TIER_ALLOWED_MODELS.free;
 }
 
-export function enforceModelForTier(requestedModel: string, tier: string): string {
+export function enforceModelForTier(requestedModel: string, tier: string, isByo: boolean = false): string {
+  // BYO LLM agents use their own API key — any model string is allowed
+  if (isByo) return requestedModel;
   const allowed = getAllowedModels(tier);
   if (allowed.includes(requestedModel)) return requestedModel;
   // Fall back to the cheapest allowed model
-  return allowed[0];
+  return allowed[0] || requestedModel;
 }
 
 // ----------------------------------------------------------

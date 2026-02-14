@@ -258,7 +258,11 @@ agentsRouter.patch('/:id/config', validate(updateAgentConfigSchema), async (req:
     const config = req.body;
     // Enforce tier-based model restriction
     const user = (req as AuthenticatedRequest).user;
-    if (config.model) {
+    // For BYO tier, check if agent actually has a custom API key configured
+    const existingAgent = await agentModel.findById(req.params.id);
+    const agentConfig = existingAgent ? { ...existingAgent.config, ...config } : config;
+    const byoActive = isByoLlm(agentConfig);
+    if (config.model && !byoActive) {
       config.model = enforceModelForTier(config.model, user?.tier || 'free');
     }
     // hideBranding is BYO-only feature

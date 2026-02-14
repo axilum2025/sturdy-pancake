@@ -51,8 +51,10 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const hasPaidSlots = (user as any)?.paidAgentSlots > 0 || (user as any)?.byoAgentSlots > 0 || user?.tier === 'pro' || user?.tier === 'byo';
+  const isByoTier = user?.tier === 'byo';
   const userTier = hasPaidSlots ? 'paid' : 'free';
-  const AVAILABLE_MODELS = ALL_MODELS.filter(m => m.tiers.includes(userTier));
+  // BYO tier uses own API key only — no GiLo models shown
+  const AVAILABLE_MODELS = isByoTier ? [] : ALL_MODELS.filter(m => m.tiers.includes(userTier));
   const [config, setConfig] = useState<AgentConfigData>({
     model: 'openai/gpt-4.1-nano',
     temperature: 0.7,

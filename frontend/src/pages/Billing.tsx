@@ -401,9 +401,9 @@ export default function Billing() {
               <tbody>
                 {[
                   [t('billing.compPrice'), '$0', '$5.99/' + t('billing.month'), '$3.99/' + t('billing.month')],
-                  [t('billing.compModel'), 'GPT-4.1 Nano', 'Nano + Mini', 'Nano + Mini + ' + t('billing.compOwnKey')],
+                  [t('billing.compModel'), 'GPT-4.1 Nano', 'Nano + Mini', t('billing.compOwnKey')],
                   [t('billing.compMessages'), '200', '500', t('billing.unlimited')],
-                  [t('billing.compMaxTokens'), '512', '2048', '2048'],
+                  [t('billing.compMaxTokens'), '512', '2048', t('billing.unlimited')],
                   [t('billing.compKnowledge'), '2', '10', '20'],
                   [t('billing.compWebhooks'), '—', <Check key="wh2" className="w-4 h-4 text-green-400 inline" />, <Check key="wh3" className="w-4 h-4 text-green-400 inline" />],
                   [t('billing.compAnalytics'), t('billing.comp7d'), t('billing.comp90d'), t('billing.comp90d')],
