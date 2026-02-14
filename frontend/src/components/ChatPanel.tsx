@@ -1181,11 +1181,11 @@ export default function ChatPanel() {
                 {msg.tasks && msg.tasks.length > 0 && (
                   <AgentTaskList
                     tasks={msg.tasks}
-                    collapsed={!!collapsedTasks[msg.id]}
+                    collapsed={collapsedTasks[msg.id] !== false}
                     onToggle={() =>
                       setCollapsedTasks((prev) => ({
                         ...prev,
-                        [msg.id]: !prev[msg.id],
+                        [msg.id]: prev[msg.id] === false ? true : false,
                       }))
                     }
                   />
