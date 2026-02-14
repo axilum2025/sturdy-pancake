@@ -3,7 +3,6 @@ import {
   Loader2,
   Copy,
   Check,
-  Zap,
   ChevronDown,
   ChevronRight,
   CheckCircle2,
@@ -885,7 +884,6 @@ export default function ChatPanel() {
                   onClick={() => setMessage(action.prompt)}
                   className="glass-card bg-t-overlay/5 hover:bg-t-overlay/10 border border-t-overlay/10 hover:border-t-overlay/20 rounded-lg px-3 py-2 text-xs text-t-text/70 hover:text-t-text transition-all duration-200 text-left"
                 >
-                  <Zap className="w-3 h-3 inline mr-1 text-amber-400" />
                   {action.label}
                 </button>
               ))}
@@ -972,13 +970,13 @@ export default function ChatPanel() {
                   onClick={() => setMessage('/review')}
                   className="text-[10px] px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/20 hover:bg-blue-500/20 transition-colors"
                 >
-                  🔍 {t('chat.suggestReview')}
+                  {t('chat.suggestReview')}
                 </button>
                 <button
                   onClick={() => setMessage(t('chat.suggestTestPrompt'))}
                   className="text-[10px] px-2.5 py-1 rounded-full bg-green-500/10 text-green-300 border border-green-500/20 hover:bg-green-500/20 transition-colors"
                 >
-                  👁️ {t('chat.suggestTest')}
+                  {t('chat.suggestTest')}
                 </button>
               </>
             )}
@@ -986,13 +984,13 @@ export default function ChatPanel() {
               onClick={() => setMessage('/suggest-tools')}
               className="text-[10px] px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
             >
-              🔧 {t('chat.suggestTools')}
+              {t('chat.suggestTools')}
             </button>
             <button
               onClick={() => setMessage('/status')}
               className="text-[10px] px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
             >
-              📊 {t('chat.suggestStatus')}
+              {t('chat.suggestStatus')}
             </button>
           </div>
         )}
