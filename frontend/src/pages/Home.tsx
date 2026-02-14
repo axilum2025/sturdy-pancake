@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Zap, Shield, Globe, Code2, Cpu, Layers, 
-  ArrowRight, Star, ChevronRight, Bot, Rocket, 
-  Terminal, Cloud
+  ArrowRight, ChevronRight, Bot, Rocket, 
+  Terminal, Cloud, QrCode, Link2
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -112,24 +112,33 @@ export default function Home() {
     { value: '24/7', labelKey: 'home.statsActive', icon: Bot },
   ];
 
-  const testimonials = [
+  const deployMethods = [
     {
-      quoteKey: 'home.testimonial1',
-      authorKey: 'home.testimonial1Author',
-      roleKey: 'home.testimonial1Role',
-      avatar: 'ML',
+      icon: Code2,
+      titleKey: 'home.deployMethod1Title',
+      descKey: 'home.deployMethod1Desc',
+      codeExample: 'POST https://api.gilo.dev/api/v1/chat\n{ "messages": [{ "role": "user", "content": "Hello!" }] }',
+      color: 'from-blue-500/20 to-indigo-500/20',
+      borderColor: 'border-blue-500/20',
+      iconColor: 'text-blue-400',
     },
     {
-      quoteKey: 'home.testimonial2',
-      authorKey: 'home.testimonial2Author',
-      roleKey: 'home.testimonial2Role',
-      avatar: 'TR',
+      icon: Link2,
+      titleKey: 'home.deployMethod2Title',
+      descKey: 'home.deployMethod2Desc',
+      codeExample: 'https://mon-agent.gilo.dev',
+      color: 'from-emerald-500/20 to-green-500/20',
+      borderColor: 'border-emerald-500/20',
+      iconColor: 'text-emerald-400',
     },
     {
-      quoteKey: 'home.testimonial3',
-      authorKey: 'home.testimonial3Author',
-      roleKey: 'home.testimonial3Role',
-      avatar: 'SK',
+      icon: QrCode,
+      titleKey: 'home.deployMethod3Title',
+      descKey: 'home.deployMethod3Desc',
+      codeExample: null,
+      color: 'from-violet-500/20 to-purple-500/20',
+      borderColor: 'border-violet-500/20',
+      iconColor: 'text-violet-400',
     },
   ];
 
@@ -152,7 +161,7 @@ export default function Home() {
             <div className="hidden md:flex items-center gap-8">
               <a href="#features" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.features')}</a>
               <a href="#stats" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.performance')}</a>
-              <a href="#testimonials" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.testimonials')}</a>
+              <a href="#testimonials" className="text-sm text-t-text/40 hover:text-t-text/80 transition-colors">{t('nav.deploy')}</a>
             </div>
 
             <div className="flex items-center gap-2">
@@ -385,49 +394,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS ===== */}
+      {/* ===== DEPLOY METHODS ===== */}
       <section id="testimonials" className="relative py-24 sm:py-32">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-16">
             <div className="animate-on-scroll">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-t-overlay/5 border border-t-overlay/10 text-xs font-medium text-t-text/50 mb-4">
-                <Star className="w-3 h-3" />
-                {t('nav.testimonials')}
+                <Rocket className="w-3 h-3" />
+                {t('home.deployLabel')}
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                {t('home.testimonialsTitle')}
+                {t('home.deployTitle')}
               </h2>
               <p className="text-t-text/40 max-w-xl mx-auto">
-                {t('home.testimonialsSubtitle')}
+                {t('home.deploySubtitle')}
               </p>
             </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-5">
-            {testimonials.map((testimonial, i) => (
-              <div
-                key={testimonial.authorKey}
-                className="animate-on-scroll glass-card rounded-2xl p-6"
-                style={{ animationDelay: `${i * 100}ms` }}
-              >
-                {/* Stars */}
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-4 h-4 text-amber-500/70 fill-amber-500/70" />
-                  ))}
-                </div>
-                <p className="text-sm text-t-text/50 leading-relaxed mb-6">"{t(testimonial.quoteKey)}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500/30 to-indigo-500/30 border border-t-overlay/10 flex items-center justify-center text-xs font-bold text-t-text/60">
-                    {testimonial.avatar}
+            {deployMethods.map((method, i) => {
+              const Icon = method.icon;
+              return (
+                <div
+                  key={method.titleKey}
+                  className="animate-on-scroll glass-card rounded-2xl p-6 flex flex-col"
+                  style={{ animationDelay: `${i * 100}ms` }}
+                >
+                  {/* Icon */}
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${method.color} border ${method.borderColor} flex items-center justify-center mb-5`}>
+                    <Icon className={`w-6 h-6 ${method.iconColor}`} />
                   </div>
-                  <div>
-                    <div className="text-sm font-medium text-t-text/70">{t(testimonial.authorKey)}</div>
-                    <div className="text-xs text-t-text/30">{t(testimonial.roleKey)}</div>
-                  </div>
+                  {/* Title */}
+                  <h3 className="text-lg font-semibold text-t-text/90 mb-2">{t(method.titleKey)}</h3>
+                  {/* Description */}
+                  <p className="text-sm text-t-text/45 leading-relaxed mb-5 flex-1">{t(method.descKey)}</p>
+                  {/* Code example or QR illustration */}
+                  {method.codeExample ? (
+                    <div className="rounded-lg bg-t-overlay/5 border border-t-overlay/10 p-3 font-mono text-[11px] text-t-text/50 leading-relaxed overflow-x-auto whitespace-pre">
+                      {method.codeExample}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-t-overlay/5 border border-t-overlay/10 p-4 flex items-center justify-center">
+                      <div className="grid grid-cols-5 gap-1">
+                        {Array.from({ length: 25 }).map((_, j) => (
+                          <div
+                            key={j}
+                            className={`w-3 h-3 rounded-sm ${
+                              [0,1,2,3,4,5,9,10,14,15,19,20,21,22,23,24].includes(j)
+                                ? 'bg-violet-400/40'
+                                : 'bg-t-overlay/10'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="ml-3 text-xs text-t-text/30">{t('home.deployMethod3Hint')}</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>

@@ -28,7 +28,7 @@
   "nav": {
     "features": "Features",
     "performance": "Performance",
-    "testimonials": "Témoignages"
+    "deploy": "Déploiement"
   },
 
   "home": {
@@ -73,18 +73,16 @@
     "howStep2Desc": "Connectez des outils (APIs, bases de données, MCP) et ajustez les instructions système.",
     "howStep3Title": "Déployez",
     "howStep3Desc": "Testez dans le playground puis déployez en API, widget ou bot en un clic.",
-    "testimonialsLabel": "Témoignages",
-    "testimonialsTitle": "Ils créent des agents avec nous",
-    "testimonialsSubtitle": "Découvrez ce que nos utilisateurs pensent de GiLo AI.",
-    "testimonial1": "J'ai créé un agent de support client en 30 minutes. Il répond mieux que notre ancien chatbot.",
-    "testimonial1Author": "Marie L.",
-    "testimonial1Role": "Fondatrice, TechStart",
-    "testimonial2": "On a déployé 5 agents internes en une semaine. L'intégration MCP avec nos APIs est magique.",
-    "testimonial2Author": "Thomas R.",
-    "testimonial2Role": "CTO, DataFlow",
-    "testimonial3": "Le playground permet de tester et itérer en temps réel. Mes agents s'améliorent à chaque session.",
-    "testimonial3Author": "Sophie K.",
-    "testimonial3Role": "Product Manager",
+    "deployLabel": "Déploiement",
+    "deployTitle": "Utilisez votre agent déployé",
+    "deploySubtitle": "3 façons d'intégrer votre agent IA une fois déployé.",
+    "deployMethod1Title": "Intégration API",
+    "deployMethod1Desc": "Intégrez votre agent dans n'importe quelle app, site web ou backend via une API REST simple. Envoyez des messages et recevez les réponses IA en un seul appel HTTP avec votre clé API.",
+    "deployMethod2Title": "Lien direct (slug.gilo.dev)",
+    "deployMethod2Desc": "Chaque agent déployé obtient sa propre URL sur slug.gilo.dev — une interface conversationnelle prête à l'emploi. Partagez le lien avec vos utilisateurs ou intégrez-le n'importe où.",
+    "deployMethod3Title": "QR Code",
+    "deployMethod3Desc": "Générez un QR code qui pointe vers la page de votre agent. Parfait pour les restaurants, événements, commerces ou tout point de contact physique où les utilisateurs peuvent scanner et discuter instantanément.",
+    "deployMethod3Hint": "Scannez pour discuter",
     "ctaTitle1": "Prêt à créer",
     "ctaTitle2": "votre agent",
     "ctaSubtitle": "Rejoignez des milliers de créateurs qui utilisent GiLo AI pour déployer des agents intelligents.",

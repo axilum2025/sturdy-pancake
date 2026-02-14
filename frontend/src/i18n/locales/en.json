@@ -28,7 +28,7 @@
   "nav": {
     "features": "Features",
     "performance": "Performance",
-    "testimonials": "Testimonials"
+    "deploy": "Deploy"
   },
 
   "home": {
@@ -73,18 +73,16 @@
     "howStep2Desc": "Connect tools (APIs, databases, MCP) and fine-tune the system instructions.",
     "howStep3Title": "Deploy",
     "howStep3Desc": "Test in the playground then deploy as API, widget, or bot in one click.",
-    "testimonialsLabel": "Testimonials",
-    "testimonialsTitle": "They build agents with us",
-    "testimonialsSubtitle": "See what our users think about GiLo AI.",
-    "testimonial1": "I built a customer support agent in 30 minutes. It responds better than our old chatbot.",
-    "testimonial1Author": "Marie L.",
-    "testimonial1Role": "Founder, TechStart",
-    "testimonial2": "We deployed 5 internal agents in a week. The MCP integration with our APIs is magical.",
-    "testimonial2Author": "Thomas R.",
-    "testimonial2Role": "CTO, DataFlow",
-    "testimonial3": "The playground lets you test and iterate in real time. My agents improve with each session.",
-    "testimonial3Author": "Sophie K.",
-    "testimonial3Role": "Product Manager",
+    "deployLabel": "Deployment",
+    "deployTitle": "Use your deployed agent",
+    "deploySubtitle": "3 ways to integrate your AI agent once it's deployed.",
+    "deployMethod1Title": "API Integration",
+    "deployMethod1Desc": "Integrate your agent into any app, website, or backend via a simple REST API. Send messages and get AI responses with a single HTTP call using your API key.",
+    "deployMethod2Title": "Direct Link (slug.gilo.dev)",
+    "deployMethod2Desc": "Each deployed agent gets its own URL at slug.gilo.dev — a ready-to-use conversational interface. Share the link with your users or embed it anywhere.",
+    "deployMethod3Title": "QR Code",
+    "deployMethod3Desc": "Generate a QR code that points to your agent's page. Perfect for restaurants, events, retail, or any physical touchpoint where users can scan and chat instantly.",
+    "deployMethod3Hint": "Scan to chat",
     "ctaTitle1": "Ready to create",
     "ctaTitle2": "your agent",
     "ctaSubtitle": "Join thousands of creators using GiLo AI to deploy intelligent agents.",
