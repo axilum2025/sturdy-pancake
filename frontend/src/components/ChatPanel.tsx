@@ -13,6 +13,7 @@ import {
   EyeOff,
   Trash2,
   X,
+  Zap,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -1156,6 +1157,7 @@ export default function ChatPanel() {
                   onClick={() => handleSend(action.prompt)}
                   className="glass-card bg-t-overlay/5 hover:bg-t-overlay/10 border border-t-overlay/10 hover:border-t-overlay/20 rounded-lg px-3 py-2 text-xs text-t-text/70 hover:text-t-text transition-all duration-200 text-left"
                 >
+                  <Zap className="w-3 h-3 inline mr-1 text-t-text/40" />
                   {action.label}
                 </button>
               ))}
