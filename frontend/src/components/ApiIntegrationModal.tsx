@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Key, Trash2, Terminal, RefreshCw, AlertTriangle, Shield, Globe, MessageSquare } from 'lucide-react';
+import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield, Globe, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createApiKey, listApiKeys, revokeApiKey, ApiKeyResponse } from '../services/api';
 
