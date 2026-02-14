@@ -7,6 +7,7 @@ import { validate, chatSchema, copilotStreamSchema } from '../middleware/validat
 import { enforceModelForTier } from '../models/agent';
 import { knowledgeService } from '../services/knowledgeService';
 import { credentialService } from '../services/credentialService';
+import { checkCopilotQuota } from '../middleware/chatAbuse';
 import OpenAI from 'openai';
 
 export const copilotRouter = Router();
@@ -45,6 +46,22 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
 
     const userId = (req as AuthenticatedRequest).userId;
     const agentId = projectContext?.projectId;
+
+    // --- Per-user daily quota & abuse detection ---
+    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+    const latestUserContent = messages?.[messages.length - 1]?.content || '';
+    const copilotQuota = await checkCopilotQuota(userId, userTier, latestUserContent, messages?.length);
+    if (!copilotQuota.allowed) {
+      return res.status(429).json({
+        error: copilotQuota.reason === 'daily_limit' ? 'Daily message limit reached' : 'Message blocked',
+        message: copilotQuota.message,
+        limit: copilotQuota.limit,
+        remaining: 0,
+        resetAt: copilotQuota.resetAt,
+        blocked: copilotQuota.blocked || false,
+        reason: copilotQuota.reason,
+      });
+    }
 
     // Helper: emit an SSE step event so the frontend can show granular progress
     const emitStep = (step: string, status: 'running' | 'done' | 'error' = 'running', detail?: string) => {
@@ -178,6 +195,9 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
     if (conversationId) {
       res.write(`data: ${JSON.stringify({ type: 'conversation', conversationId })}\n\n`);
     }
+
+    // Send quota info so the frontend can display remaining messages
+    res.write(`data: ${JSON.stringify({ type: 'quota', remaining: copilotQuota.remaining, limit: copilotQuota.limit, resetAt: copilotQuota.resetAt })}\n\n`);
 
     // Step events for the frontend
     emitStep('language_detect', 'done');
@@ -421,6 +441,21 @@ copilotRouter.post('/repo/info', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Repo info error:', error);
     res.status(500).json({ error: 'Failed to fetch repo info', details: error.message });
+  }
+});
+
+// ----------------------------------------------------------
+// GET /api/copilot/quota  –  Get current message quota usage
+// ----------------------------------------------------------
+copilotRouter.get('/quota', async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).userId;
+    const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
+    const { getCopilotUsage } = await import('../middleware/chatAbuse');
+    const usage = await getCopilotUsage(userId, userTier);
+    res.json(usage);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 

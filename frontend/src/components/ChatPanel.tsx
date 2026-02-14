@@ -573,6 +573,10 @@ export default function ChatPanel() {
   const [slashFilter, setSlashFilter] = useState('');
   const [showCredentialModal, setShowCredentialModal] = useState(false);
   const [requestedCredKeys, setRequestedCredKeys] = useState<string[]>([]);
+  const [quotaRemaining, setQuotaRemaining] = useState<number | null>(null);
+  const [quotaLimit, setQuotaLimit] = useState<number | null>(null);
+  const [quotaBlocked, setQuotaBlocked] = useState(false);
+  const [quotaBlockMessage, setQuotaBlockMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const conversationIdRef = useRef<string | undefined>(undefined);
@@ -827,6 +831,9 @@ export default function ChatPanel() {
                 );
               } else if (chunk.type === 'conversation' && chunk.conversationId) {
                 conversationIdRef.current = chunk.conversationId;
+              } else if (chunk.type === 'quota') {
+                setQuotaRemaining(chunk.remaining);
+                setQuotaLimit(chunk.limit);
               } else if (chunk.type === 'config_score' && chunk.score !== undefined) {
                 setConfigScore(chunk.score);
               } else if (chunk.type === 'config_applied' && chunk.fields) {
@@ -1030,6 +1037,15 @@ export default function ChatPanel() {
       }
     } catch (error: any) {
       console.error('Copilot error:', error);
+
+      // Handle quota exceeded
+      if (error.quotaExceeded) {
+        setQuotaBlocked(true);
+        setQuotaRemaining(0);
+        setQuotaLimit(error.limit);
+        setQuotaBlockMessage(error.message);
+      }
+
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMsgId
@@ -1295,6 +1311,17 @@ export default function ChatPanel() {
 
       {/* Input – Gemini-style on mobile */}
       <div className="flex-shrink-0 md:p-4 md:border-t md:border-t-overlay/10 p-0 border-t-0">
+        {/* Quota warning / blocked indicator */}
+        {quotaBlocked && (
+          <div className="mb-2 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-center">
+            <p className="text-red-400 text-xs font-medium">🚫 {quotaBlockMessage || 'Daily message limit reached'}</p>
+          </div>
+        )}
+        {quotaRemaining !== null && quotaLimit !== null && !quotaBlocked && quotaRemaining <= Math.ceil(quotaLimit * 0.15) && (
+          <div className="mb-1 text-center">
+            <span className="text-[10px] text-amber-400/70">{quotaRemaining} / {quotaLimit} messages remaining today</span>
+          </div>
+        )}
         {isTyping && (
           <button
             onClick={handleStop}
@@ -1348,13 +1375,14 @@ export default function ChatPanel() {
                 }
               }
             }}
-            placeholder={t('chat.placeholder')}
+            placeholder={quotaBlocked ? 'Daily message limit reached' : t('chat.placeholder')}
             rows={4}
             className="w-full text-t-text px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
+            disabled={quotaBlocked}
           />
           <button
             onClick={() => handleSend()}
-            disabled={!message.trim() || isTyping}
+            disabled={!message.trim() || isTyping || quotaBlocked}
             className="absolute right-5 md:right-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text flex items-center justify-center disabled:opacity-50 hover:bg-t-overlay/10 transition-colors"
           >
             {isTyping ? (

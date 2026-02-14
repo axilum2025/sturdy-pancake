@@ -140,6 +140,9 @@ export default function AgentChat() {
   const [isThinking, setIsThinking] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isDark, setIsDark] = useState(true);
+  const [sessionRemaining, setSessionRemaining] = useState<number | null>(null);
+  const [sessionLimit, setSessionLimit] = useState<number>(10);
+  const [sessionBlocked, setSessionBlocked] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -294,6 +297,12 @@ export default function AgentChat() {
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        if (response.status === 429 && errorData) {
+          setSessionBlocked(true);
+          setSessionRemaining(0);
+          throw new Error(errorData.message || 'Test limit reached');
+        }
         throw new Error(`Erreur: ${response.statusText}`);
       }
 
@@ -332,6 +341,10 @@ export default function AgentChat() {
                 setMessages((prev) =>
                   prev.map((m) => (m.id === assistantId ? { ...m, content: fullContent, isStreaming: true } : m))
                 );
+              }
+              if (data.type === 'session_limit') {
+                setSessionRemaining(data.remaining);
+                setSessionLimit(data.limit);
               }
               if (data.done) break;
             } catch {
@@ -739,6 +752,35 @@ export default function AgentChat() {
             </button>
           )}
 
+          {/* Session limit indicator */}
+          {sessionBlocked && (
+            <div style={{
+              padding: '12px 16px',
+              borderRadius: 12,
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.2)',
+              textAlign: 'center',
+              marginBottom: 8,
+            }}>
+              <p style={{ color: '#f87171', fontSize: 13, fontWeight: 500, margin: 0 }}>
+                🚫 Test limit reached ({sessionLimit} messages)
+              </p>
+              <p style={{ color: vars['--chat-text-40'], fontSize: 11, margin: '4px 0 0' }}>
+                Create your own agent to chat without limits!
+              </p>
+            </div>
+          )}
+          {sessionRemaining !== null && !sessionBlocked && (
+            <div style={{
+              textAlign: 'center',
+              fontSize: 11,
+              color: sessionRemaining <= 3 ? '#f59e0b' : vars['--chat-text-30'],
+              marginBottom: 4,
+            }}>
+              {sessionRemaining} / {sessionLimit} test messages remaining
+            </div>
+          )}
+
           {/* Textarea wrapper */}
           <div style={{ position: 'relative' }}>
             <textarea
@@ -746,7 +788,7 @@ export default function AgentChat() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
+              placeholder={sessionBlocked ? 'Test limit reached' : t('store.messagePlaceholder', { name: agent?.name || 'Agent' })}
               rows={4}
               className="agent-chat-textarea"
               style={{
@@ -764,8 +806,9 @@ export default function AgentChat() {
                 minHeight: 100,
                 lineHeight: 1.5,
                 transition: 'border-color 0.2s, box-shadow 0.2s',
+                opacity: sessionBlocked ? 0.5 : 1,
               }}
-              disabled={isStreaming}
+              disabled={isStreaming || sessionBlocked}
             />
             <button
               onClick={handleSend}

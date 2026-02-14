@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { storeModel, PublishAgentDTO, StoreCategory } from '../models/storeAgent';
 import { agentModel, enforceModelForTier, enforceMaxTokensForTier, isByoLlm } from '../models/agent';
 import { checkMessageQuota } from '../middleware/messageQuota';
+import { checkStoreSessionLimit } from '../middleware/chatAbuse';
 import { copilotService } from '../services/copilotService';
 import { userModel } from '../models/user';
 import { AuthenticatedRequest, authMiddleware } from '../middleware/auth';
@@ -316,7 +317,19 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'messages array required' });
     }
 
-    // Daily message quota check
+    // Per-IP session limit (store = test only, max 10 messages)
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || 'unknown';
+    const sessionCheck = await checkStoreSessionLimit(clientIp, listing.id);
+    if (!sessionCheck.allowed) {
+      return res.status(429).json({
+        error: 'Test limit reached',
+        message: sessionCheck.message,
+        limit: sessionCheck.limit,
+        remaining: 0,
+      });
+    }
+
+    // Daily message quota check (per-agent)
     const byoLlm = isByoLlm(listing.configSnapshot as any);
     let storeOwnerTier = 'free';
     try {
@@ -352,6 +365,9 @@ storeRouter.post('/:id/chat', async (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+
+    // Send session limit info as first SSE event
+    res.write(`data: ${JSON.stringify({ type: 'session_limit', remaining: sessionCheck.remaining, limit: sessionCheck.limit })}\n\n`);
 
     try {
       const stream = await client.chat.completions.create({

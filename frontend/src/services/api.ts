@@ -509,6 +509,16 @@ export const copilotChatStream = async (
   });
 
   if (!response.ok) {
+    const errorData = await response.json().catch(() => null);
+    if (response.status === 429 && errorData) {
+      const err = new Error(errorData.message || 'Daily message limit reached') as any;
+      err.quotaExceeded = true;
+      err.reason = errorData.reason;
+      err.limit = errorData.limit;
+      err.remaining = errorData.remaining;
+      err.resetAt = errorData.resetAt;
+      throw err;
+    }
     throw new Error(`Copilot stream failed: ${response.statusText}`);
   }
 
