@@ -33,6 +33,13 @@ param jwtSecret string
 @description('GitHub token for Copilot proxy (optional)')
 param githubToken string = ''
 
+@secure()
+@description('SendGrid API key for transactional emails (password reset, etc.)')
+param sendgridApiKey string = ''
+
+@description('Frontend URL for OAuth redirects')
+param frontendUrl string = 'https://nice-smoke-0fc3e1e0f.6.azurestaticapps.net'
+
 @description('Container image tag')
 param imageTag string = 'latest'
 
@@ -188,6 +195,10 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'github-token'
           value: githubToken
         }
+        {
+          name: 'sendgrid-api-key'
+          value: sendgridApiKey
+        }
       ]
     }
     template: {
@@ -208,6 +219,8 @@ resource backendApp 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
             { name: 'GITHUB_TOKEN', secretRef: 'github-token' }
+            { name: 'SENDGRID_API_KEY', secretRef: 'sendgrid-api-key' }
+            { name: 'FRONTEND_URL', value: frontendUrl }
           ]
           probes: [
             {
