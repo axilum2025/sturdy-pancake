@@ -117,6 +117,7 @@ export default function Home() {
       icon: Code2,
       titleKey: 'home.deployMethod1Title',
       descKey: 'home.deployMethod1Desc',
+      codeExample: 'POST https://api.gilo.dev/api/v1/chat\n{ "messages": [{ "role": "user", "content": "Hello!" }] }',
       color: 'from-blue-500/20 to-indigo-500/20',
       borderColor: 'border-blue-500/20',
       iconColor: 'text-blue-400',
@@ -125,6 +126,7 @@ export default function Home() {
       icon: Link2,
       titleKey: 'home.deployMethod2Title',
       descKey: 'home.deployMethod2Desc',
+      codeExample: 'https://mon-agent.gilo.dev',
       color: 'from-emerald-500/20 to-green-500/20',
       borderColor: 'border-emerald-500/20',
       iconColor: 'text-emerald-400',
@@ -133,6 +135,7 @@ export default function Home() {
       icon: QrCode,
       titleKey: 'home.deployMethod3Title',
       descKey: 'home.deployMethod3Desc',
+      codeExample: null,
       color: 'from-violet-500/20 to-purple-500/20',
       borderColor: 'border-violet-500/20',
       iconColor: 'text-violet-400',
@@ -425,7 +428,29 @@ export default function Home() {
                   {/* Title */}
                   <h3 className="text-lg font-semibold text-t-text/90 mb-2">{t(method.titleKey)}</h3>
                   {/* Description */}
-                  <p className="text-sm text-t-text/45 leading-relaxed flex-1">{t(method.descKey)}</p>
+                  <p className="text-sm text-t-text/45 leading-relaxed mb-5 flex-1">{t(method.descKey)}</p>
+                  {/* Code example or QR illustration */}
+                  {method.codeExample ? (
+                    <div className="rounded-lg bg-t-overlay/5 border border-t-overlay/10 p-3 font-mono text-[11px] text-t-text/50 leading-relaxed overflow-x-auto whitespace-pre">
+                      {method.codeExample}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg bg-t-overlay/5 border border-t-overlay/10 p-4 flex items-center justify-center">
+                      <div className="grid grid-cols-5 gap-1">
+                        {Array.from({ length: 25 }).map((_, j) => (
+                          <div
+                            key={j}
+                            className={`w-3 h-3 rounded-sm ${
+                              [0,1,2,3,4,5,9,10,14,15,19,20,21,22,23,24].includes(j)
+                                ? 'bg-violet-400/40'
+                                : 'bg-t-overlay/10'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="ml-3 text-xs text-t-text/30">{t('home.deployMethod3Hint')}</span>
+                    </div>
+                  )}
                 </div>
               );
             })}
