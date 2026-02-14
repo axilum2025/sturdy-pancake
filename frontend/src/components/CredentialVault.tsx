@@ -8,14 +8,14 @@ interface CredentialVaultProps {
 }
 
 const COMMON_SERVICES = [
-  { id: 'openai', label: 'OpenAI', icon: '🤖', fields: ['API Key'] },
-  { id: 'anthropic', label: 'Anthropic', icon: '🧠', fields: ['API Key'] },
-  { id: 'stripe', label: 'Stripe', icon: '💳', fields: ['Secret Key', 'Publishable Key'] },
-  { id: 'google', label: 'Google', icon: '🔍', fields: ['API Key', 'Client ID', 'Client Secret'] },
-  { id: 'slack', label: 'Slack', icon: '💬', fields: ['Bot Token', 'Webhook URL'] },
-  { id: 'notion', label: 'Notion', icon: '📝', fields: ['Integration Token'] },
-  { id: 'github', label: 'GitHub', icon: '🐙', fields: ['Personal Access Token'] },
-  { id: 'custom', label: 'Custom', icon: '🔧', fields: [] },
+  { id: 'openai', label: 'OpenAI', fields: ['API Key'] },
+  { id: 'anthropic', label: 'Anthropic', fields: ['API Key'] },
+  { id: 'stripe', label: 'Stripe', fields: ['Secret Key', 'Publishable Key'] },
+  { id: 'google', label: 'Google', fields: ['API Key', 'Client ID', 'Client Secret'] },
+  { id: 'slack', label: 'Slack', fields: ['Bot Token', 'Webhook URL'] },
+  { id: 'notion', label: 'Notion', fields: ['Integration Token'] },
+  { id: 'github', label: 'GitHub', fields: ['Personal Access Token'] },
+  { id: 'custom', label: 'Custom', fields: [] },
 ];
 
 export default function CredentialVault({ agentId }: CredentialVaultProps) {
@@ -153,7 +153,6 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
                       : 'bg-t-overlay/[0.02] border-t-overlay/5 text-t-text/40 hover:text-t-text/60'
                   }`}
                 >
-                  <span className="text-base">{svc.icon}</span>
                   <span className="text-[10px] font-medium">{svc.label}</span>
                 </button>
               ))}
@@ -255,8 +254,8 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
                 key={cred.id}
                 className="flex items-center gap-3 p-3 rounded-xl bg-t-overlay/[0.04] border border-t-overlay/10"
               >
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-sm flex-shrink-0">
-                  {serviceInfo?.icon || '🔑'}
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-xs font-bold text-t-text/40 flex-shrink-0">
+                  {(serviceInfo?.label || cred.service).charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
