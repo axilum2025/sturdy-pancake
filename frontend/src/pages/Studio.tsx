@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, Rocket, ArrowLeft, Eye, Clock, Sliders, Store, Code2, Wrench } from 'lucide-react';
+import { Settings, Rocket, ArrowLeft, Eye, Clock, Sliders, Store, Code2, Wrench, Key, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ChatPanel from '../components/ChatPanel';
 import Playground from '../components/Playground';
@@ -10,6 +10,7 @@ import MCPBrowser from '../components/MCPBrowser';
 import AgentConfig from '../components/AgentConfig';
 import PublishModal from '../components/PublishModal';
 import ApiIntegrationModal from '../components/ApiIntegrationModal';
+import CredentialVault from '../components/CredentialVault';
 import { useSessionStore } from '../store/sessionStore';
 import { useStudioStore } from '../store/studioStore';
 import { getAgent } from '../services/api';
@@ -30,6 +31,7 @@ export default function Studio() {
   const [showApiIntegration, setShowApiIntegration] = useState(false);
   const [publishedStoreId, setPublishedStoreId] = useState<string | null>(null);
   const [agentSlug, setAgentSlug] = useState<string | undefined>();
+  const [showCredentials, setShowCredentials] = useState(false);
 
   useEffect(() => {
     const initSession = async () => {
@@ -124,6 +126,13 @@ export default function Studio() {
           <Store className="w-5 h-5" />
         </button>
         <button
+          onClick={() => setShowCredentials(!showCredentials)}
+          className={`w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center transition-all duration-300 ${showCredentials ? 'text-amber-400 bg-amber-500/10' : 'text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'}`}
+          title={t('credentials.title', 'Clés & Credentials')}
+        >
+          <Key className="w-5 h-5" />
+        </button>
+        <button
           onClick={() => setShowMCPBrowser(!showMCPBrowser)}
           className={`w-12 h-12 rounded-xl btn-outline-glow flex items-center justify-center transition-all duration-300 ${showMCPBrowser ? 'text-primary bg-primary/10' : 'text-t-text/70 hover:text-t-text hover:bg-t-overlay/5'}`}
           title={t('builder.tools')}
@@ -171,6 +180,13 @@ export default function Studio() {
               title="Playground"
             >
               <Eye className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setShowCredentials(!showCredentials)}
+              className={`p-2 rounded-lg transition-colors ${showCredentials ? 'bg-amber-500/20 text-amber-400' : 'text-t-text/60 hover:text-t-text hover:bg-t-overlay/10'}`}
+              title={t('credentials.title', 'Clés & Credentials')}
+            >
+              <Key className="w-4 h-4" />
             </button>
             <button
               onClick={() => setShowMCPBrowser(!showMCPBrowser)}
@@ -299,6 +315,33 @@ export default function Studio() {
               setShowPublish(false);
             }}
           />
+        )}
+
+        {/* Credentials Slidebar */}
+        {showCredentials && projectId && (
+          <>
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 animate-fade-in"
+              onClick={() => setShowCredentials(false)}
+            />
+            <div className="fixed top-0 right-0 h-full w-full md:w-[55%] lg:w-[45%] z-40 glass-strong border-l-0 md:border-l md:border-t-overlay/10 shadow-2xl flex flex-col animate-slide-in-right">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-t-overlay/10 flex-shrink-0">
+                <h2 className="text-base font-semibold text-t-text flex items-center gap-2">
+                  <Key className="w-5 h-5 text-amber-400" />
+                  {t('credentials.title', 'Clés & Credentials')}
+                </h2>
+                <button
+                  onClick={() => setShowCredentials(false)}
+                  className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5">
+                <CredentialVault agentId={projectId} />
+              </div>
+            </div>
+          </>
         )}
 
         {/* API Integration Modal */}

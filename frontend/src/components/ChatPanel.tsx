@@ -15,12 +15,20 @@ import {
   Star,
   HelpCircle,
   Wrench,
+  Key,
+  Lock,
+  Eye,
+  EyeOff,
+  Plus,
+  Trash2,
+  Shield,
+  X,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
-import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile, getConversations, getConversationMessages, getAgent } from '../services/api';
+import { copilotChatStream, getCopilotStatus, CopilotMessage, saveFile, getConversations, getConversationMessages, getAgent, listCredentials, saveCredential, deleteCredential, CredentialEntry } from '../services/api';
 import { useStudioStore } from '../store/studioStore';
 
 // ============================================================
@@ -220,6 +228,257 @@ function AgentTaskList({
 }
 
 // ============================================================
+// Credential Modal (appears when GiLo AI requests keys or user opens it)
+// ============================================================
+
+const COMMON_SERVICES = [
+  { id: 'openai', label: 'OpenAI', fields: ['API Key'] },
+  { id: 'anthropic', label: 'Anthropic', fields: ['API Key'] },
+  { id: 'stripe', label: 'Stripe', fields: ['Secret Key', 'Publishable Key'] },
+  { id: 'google', label: 'Google', fields: ['API Key', 'Client ID', 'Client Secret'] },
+  { id: 'slack', label: 'Slack', fields: ['Bot Token', 'Webhook URL'] },
+  { id: 'notion', label: 'Notion', fields: ['Integration Token'] },
+  { id: 'github', label: 'GitHub', fields: ['Personal Access Token'] },
+  { id: 'custom', label: 'Custom', fields: [] },
+];
+
+function CredentialModal({
+  agentId,
+  onClose,
+  requestedKeys,
+}: {
+  agentId: string;
+  onClose: () => void;
+  requestedKeys?: string[];
+}) {
+  const { t } = useTranslation();
+  const [credentials, setCredentials] = useState<CredentialEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedService, setSelectedService] = useState('custom');
+  const [customServiceName, setCustomServiceName] = useState('');
+  const [credKey, setCredKey] = useState('');
+  const [credValue, setCredValue] = useState('');
+  const [showValue, setShowValue] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(!!requestedKeys?.length);
+
+  const loadCreds = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await listCredentials(agentId);
+      setCredentials(data.credentials);
+    } catch { /* silent */ } finally {
+      setLoading(false);
+    }
+  }, [agentId]);
+
+  useEffect(() => { loadCreds(); }, [loadCreds]);
+
+  // Pre-fill from requested keys
+  useEffect(() => {
+    if (requestedKeys?.length) {
+      const key = requestedKeys[0];
+      // Try to match service
+      const svc = COMMON_SERVICES.find(s =>
+        key.toLowerCase().includes(s.id) || s.label.toLowerCase().includes(key.toLowerCase().split(' ')[0])
+      );
+      if (svc) {
+        setSelectedService(svc.id);
+        setCredKey(svc.fields[0] || key);
+      } else {
+        setSelectedService('custom');
+        setCredKey(key);
+      }
+    }
+  }, [requestedKeys]);
+
+  const handleSave = async () => {
+    const service = selectedService === 'custom' ? customServiceName.trim() : selectedService;
+    if (!service || !credKey.trim() || !credValue.trim()) {
+      setError(t('credentials.fillAllFields', 'Remplissez tous les champs'));
+      return;
+    }
+    try {
+      setSaving(true);
+      setError(null);
+      await saveCredential(agentId, service, credKey.trim(), credValue.trim());
+      setSuccess(t('credentials.saved', 'Credential sauvegardé'));
+      setTimeout(() => setSuccess(null), 3000);
+      setCredKey('');
+      setCredValue('');
+      setCustomServiceName('');
+      setShowAdd(false);
+      await loadCreds();
+    } catch (e: any) {
+      setError(e.message || 'Erreur');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCredential(agentId, id);
+      await loadCreds();
+    } catch { setError('Erreur suppression'); }
+  };
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 animate-fade-in" onClick={onClose} />
+      <div className="fixed inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-[500px] md:max-h-[80vh] z-50 flex flex-col glass-strong rounded-2xl border border-t-overlay/10 shadow-2xl animate-fade-in-up overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-t-overlay/10">
+          <div className="flex items-center gap-2">
+            <Shield className="w-5 h-5 text-amber-400" />
+            <h2 className="text-base font-semibold text-t-text">{t('credentials.title', 'Clés & Credentials')}</h2>
+            <Lock className="w-3 h-3 text-green-400" />
+            <span className="text-[9px] text-green-400/60 font-mono">AES-256</span>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-t-overlay/10 text-t-text/50 hover:text-t-text transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Requested keys banner */}
+        {requestedKeys && requestedKeys.length > 0 && (
+          <div className="mx-5 mt-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <p className="text-xs text-amber-300">
+              <Key className="w-3 h-3 inline mr-1" />
+              GiLo AI a besoin de : <strong>{requestedKeys.join(', ')}</strong>
+            </p>
+          </div>
+        )}
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+          {/* Error/Success */}
+          {error && (
+            <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 text-xs text-red-300">{error}</div>
+          )}
+          {success && (
+            <div className="p-2 rounded-lg bg-green-500/10 border border-green-500/20 text-xs text-green-300">{success}</div>
+          )}
+
+          {/* Add form */}
+          {showAdd ? (
+            <div className="bg-t-overlay/[0.04] rounded-xl border border-t-overlay/10 p-4 space-y-3">
+              {/* Service grid */}
+              <div>
+                <label className="block text-xs text-t-text/50 mb-2">{t('credentials.service', 'Service')}</label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {COMMON_SERVICES.map(svc => (
+                    <button
+                      key={svc.id}
+                      onClick={() => {
+                        setSelectedService(svc.id);
+                        if (svc.fields.length > 0) setCredKey(svc.fields[0]);
+                      }}
+                      className={`flex flex-col items-center gap-1 p-2 rounded-lg text-center transition-all border ${
+                        selectedService === svc.id
+                          ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
+                          : 'bg-t-overlay/[0.02] border-t-overlay/5 text-t-text/40 hover:text-t-text/60'
+                      }`}
+                    >
+                      <span className="text-[10px] font-medium">{svc.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {selectedService === 'custom' && (
+                <input
+                  value={customServiceName}
+                  onChange={(e) => setCustomServiceName(e.target.value)}
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+                  placeholder="Nom du service"
+                />
+              )}
+
+              <input
+                value={credKey}
+                onChange={(e) => setCredKey(e.target.value)}
+                className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+                placeholder="Nom de la clé (ex: api_key)"
+              />
+
+              <div className="relative">
+                <input
+                  type={showValue ? 'text' : 'password'}
+                  value={credValue}
+                  onChange={(e) => setCredValue(e.target.value)}
+                  className="w-full bg-t-overlay/[0.04] text-t-text/90 px-3 py-2 pr-10 rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500/30 border border-t-overlay/10"
+                  placeholder="sk-... ou valeur secrète"
+                />
+                <button
+                  onClick={() => setShowValue(!showValue)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-t-text/30 hover:text-t-text/60"
+                >
+                  {showValue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <button onClick={() => setShowAdd(false)} className="flex-1 px-3 py-2 text-sm rounded-lg border border-t-overlay/10 text-t-text/50 hover:bg-t-overlay/5">
+                  {t('common.cancel', 'Annuler')}
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !credKey.trim() || !credValue.trim()}
+                  className="flex-1 btn-gradient px-3 py-2 text-sm rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {saving && <RotateCw className="w-3 h-3 animate-spin" />}
+                  <Lock className="w-3 h-3" />
+                  {t('credentials.saveEncrypted', 'Sauvegarder')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="w-full btn-outline-glow px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-2"
+            >
+              <Plus className="w-3 h-3" />
+              {t('credentials.add', 'Ajouter une clé')}
+            </button>
+          )}
+
+          {/* Existing credentials */}
+          {loading ? (
+            <div className="text-center py-4 text-xs text-t-text/30 animate-pulse">Chargement...</div>
+          ) : credentials.length === 0 && !showAdd ? (
+            <div className="text-center py-6 bg-t-overlay/[0.02] rounded-xl border border-dashed border-t-overlay/10">
+              <Key className="w-8 h-8 mx-auto mb-2 text-t-text/15" />
+              <p className="text-sm text-t-text/30">{t('credentials.empty', 'Aucune clé stockée')}</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {credentials.map((cred) => (
+                <div key={cred.id} className="flex items-center gap-3 p-2.5 rounded-lg bg-t-overlay/[0.04] border border-t-overlay/10">
+                  <Key className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-t-text/80 capitalize">{cred.service}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70">{cred.key}</span>
+                    </div>
+                    <p className="text-[10px] text-t-text/35 font-mono mt-0.5">{cred.maskedValue}</p>
+                  </div>
+                  <button onClick={() => handleDelete(cred.id)} className="p-1 rounded text-t-text/20 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ============================================================
 // Slash commands definition
 // ============================================================
 
@@ -332,6 +591,8 @@ export default function ChatPanel() {
   const [configScore, setConfigScore] = useState<number | null>(null);
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashFilter, setSlashFilter] = useState('');
+  const [showCredentialModal, setShowCredentialModal] = useState(false);
+  const [requestedCredKeys, setRequestedCredKeys] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const conversationIdRef = useRef<string | undefined>(undefined);
@@ -478,8 +739,8 @@ export default function ChatPanel() {
   );
 
   // Step label mapping (step id → i18n key)
+  // language_detect is intentionally excluded — detection runs in backend only, no UI step
   const stepLabels: Record<string, string> = {
-    language_detect: 'chat.steps.languageDetect',
     load_context: 'chat.steps.loadContext',
     thinking: 'chat.steps.thinking',
     build_prompt: 'chat.steps.buildPrompt',
@@ -489,6 +750,9 @@ export default function ChatPanel() {
     apply_config: 'chat.steps.applyConfig',
     save_credentials: 'chat.steps.saveCredentials',
   };
+
+  // Hidden steps that should not appear in the task list
+  const hiddenSteps = new Set(['language_detect']);
 
   // ---- SSE reader ----
 
@@ -595,9 +859,15 @@ export default function ChatPanel() {
                 // Credentials saved securely on the backend
                 setConfigApplied(true);
                 setTimeout(() => setConfigApplied(false), 4000);
+              } else if (chunk.type === 'credential_request' && chunk.keys) {
+                // GiLo AI is requesting the user to provide API keys
+                setRequestedCredKeys(chunk.keys as string[]);
+                setShowCredentialModal(true);
               } else if (chunk.type === 'step' && chunk.step) {
                 // Granular progress steps from the backend
                 const stepId = chunk.step as string;
+                // Skip hidden steps (e.g. language_detect)
+                if (hiddenSteps.has(stepId)) continue;
                 const stepStatus = chunk.status as 'running' | 'done' | 'error';
                 const stepDetail = chunk.detail as string | undefined;
                 const label = stepLabels[stepId] ? t(stepLabels[stepId]) : stepId;
@@ -1076,8 +1346,16 @@ export default function ChatPanel() {
             }}
             placeholder={t('chat.placeholder')}
             rows={4}
-            className="w-full text-t-text px-4 py-3 pr-12 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
+            className="w-full text-t-text px-12 py-3 resize-none md:input-futuristic md:rounded-lg rounded-xl bg-transparent !border-none outline-none focus:outline-none focus:ring-0 focus:border-none transition-all placeholder:text-t-text/25 landscape-input"
           />
+          {/* Key button to open credential modal */}
+          <button
+            onClick={() => setShowCredentialModal(true)}
+            className="absolute left-5 md:left-3 bottom-[calc(env(safe-area-inset-bottom,12px)+10px)] md:bottom-auto md:top-1/2 md:-translate-y-1/2 p-2 rounded-lg text-t-text/40 hover:text-amber-400 flex items-center justify-center hover:bg-t-overlay/10 transition-colors"
+            title={t('credentials.title', 'Clés & Credentials')}
+          >
+            <Key className="w-4 h-4" />
+          </button>
           <button
             onClick={handleSend}
             disabled={!message.trim() || isTyping}
@@ -1105,6 +1383,18 @@ export default function ChatPanel() {
           </button>
         </div>
       </div>
+
+      {/* Credential modal overlay */}
+      {showCredentialModal && projectId && (
+        <CredentialModal
+          agentId={projectId}
+          onClose={() => {
+            setShowCredentialModal(false);
+            setRequestedCredKeys([]);
+          }}
+          requestedKeys={requestedCredKeys.length > 0 ? requestedCredKeys : undefined}
+        />
+      )}
     </div>
   );
 }

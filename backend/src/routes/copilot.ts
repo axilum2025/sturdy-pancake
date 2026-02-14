@@ -299,6 +299,29 @@ copilotRouter.post('/stream', async (req: Request, res: Response) => {
       }
     }
 
+    // Detect if the LLM is asking the user to provide API keys (no GILO_SAVE_CREDENTIALS block)
+    if (!credMatch) {
+      const keyRequestPatterns = [
+        /(?:besoin|need|require|fournir|provide|entrer|enter)[\s\S]{0,60}(?:cl[ée]\s*(?:api|d'api)|api\s*key|secret|token|credential)/i,
+        /(?:cl[ée]\s*(?:api|d'api)|api\s*key|secret\s*key|access\s*token)[\s\S]{0,60}(?:requis|required|manquant|missing|nécessaire|needed)/i,
+        /veuillez\s+(?:fournir|ajouter|configurer|entrer)[\s\S]{0,40}(?:cl[ée]|key|token|secret)/i,
+        /please\s+(?:provide|add|configure|enter)[\s\S]{0,40}(?:key|token|secret|credential)/i,
+      ];
+      const detectedKeys: string[] = [];
+      // Extract specific key names mentioned
+      const keyNameMatches = fullAssistantContent.matchAll(/(?:cl[ée]\s*(?:api|d'api)|api\s*key|secret\s*key|access\s*token|token)\s*(?:pour|for|de|:)?\s*[«"']?(\w[\w\s.-]{0,30}\w)[»"']?/gi);
+      for (const m of keyNameMatches) {
+        if (m[1] && m[1].length > 2 && m[1].length < 32) {
+          detectedKeys.push(m[1].trim());
+        }
+      }
+      const needsKeys = keyRequestPatterns.some(p => p.test(fullAssistantContent));
+      if (needsKeys || detectedKeys.length > 0) {
+        const uniqueKeys = [...new Set(detectedKeys)].slice(0, 5);
+        res.write(`data: ${JSON.stringify({ type: 'credential_request', keys: uniqueKeys })}\n\n`);
+      }
+    }
+
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (error: any) {
