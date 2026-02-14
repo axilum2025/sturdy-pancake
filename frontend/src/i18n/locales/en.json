@@ -380,7 +380,8 @@
     "quickDev": "Dev Agent",
     "quickDevPrompt": "Create a developer assistant agent that helps write code, debug, and explain technical concepts.",
     "quickRag": "RAG Agent",
-    "quickRagPrompt": "Create a RAG agent that can index documents, search a knowledge base, and answer with sources."
+    "quickRagPrompt": "Create a RAG agent that can index documents, search a knowledge base, and answer with sources.",
+    "autoGreet": "👋 **Hello!** I see your agent was just created. I'm **GiLo AI**, your copilot.\n\nDescribe **what your agent should do** and I'll configure it automatically for you:\n\n- Its role and personality\n- The right AI model\n- Tools to enable\n- Welcome message\n\nFor example: *\"A customer support assistant for my SaaS that responds in English and French\"*"
   },
 
   "agentConfig": {

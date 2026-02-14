@@ -35,6 +35,7 @@ interface ChatMessage {
   content: string;
   timestamp: Date;
   isStreaming?: boolean;
+  isGreeting?: boolean;
   tasks?: AgentTask[];
 }
 
@@ -262,15 +263,9 @@ export default function ChatPanel() {
           const welcome: ChatMessage = {
             id: `greet-${Date.now()}`,
             role: 'assistant',
-            content:
-              '👋 **Bonjour !** Je vois que votre agent vient d\'être créé. Je suis **GiLo AI**, votre copilote.\n\n' +
-              'Décrivez-moi **à quoi servira votre agent** et je le configurerai automatiquement pour vous :\n\n' +
-              '- Son rôle et sa personnalité\n' +
-              '- Le modèle d\'IA adapté\n' +
-              '- Les outils à activer\n' +
-              '- Le message d\'accueil\n\n' +
-              'Par exemple : *« Un assistant support client pour mon SaaS qui répond en français et en anglais »*',
+            content: t('chat.autoGreet'),
             timestamp: new Date(),
+            isGreeting: true,
           };
           setMessages([welcome]);
         }
@@ -702,15 +697,26 @@ export default function ChatPanel() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-3 md:space-y-4 min-h-0">
-        {messages.length === 0 ? (
+        {/* Welcome section: show when no real messages (only greeting or empty) */}
+        {(messages.length === 0 || (messages.length === 1 && messages[0].isGreeting)) && (
           <div className="text-center mt-8 animate-fade-in-up">
             <p className="text-t-text/60 mb-1">
               {t('chat.welcome')}{' '}
               <strong className="gradient-text">GiLo AI</strong>
             </p>
-            <p className="text-sm text-t-text/40 mb-6">
+            <p className="text-sm text-t-text/40 mb-4">
               {t('chat.describeAgent')}
             </p>
+            {/* Show the greeting message inline */}
+            {messages.length === 1 && messages[0].isGreeting && (
+              <div className="max-w-md mx-auto mb-4 text-left">
+                <div className="chat-markdown text-t-text text-sm prose prose-invert prose-sm max-w-none prose-a:text-blue-400">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {messages[0].content}
+                  </ReactMarkdown>
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2 max-w-sm mx-auto">
               {quickActions.map((action) => (
                 <button
@@ -724,7 +730,10 @@ export default function ChatPanel() {
               ))}
             </div>
           </div>
-        ) : (
+        )}
+        {/* Regular messages (skip greeting if it's displayed above) */}
+        {messages.filter((m) => !(m.isGreeting && messages.length === 1)).length > 0 &&
+          !(messages.length === 1 && messages[0].isGreeting) &&
           messages.map((msg) => (
             <div
               key={msg.id}
@@ -746,7 +755,7 @@ export default function ChatPanel() {
                   }`}
                 >
                   {msg.role === 'assistant' ? (
-                    <div className="chat-markdown text-t-text/90 text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-pre:bg-black/40 prose-pre:border prose-pre:border-t-overlay/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-indigo-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
+                    <div className="chat-markdown text-t-text text-sm prose prose-invert prose-sm max-w-none overflow-hidden prose-p:text-t-text prose-strong:text-t-text prose-li:text-t-text prose-headings:text-t-text prose-pre:bg-black/40 prose-pre:border prose-pre:border-t-overlay/10 prose-pre:rounded-lg prose-pre:max-w-full prose-pre:text-xs prose-code:text-indigo-300 prose-code:break-words prose-a:text-blue-400 [&_pre]:my-2 [&_pre]:overflow-x-auto [&_pre]:scrollbar-none [&_pre_code]:whitespace-pre [&_pre_code]:block [&_pre_code]:p-3 [&_hr]:hidden [&_::-webkit-scrollbar]:hidden">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {msg.content || (msg.isStreaming ? '...' : '')}
                       </ReactMarkdown>
@@ -755,7 +764,7 @@ export default function ChatPanel() {
                       )}
                     </div>
                   ) : (
-                    <p className="text-t-text/90 text-sm">{msg.content}</p>
+                    <p className="text-t-text text-sm">{msg.content}</p>
                   )}
                 </div>
 
@@ -791,8 +800,7 @@ export default function ChatPanel() {
                   )}
               </div>
             </div>
-          ))
-        )}
+          ))}
 
         {isTyping && messages[messages.length - 1]?.content === '' && (
           <div className="flex animate-fade-in-up justify-start">
