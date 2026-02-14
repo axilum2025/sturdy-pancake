@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "byo_agent_slots" integer DEFAULT 0 NOT NULL;

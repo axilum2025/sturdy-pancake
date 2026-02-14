@@ -20,6 +20,7 @@ const memStore = new Map<string, RateLimitEntry>();
 const TIER_LIMITS: Record<string, { perMinute: number; perDay: number }> = {
   free: { perMinute: 10, perDay: 200 },
   pro: { perMinute: 60, perDay: 2000 },
+  byo: { perMinute: 60, perDay: 10000 },
 };
 
 const MINUTE_MS = 60 * 1000;

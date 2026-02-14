@@ -174,7 +174,7 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
         <div className="flex items-center justify-between p-5 border-b border-t-overlay/10">
           <div className="flex items-center gap-3">
             <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-              user.tier === 'pro' ? 'from-indigo-500 to-purple-600' : 'from-blue-500 to-indigo-500'
+              user.tier === 'byo' ? 'from-amber-500 to-orange-500' : user.tier === 'pro' ? 'from-indigo-500 to-purple-600' : 'from-blue-500 to-indigo-500'
             } flex items-center justify-center text-white font-bold text-sm shadow-lg flex-shrink-0`}>
               {getInitials(user.email)}
             </div>
@@ -185,11 +185,11 @@ export default function UserProfileModal({ isOpen, onClose }: UserProfileModalPr
               )}
               <div className="flex items-center gap-2">
                 <span className={`text-xs font-medium capitalize ${
-                  user.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
+                  user.tier === 'byo' ? 'text-amber-400' : user.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
                 }`}>
-                  {user.tier} Plan
+                  {user.tier === 'byo' ? 'BYO LLM' : user.tier} Plan
                 </span>
-                {user.tier === 'pro' && <Crown className="w-3 h-3 text-indigo-400" />}
+                {(user.tier === 'pro' || user.tier === 'byo') && <Crown className="w-3 h-3 text-indigo-400" />}
               </div>
             </div>
           </div>

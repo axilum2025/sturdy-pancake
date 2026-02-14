@@ -90,6 +90,7 @@ export default function Dashboard() {
   const getTierColor = (tier: string) => {
     switch (tier) {
       case 'pro': return 'from-indigo-500 to-indigo-500';
+      case 'byo': return 'from-amber-500 to-orange-500';
       case 'team': return 'from-blue-500 to-indigo-500';
       default: return 'from-blue-500 to-indigo-500';
     }
@@ -98,6 +99,7 @@ export default function Dashboard() {
   const getTierGlow = (tier: string) => {
     switch (tier) {
       case 'pro': return 'glow-purple';
+      case 'byo': return 'glow-blue';
       case 'team': return 'glow-blue';
       default: return 'glow-blue';
     }
@@ -186,11 +188,11 @@ export default function Dashboard() {
                   <p className="text-t-text/90 font-medium text-sm truncate">{user?.email}</p>
                   <div className="flex items-center justify-end gap-2">
                     <span className={`text-xs font-medium capitalize ${
-                      user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
+                      user?.tier === 'byo' ? 'text-amber-400' : user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'
                     }`}>
-                      {user?.tier} Plan
+                      {user?.tier === 'byo' ? 'BYO LLM' : user?.tier} Plan
                     </span>
-                    {user?.tier === 'pro' && (
+                    {(user?.tier === 'pro' || user?.tier === 'byo') && (
                       <Crown className="w-3 h-3 text-indigo-400" />
                     )}
                   </div>
@@ -275,20 +277,21 @@ export default function Dashboard() {
             <div className="glass-card rounded-2xl p-3 sm:p-5 animate-fade-in-up delay-300">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <div className={`p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-br ${getTierColor(user?.tier || 'free')}/10 border border-t-overlay/10`}>
-                  <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'} glow-icon`} />
+                  <Crown className={`w-4 h-4 sm:w-5 sm:h-5 ${user?.tier === 'byo' ? 'text-amber-400' : user?.tier === 'pro' ? 'text-indigo-400' : 'text-blue-400'} glow-icon`} />
                 </div>
                 <span className="text-[10px] sm:text-xs text-t-text/40">{t('dashboard.tier')}</span>
               </div>
               <p className="text-lg sm:text-2xl font-bold capitalize text-t-text mb-2">
-                {paidSlots > 0 ? 'Pro' : 'Free'}
+                {user?.tier === 'byo' ? 'BYO LLM' : paidSlots > 0 ? 'Pro' : 'Free'}
               </p>
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                user?.tier === 'byo' ? 'bg-amber-500/20 text-amber-300' :
                 paidSlots > 0 ? 'bg-indigo-500/20 text-indigo-300' : 
                 'bg-blue-500/20 text-blue-300'
               }`}>
-                {paidSlots > 0 && <Crown className="w-3 h-3" />}
-                {paidSlots === 0 && <Sparkles className="w-3 h-3" />}
-                {paidSlots > 0 ? `${paidSlots} PAID` : 'FREE'}
+                {(paidSlots > 0 || user?.tier === 'byo') && <Crown className="w-3 h-3" />}
+                {paidSlots === 0 && user?.tier !== 'byo' && <Sparkles className="w-3 h-3" />}
+                {user?.tier === 'byo' ? 'BYO LLM' : paidSlots > 0 ? `${paidSlots} PAID` : 'FREE'}
               </div>
             </div>
           </div>

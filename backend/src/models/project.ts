@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-export type ProjectTier = 'free' | 'pro';
+export type ProjectTier = 'free' | 'pro' | 'byo';
 export type DeploymentStatus = 'idle' | 'building' | 'deployed' | 'failed';
 export type DeploymentProvider = 'azure-static' | 'azure-webapp' | 'github';
 

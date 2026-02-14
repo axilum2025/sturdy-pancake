@@ -50,7 +50,7 @@ const ALL_MODELS = [
 export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const hasPaidSlots = (user as any)?.paidAgentSlots > 0 || user?.tier === 'pro';
+  const hasPaidSlots = (user as any)?.paidAgentSlots > 0 || (user as any)?.byoAgentSlots > 0 || user?.tier === 'pro' || user?.tier === 'byo';
   const userTier = hasPaidSlots ? 'paid' : 'free';
   const AVAILABLE_MODELS = ALL_MODELS.filter(m => m.tiers.includes(userTier));
   const [config, setConfig] = useState<AgentConfigData>({

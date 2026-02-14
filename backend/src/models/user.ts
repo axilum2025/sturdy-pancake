@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { getDb } from '../db';
 import { users } from '../db/schema';
 
-export type UserTier = 'free' | 'pro';
+export type UserTier = 'free' | 'pro' | 'byo';
 export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
 
 export interface User {
@@ -14,8 +14,10 @@ export interface User {
   displayName?: string;
   githubId?: string;
   tier: UserTier;
-  /** Number of extra agent slots purchased ($3/agent/month) */
+  /** Number of extra agent slots purchased ($5.99/agent/month) */
   paidAgentSlots: number;
+  /** Number of BYO LLM agent slots purchased ($3.99/agent/month) */
+  byoAgentSlots: number;
   subscription?: {
     status: SubscriptionStatus;
     stripeCustomerId?: string;
@@ -50,7 +52,8 @@ export interface UserResponse {
   displayName?: string;
   tier: UserTier;
   paidAgentSlots: number;
-  /** Total agent limit: 2 free + paidAgentSlots */
+  byoAgentSlots: number;
+  /** Total agent limit: 1 free + paidAgentSlots + byoAgentSlots */
   maxAgents: number;
   quotas: User['quotas'];
   usage: {
@@ -139,7 +142,7 @@ export class UserModel {
     return this.mapRow(row);
   }
 
-  async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId' | 'displayName' | 'paidAgentSlots'>>): Promise<User> {
+  async update(id: string, data: Partial<Pick<User, 'tier' | 'subscription' | 'quotas' | 'githubId' | 'displayName' | 'paidAgentSlots' | 'byoAgentSlots'>>): Promise<User> {
     const db = getDb();
     const [row] = await db.update(users)
       .set({ ...data, updatedAt: new Date() })
@@ -308,13 +311,15 @@ export class UserModel {
 
   toResponse(user: User): UserResponse {
     const paidSlots = user.paidAgentSlots || 0;
+    const byoSlots = user.byoAgentSlots || 0;
     return {
       id: user.id,
       email: user.email,
       displayName: user.displayName,
       tier: user.tier,
       paidAgentSlots: paidSlots,
-      maxAgents: 2 + paidSlots,
+      byoAgentSlots: byoSlots,
+      maxAgents: 1 + paidSlots + byoSlots,
       quotas: user.quotas,
       usage: {
         projectsCount: user.usage.projectsCount,
@@ -334,6 +339,7 @@ export class UserModel {
       githubId: row.githubId ?? undefined,
       tier: row.tier as UserTier,
       paidAgentSlots: row.paidAgentSlots ?? 0,
+      byoAgentSlots: row.byoAgentSlots ?? 0,
       subscription: row.subscription ?? undefined,
       quotas: row.quotas,
       usage: row.usage,

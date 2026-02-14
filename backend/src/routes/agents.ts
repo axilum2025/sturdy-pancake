@@ -88,6 +88,7 @@ agentsRouter.post('/quick-create', async (req: Request, res: Response) => {
 
     const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
     const paidAgentSlots = (req as AuthenticatedRequest).user?.paidAgentSlots || 0;
+    const byoAgentSlots = (req as AuthenticatedRequest).user?.byoAgentSlots || 0;
     const lang = language || 'fr';
 
     // Available built-in tools the AI can choose from
@@ -169,7 +170,7 @@ Rules:
     };
 
     // Create the agent
-    const agent = await agentModel.create(userId, { name, description: agentDesc, config }, userTier, paidAgentSlots);
+    const agent = await agentModel.create(userId, { name, description: agentDesc, config }, userTier, paidAgentSlots, byoAgentSlots);
     console.log('[QuickCreate] Agent created:', agent.id, name);
 
     res.status(201).json(agentModel.toResponse(agent));
@@ -194,11 +195,12 @@ agentsRouter.post('/', validate(createAgentSchema), async (req: Request, res: Re
 
     const userTier = (req as AuthenticatedRequest).user?.tier || 'free';
     const paidAgentSlots = (req as AuthenticatedRequest).user?.paidAgentSlots || 0;
+    const byoAgentSlots = (req as AuthenticatedRequest).user?.byoAgentSlots || 0;
     const { name, description, config } = req.body as AgentCreateDTO & { config?: any };
 
-    console.log('[Agents] Processing creation:', { name, userTier, paidAgentSlots });
+    console.log('[Agents] Processing creation:', { name, userTier, paidAgentSlots, byoAgentSlots });
 
-    const agent = await agentModel.create(userId, { name, description, config }, userTier, paidAgentSlots);
+    const agent = await agentModel.create(userId, { name, description, config }, userTier, paidAgentSlots, byoAgentSlots);
     console.log('[Agents] Agent created successfully:', agent.id);
     res.status(201).json(agentModel.toResponse(agent));
   } catch (error: any) {
@@ -259,8 +261,8 @@ agentsRouter.patch('/:id/config', validate(updateAgentConfigSchema), async (req:
     if (config.model) {
       config.model = enforceModelForTier(config.model, user?.tier || 'free');
     }
-    // hideBranding is a paid-only feature
-    if (config.hideBranding && (!user || user.tier === 'free')) {
+    // hideBranding is BYO-only feature
+    if (config.hideBranding && (!user || user.tier !== 'byo')) {
       config.hideBranding = false;
     }
     const agent = await agentModel.updateConfig(req.params.id, config);

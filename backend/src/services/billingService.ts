@@ -25,10 +25,15 @@ function getStripe(): Stripe {
 // ----------------------------------------------------------
 export const PLANS = {
   free: { name: 'Free', price: 0, priceId: '' },
-  agent: {
-    name: 'Agent Slot',
-    price: 3,
+  extra: {
+    name: 'Extra Agent',
+    price: 5.99,
     priceId: process.env.STRIPE_AGENT_PRICE_ID || '',
+  },
+  byo: {
+    name: 'BYO LLM Agent',
+    price: 3.99,
+    priceId: process.env.STRIPE_BYO_PRICE_ID || '',
   },
 } as const;
 
@@ -39,10 +44,14 @@ export async function createCheckoutSession(
   userId: string,
   userEmail: string,
   quantity: number,
+  planType: 'extra' | 'byo',
   successUrl: string,
   cancelUrl: string,
 ): Promise<{ url: string }> {
   const stripe = getStripe();
+
+  const plan = planType === 'byo' ? PLANS.byo : PLANS.extra;
+  if (!plan.priceId) throw new Error(`Stripe price ID not configured for ${planType} plan`);
 
   // Fetch or create Stripe customer
   const user = await userModel.findById(userId);
@@ -61,15 +70,15 @@ export async function createCheckoutSession(
     mode: 'subscription',
     line_items: [
       {
-        price: PLANS.agent.priceId,
+        price: plan.priceId,
         quantity,
       },
     ],
     success_url: successUrl,
     cancel_url: cancelUrl,
-    metadata: { userId, quantity: String(quantity) },
+    metadata: { userId, quantity: String(quantity), planType },
     subscription_data: {
-      metadata: { userId, quantity: String(quantity) },
+      metadata: { userId, quantity: String(quantity), planType },
     },
   });
 
@@ -125,20 +134,26 @@ export async function handleWebhookEvent(
         ? new Date((sub as any).current_period_end * 1000).toISOString()
         : undefined;
 
-      // Extract quantity from subscription items (per-agent seats)
+      // Extract quantity and planType from subscription metadata
       const quantity = (sub as any).items?.data?.[0]?.quantity || parseInt(sub.metadata?.quantity || '0', 10);
+      const planType = sub.metadata?.planType || 'extra';
 
       if (status === 'active' || status === 'trialing') {
-        await userModel.update(userId, {
-          tier: quantity > 0 ? 'pro' : 'free',
-          paidAgentSlots: quantity,
+        const updateData: any = {
+          tier: quantity > 0 ? (planType === 'byo' ? 'byo' : 'pro') : 'free',
           subscription: {
             status: status as any,
             stripeCustomerId: customerId,
             subscriptionId: sub.id,
             currentPeriodEnd: periodEnd,
           },
-        });
+        };
+        if (planType === 'byo') {
+          updateData.byoAgentSlots = quantity;
+        } else {
+          updateData.paidAgentSlots = quantity;
+        }
+        await userModel.update(userId, updateData);
       } else if (status === 'past_due') {
         await userModel.update(userId, {
           subscription: {
@@ -158,15 +173,27 @@ export async function handleWebhookEvent(
       const userId = sub.metadata?.userId;
       if (!userId) break;
 
-      await userModel.update(userId, {
-        tier: 'free',
-        paidAgentSlots: 0,
+      const planType = sub.metadata?.planType || 'extra';
+      const updateData: any = {
         subscription: {
           status: 'canceled',
           stripeCustomerId: typeof sub.customer === 'string' ? sub.customer : sub.customer.id,
           subscriptionId: sub.id,
         },
-      });
+      };
+      if (planType === 'byo') {
+        updateData.byoAgentSlots = 0;
+      } else {
+        updateData.paidAgentSlots = 0;
+      }
+      // Set tier to free only if both slot types are 0
+      const user = await userModel.findById(userId);
+      const remainingExtra = planType === 'extra' ? 0 : (user?.paidAgentSlots || 0);
+      const remainingByo = planType === 'byo' ? 0 : (user?.byoAgentSlots || 0);
+      if (remainingExtra === 0 && remainingByo === 0) {
+        updateData.tier = 'free';
+      }
+      await userModel.update(userId, updateData);
       break;
     }
 

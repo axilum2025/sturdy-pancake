@@ -24,6 +24,7 @@ const ANALYTICS_RETENTION_DAYS: Record<string, number> = {
   free: 7,
   pro: 90,
   paid: 90,
+  byo: 90,
 };
 
 // ----------------------------------------------------------

@@ -7,7 +7,7 @@ import { agents } from '../db/schema';
 // ============================================================
 
 export type AgentStatus = 'draft' | 'active' | 'deployed';
-export type AgentTier = 'free' | 'pro' | 'paid';
+export type AgentTier = 'free' | 'pro' | 'paid' | 'byo';
 
 export interface AgentTool {
   id: string;
@@ -97,6 +97,7 @@ export const TIER_ALLOWED_MODELS: Record<string, string[]> = {
   free: ['openai/gpt-4.1-nano'],
   paid: ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
   pro:  ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
+  byo:  ['openai/gpt-4.1-nano', 'openai/gpt-4.1-mini'],
 };
 
 export function getAllowedModels(tier: string): string[] {
@@ -118,6 +119,7 @@ const TIER_MAX_TOKENS: Record<string, number> = {
   free: 512,
   paid: 2048,
   pro: 2048,
+  byo: 2048,
 };
 
 export function enforceMaxTokensForTier(requestedTokens: number, tier: string, isByo: boolean): number {
@@ -132,8 +134,9 @@ export function enforceMaxTokensForTier(requestedTokens: number, tier: string, i
 // ----------------------------------------------------------
 const TIER_KNOWLEDGE_LIMITS: Record<string, number> = {
   free: 2,
-  paid: 20,
-  pro: 20,
+  paid: 10,
+  pro: 10,
+  byo: 20,
 };
 
 export function getKnowledgeLimit(tier: string): number {
@@ -153,21 +156,21 @@ export function isByoLlm(config: AgentConfig): boolean {
 // ============================================================
 
 export class AgentModel {
-  async create(userId: string, data: AgentCreateDTO, userTier: AgentTier, paidAgentSlots: number = 0): Promise<Agent> {
+  async create(userId: string, data: AgentCreateDTO, userTier: AgentTier, paidAgentSlots: number = 0, byoAgentSlots: number = 0): Promise<Agent> {
     const db = getDb();
 
-    // Check agent limit: 2 free + paidAgentSlots
+    // Check agent limit: 1 free + paidAgentSlots + byoAgentSlots
     try {
       const userAgents = await db.select({ count: sql<number>`count(*)::int` })
         .from(agents)
         .where(eq(agents.userId, userId));
       const count = userAgents[0]?.count || 0;
-      const maxAgents = 2 + paidAgentSlots;
+      const maxAgents = 1 + paidAgentSlots + byoAgentSlots;
 
-      console.log(`[AgentModel] Count check: ${count}/${maxAgents} (free: 2, paid slots: ${paidAgentSlots})`);
+      console.log(`[AgentModel] Count check: ${count}/${maxAgents} (free: 1, paid slots: ${paidAgentSlots}, byo slots: ${byoAgentSlots})`);
 
       if (count >= maxAgents) {
-        throw new Error(`Agent limit reached (${maxAgents}). Add more agent slots ($3/agent/month) to create more.`);
+        throw new Error(`Agent limit reached (${maxAgents}). Add more agent slots to create more.`);
       }
     } catch (err: any) {
       console.error('[AgentModel] Quota check failed:', err);

@@ -52,8 +52,9 @@ export interface User {
   id: string;
   email: string;
   displayName?: string;
-  tier: 'free' | 'pro' | 'team';
+  tier: 'free' | 'pro' | 'byo';
   paidAgentSlots: number;
+  byoAgentSlots: number;
   maxAgents: number;
   quotas: {
     projectsMax: number;
@@ -225,7 +226,7 @@ export interface Agent {
   id: string;
   name: string;
   description?: string;
-  tier: 'free' | 'pro';
+  tier: 'free' | 'pro' | 'byo';
   config: AgentConfig;
   status: 'draft' | 'active' | 'deployed';
   slug?: string;

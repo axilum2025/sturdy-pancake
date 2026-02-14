@@ -22,7 +22,7 @@ billingRouter.get('/plans', (req: Request, res: Response) => {
         currency: 'usd',
         interval: 'month',
         features: [
-          '2 agents included',
+          '1 agent included',
           'GPT-4.1 Nano',
           '200 messages/day/agent',
           '512 tokens max per response',
@@ -31,26 +31,46 @@ billingRouter.get('/plans', (req: Request, res: Response) => {
           'Analytics (7 days)',
           'Chat history (7 days)',
           'Custom domain (slug.gilo.dev)',
+          '"Powered by GiLo" branding',
         ],
       },
       {
-        id: 'agent',
+        id: 'extra',
         name: 'Extra Agent',
-        price: 3,
+        price: 5.99,
         currency: 'usd',
         interval: 'month',
         unit: 'per agent',
         features: [
-          '$3/agent/month',
+          '$5.99/agent/month',
           'GPT-4.1 Nano + Mini',
           '500 messages/day/agent',
           '2048 tokens max per response',
-          '20 knowledge docs per agent',
-          'BYO LLM (your own API key)',
+          '10 knowledge docs per agent',
           'Webhooks',
           'Analytics (90 days + CSV export)',
           'Chat history (90 days)',
-          'Remove "Powered by GiLo" branding',
+          '"Powered by GiLo" branding',
+          'Priority support',
+        ],
+      },
+      {
+        id: 'byo',
+        name: 'BYO LLM',
+        price: 3.99,
+        currency: 'usd',
+        interval: 'month',
+        unit: 'per agent',
+        features: [
+          '$3.99/agent/month',
+          'Use your own API key',
+          'Unlimited messages',
+          'No token limits',
+          '20 knowledge docs per agent',
+          'Remove "Powered by GiLo"',
+          'Webhooks',
+          'Analytics (90 days + CSV export)',
+          'Chat history (90 days)',
           'Priority support',
         ],
       },
@@ -65,12 +85,15 @@ billingRouter.post('/checkout', authMiddleware, async (req: Request, res: Respon
   try {
     const userId = (req as AuthenticatedRequest).userId;
     const userEmail = (req as AuthenticatedRequest).user?.email;
-    const { quantity } = req.body;
+    const { quantity, planType } = req.body;
 
     const agentCount = parseInt(quantity, 10);
     if (!agentCount || agentCount < 1 || agentCount > 50) {
       return res.status(400).json({ error: 'Invalid quantity. Must be 1-50 agent slots.' });
     }
+
+    const validPlanTypes = ['extra', 'byo'];
+    const plan = validPlanTypes.includes(planType) ? planType : 'extra';
 
     if (!userEmail) {
       return res.status(400).json({ error: 'User email not found' });
@@ -81,6 +104,7 @@ billingRouter.post('/checkout', authMiddleware, async (req: Request, res: Respon
       userId,
       userEmail,
       agentCount,
+      plan,
       `${frontendUrl}/billing?success=true`,
       `${frontendUrl}/billing?canceled=true`,
     );

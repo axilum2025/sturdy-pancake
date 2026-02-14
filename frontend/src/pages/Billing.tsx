@@ -14,20 +14,22 @@ export default function Billing() {
   const [searchParams] = useSearchParams();
   const { user, refreshUser } = useAuth();
 
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<'extra' | 'byo' | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [agentQuantity, setAgentQuantity] = useState(1);
+  const [extraQuantity, setExtraQuantity] = useState(1);
+  const [byoQuantity, setByoQuantity] = useState(1);
 
   const isSuccess = searchParams.get('success') === 'true';
   const isCanceled = searchParams.get('canceled') === 'true';
 
   const paidSlots = user?.paidAgentSlots || 0;
-  const maxAgents = user?.maxAgents || (2 + paidSlots);
-  const hasPaidSlots = paidSlots > 0;
+  const byoSlots = (user as any)?.byoAgentSlots || 0;
+  const maxAgents = user?.maxAgents || (1 + paidSlots + byoSlots);
+  const hasAnyPaid = paidSlots > 0 || byoSlots > 0;
   const subscription = user?.subscription;
-  const isSubscribed = hasPaidSlots && subscription?.status === 'active';
+  const isSubscribed = hasAnyPaid && subscription?.status === 'active';
 
   useEffect(() => {
     if (isSuccess) {
@@ -39,17 +41,18 @@ export default function Billing() {
     }
   }, []);
 
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
+  const handleCheckout = async (planType: 'extra' | 'byo') => {
+    setCheckoutLoading(planType);
     setError(null);
     try {
-      const res = await api.post('/billing/checkout', { quantity: agentQuantity });
+      const quantity = planType === 'extra' ? extraQuantity : byoQuantity;
+      const res = await api.post('/billing/checkout', { quantity, planType });
       if (res.data.url) {
         window.location.href = res.data.url;
       }
     } catch (err: any) {
       setError(err.response?.data?.error || t('billing.checkoutError'));
-      setCheckoutLoading(false);
+      setCheckoutLoading(null);
     }
   };
 
@@ -67,6 +70,8 @@ export default function Billing() {
     }
   };
 
+  const monthlyTotal = (paidSlots * 5.99) + (byoSlots * 3.99);
+
   return (
     <div className="min-h-screen bg-t-page">
       <div className="fixed inset-0 bg-gradient-mesh pointer-events-none" />
@@ -74,7 +79,7 @@ export default function Billing() {
 
       {/* Header */}
       <header className="relative z-40 border-b border-t-overlay/5 glass">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16">
             <div className="flex items-center gap-3">
               <button
@@ -99,7 +104,7 @@ export default function Billing() {
         </div>
       </header>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Banners */}
         {successMessage && (
           <div className="mb-6 p-4 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center gap-3 animate-fade-in-up">
@@ -124,7 +129,10 @@ export default function Billing() {
                 <div className="flex items-center gap-2 mb-2">
                   <Crown className="w-5 h-5 text-indigo-400" />
                   <h2 className="text-lg font-bold text-t-text">
-                    {paidSlots} {t('billing.paidSlots', 'agents payants')} ({maxAgents} {t('billing.agentsTotal', 'au total')})
+                    {paidSlots > 0 && <>{paidSlots} Extra</>}
+                    {paidSlots > 0 && byoSlots > 0 && ' + '}
+                    {byoSlots > 0 && <>{byoSlots} BYO</>}
+                    {' '}({maxAgents} {t('billing.agentsTotal', 'au total')})
                   </h2>
                 </div>
                 <p className="text-sm text-t-text/50">
@@ -138,7 +146,7 @@ export default function Billing() {
                   )}
                 </p>
                 <p className="text-sm text-t-text/40 mt-1">
-                  {t('billing.monthlyTotal', 'Total mensuel')}: <span className="text-t-text/70 font-semibold">${paidSlots * 3}/mois</span>
+                  {t('billing.monthlyTotal', 'Total mensuel')}: <span className="text-t-text/70 font-semibold">${monthlyTotal.toFixed(2)}/{t('billing.month', 'mois')}</span>
                 </p>
               </div>
               <button
@@ -156,17 +164,17 @@ export default function Billing() {
         {/* Title */}
         <div className="text-center mb-10">
           <h1 className="text-2xl sm:text-3xl font-bold text-t-text mb-2">
-            {t('billing.payPerAgent', 'Payez par agent')}
+            {t('billing.payPerAgent')}
           </h1>
           <p className="text-sm text-t-text/40 max-w-lg mx-auto">
-            {t('billing.payPerAgentDesc', '2 agents gratuits inclus. Ajoutez des agents supplémentaires à $3/mois chacun.')}
+            {t('billing.payPerAgentDesc')}
           </p>
         </div>
 
-        {/* Plans grid: Free + Per-Agent */}
-        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+        {/* Plans grid: Free + Extra + BYO LLM */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {/* Free Plan */}
-          <div className="glass-card rounded-2xl p-6 sm:p-8 border border-t-overlay/10 animate-fade-in-up">
+          <div className="glass-card rounded-2xl p-6 sm:p-8 border border-t-overlay/10 animate-fade-in-up flex flex-col">
             <div className="text-center mb-6">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-blue-500/10 border border-blue-500/20">
                 <Zap className="w-7 h-7 text-blue-400" />
@@ -175,19 +183,19 @@ export default function Billing() {
               <div className="mt-3 flex items-baseline justify-center gap-1">
                 <span className="text-4xl font-bold text-t-text">$0</span>
               </div>
-              <p className="text-xs text-t-text/40 mt-1">{t('billing.forever', 'Pour toujours')}</p>
+              <p className="text-xs text-t-text/40 mt-1">{t('billing.forever')}</p>
             </div>
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-3 mb-8 flex-1">
               {[
-                t('billing.free2Agents', '2 agents inclus'),
+                t('billing.free1Agent'),
                 'GPT-4.1 Nano',
-                t('billing.free200Msg', '200 messages/jour/agent'),
-                t('billing.freeMaxTokens', '512 tokens max / réponse'),
-                t('billing.freeKnowledge', '2 documents knowledge base'),
-                t('billing.free50Mb', '50 MB stockage'),
-                t('billing.freeAnalytics', 'Analytics (7 jours)'),
-                t('billing.freeHistory', 'Historique chat (7 jours)'),
-                t('billing.freeCustomDomain', 'Domaine personnalisé (slug.gilo.dev)'),
+                t('billing.free200Msg'),
+                t('billing.freeMaxTokens'),
+                t('billing.freeKnowledge'),
+                t('billing.free50Mb'),
+                t('billing.freeAnalytics'),
+                t('billing.freeHistory'),
+                t('billing.freeCustomDomain'),
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <div className="mt-0.5 p-1 rounded-md bg-blue-500/10">
@@ -199,40 +207,39 @@ export default function Billing() {
             </ul>
             <div className="w-full py-3 rounded-xl text-sm font-medium text-center bg-blue-500/10 border border-blue-500/20 text-blue-300">
               <Check className="w-4 h-4 inline mr-1.5" />
-              {t('billing.included', 'Inclus')}
+              {t('billing.included')}
             </div>
           </div>
 
-          {/* Per-Agent Plan */}
-          <div className="relative glass-card rounded-2xl p-6 sm:p-8 border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/5 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          {/* Extra Plan */}
+          <div className="relative glass-card rounded-2xl p-6 sm:p-8 border-2 border-indigo-500/30 shadow-lg shadow-indigo-500/5 animate-fade-in-up flex flex-col" style={{ animationDelay: '100ms' }}>
             <div className="absolute -top-3 left-1/2 -translate-x-1/2">
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 text-white shadow-lg shadow-indigo-500/30">
-                {t('billing.flexible', 'Flexible')}
+                {t('billing.flexible')}
               </span>
             </div>
             <div className="text-center mb-6">
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30">
                 <Crown className="w-7 h-7 text-indigo-400" />
               </div>
-              <h3 className="text-xl font-bold text-t-text">{t('billing.extraAgents', 'Agents supplémentaires')}</h3>
+              <h3 className="text-xl font-bold text-t-text">{t('billing.extraAgents')}</h3>
               <div className="mt-3 flex items-baseline justify-center gap-1">
-                <span className="text-4xl font-bold text-t-text">$3</span>
-                <span className="text-sm text-t-text/40">/{t('billing.perAgentMonth', 'agent/mois')}</span>
+                <span className="text-4xl font-bold text-t-text">$5.99</span>
+                <span className="text-sm text-t-text/40">/{t('billing.perAgentMonth')}</span>
               </div>
             </div>
 
-            <ul className="space-y-3 mb-6">
+            <ul className="space-y-3 mb-6 flex-1">
               {[
-                t('billing.paidNanoMini', 'GPT-4.1 Nano + Mini'),
-                t('billing.paid500Msg', '500 messages/jour/agent'),
-                t('billing.paidMaxTokens', '2048 tokens max / réponse'),
-                t('billing.paidKnowledge', '20 documents knowledge base'),
-                t('billing.paidByoLlm', 'BYO LLM (votre propre clé API)'),
-                t('billing.paidWebhooks', 'Webhooks'),
-                t('billing.paidAnalytics', 'Analytics (90 jours + export CSV)'),
-                t('billing.paidHistory', 'Historique chat (90 jours)'),
-                t('billing.paidBranding', 'Retirer "Powered by GiLo"'),
-                t('billing.paidPriority', 'Support prioritaire'),
+                t('billing.extraNanoMini'),
+                t('billing.extra500Msg'),
+                t('billing.extraMaxTokens'),
+                t('billing.extraKnowledge'),
+                t('billing.extraWebhooks'),
+                t('billing.extraAnalytics'),
+                t('billing.extraHistory'),
+                t('billing.extraBranding'),
+                t('billing.extraPriority'),
               ].map((f, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <div className="mt-0.5 p-1 rounded-md bg-indigo-500/10">
@@ -245,44 +252,128 @@ export default function Billing() {
 
             {/* Quantity Selector */}
             <div className="mb-6 p-4 rounded-xl bg-t-overlay/[0.04] border border-t-overlay/10">
-              <label className="block text-xs text-t-text/50 mb-2">{t('billing.howMany', 'Combien d\'agents supplémentaires ?')}</label>
+              <label className="block text-xs text-t-text/50 mb-2">{t('billing.howMany')}</label>
               <div className="flex items-center justify-between">
                 <button
-                  onClick={() => setAgentQuantity(Math.max(1, agentQuantity - 1))}
+                  onClick={() => setExtraQuantity(Math.max(1, extraQuantity - 1))}
                   className="p-2 rounded-lg bg-t-overlay/10 hover:bg-t-overlay/20 transition-all text-t-text/60"
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 <div className="text-center">
-                  <span className="text-3xl font-bold text-t-text">{agentQuantity}</span>
-                  <p className="text-xs text-t-text/40">{t('billing.extraAgentsLabel', 'agents en plus')}</p>
+                  <span className="text-3xl font-bold text-t-text">{extraQuantity}</span>
+                  <p className="text-xs text-t-text/40">{t('billing.extraAgentsLabel')}</p>
                 </div>
                 <button
-                  onClick={() => setAgentQuantity(Math.min(48, agentQuantity + 1))}
+                  onClick={() => setExtraQuantity(Math.min(48, extraQuantity + 1))}
                   className="p-2 rounded-lg bg-t-overlay/10 hover:bg-t-overlay/20 transition-all text-t-text/60"
                 >
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              <div className="mt-3 flex justify-between text-sm">
-                <span className="text-t-text/50">{t('billing.totalAgents', 'Total agents')}: <span className="text-t-text/80 font-medium">{2 + agentQuantity}</span></span>
-                <span className="text-indigo-400 font-semibold">${agentQuantity * 3}/{t('billing.month', 'mois')}</span>
+              <div className="mt-3 text-right">
+                <span className="text-indigo-400 font-semibold">${(extraQuantity * 5.99).toFixed(2)}/{t('billing.month')}</span>
               </div>
             </div>
 
             <button
-              onClick={isSubscribed ? handlePortal : handleCheckout}
-              disabled={checkoutLoading || portalLoading}
+              onClick={paidSlots > 0 ? handlePortal : () => handleCheckout('extra')}
+              disabled={checkoutLoading !== null || portalLoading}
               className="w-full py-3 rounded-xl text-sm font-semibold btn-gradient glow-blue flex items-center justify-center gap-2 disabled:opacity-50"
             >
-              {(checkoutLoading || portalLoading) ? (
+              {(checkoutLoading === 'extra' || (paidSlots > 0 && portalLoading)) ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <Crown className="w-4 h-4" />
-                  {isSubscribed
-                    ? t('billing.manageAgents', 'Gérer mes agents (portail)')
-                    : t('billing.getStarted', 'Commencer — $' + (agentQuantity * 3) + '/mois')
+                  {paidSlots > 0
+                    ? t('billing.manageAgents')
+                    : t('billing.getStartedExtra')
+                  }
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* BYO LLM Plan */}
+          <div className="relative glass-card rounded-2xl p-6 sm:p-8 border-2 border-amber-500/30 shadow-lg shadow-amber-500/5 animate-fade-in-up flex flex-col" style={{ animationDelay: '200ms' }}>
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-500 text-white shadow-lg shadow-amber-500/30">
+                BYO LLM
+              </span>
+            </div>
+            <div className="text-center mb-6">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                <Key className="w-7 h-7 text-amber-400" />
+              </div>
+              <h3 className="text-xl font-bold text-t-text">BYO LLM</h3>
+              <div className="mt-3 flex items-baseline justify-center gap-1">
+                <span className="text-4xl font-bold text-t-text">$3.99</span>
+                <span className="text-sm text-t-text/40">/{t('billing.perAgentMonth')}</span>
+              </div>
+            </div>
+
+            <ul className="space-y-3 mb-6 flex-1">
+              {[
+                t('billing.byoOwnKey'),
+                t('billing.byoNanoMini'),
+                t('billing.byoUnlimited'),
+                t('billing.byoMaxTokens'),
+                t('billing.byoKnowledge'),
+                t('billing.byoWebhooks'),
+                t('billing.byoAnalytics'),
+                t('billing.byoHistory'),
+                t('billing.byoBranding'),
+                t('billing.byoPriority'),
+              ].map((f, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <div className="mt-0.5 p-1 rounded-md bg-amber-500/10">
+                    <Check className="w-3.5 h-3.5 text-amber-400" />
+                  </div>
+                  <span className="text-sm text-t-text/70">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* Quantity Selector */}
+            <div className="mb-6 p-4 rounded-xl bg-t-overlay/[0.04] border border-t-overlay/10">
+              <label className="block text-xs text-t-text/50 mb-2">{t('billing.howManyByo')}</label>
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => setByoQuantity(Math.max(1, byoQuantity - 1))}
+                  className="p-2 rounded-lg bg-t-overlay/10 hover:bg-t-overlay/20 transition-all text-t-text/60"
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <div className="text-center">
+                  <span className="text-3xl font-bold text-t-text">{byoQuantity}</span>
+                  <p className="text-xs text-t-text/40">{t('billing.byoAgentsLabel')}</p>
+                </div>
+                <button
+                  onClick={() => setByoQuantity(Math.min(48, byoQuantity + 1))}
+                  className="p-2 rounded-lg bg-t-overlay/10 hover:bg-t-overlay/20 transition-all text-t-text/60"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="mt-3 text-right">
+                <span className="text-amber-400 font-semibold">${(byoQuantity * 3.99).toFixed(2)}/{t('billing.month')}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={byoSlots > 0 ? handlePortal : () => handleCheckout('byo')}
+              disabled={checkoutLoading !== null || portalLoading}
+              className="w-full py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+            >
+              {(checkoutLoading === 'byo' || (byoSlots > 0 && portalLoading)) ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <Key className="w-4 h-4" />
+                  {byoSlots > 0
+                    ? t('billing.manageAgents')
+                    : t('billing.getStartedByo')
                   }
                 </>
               )}
@@ -291,41 +382,44 @@ export default function Billing() {
         </div>
 
         {/* Comparison Table */}
-        <div className="mt-16 max-w-3xl mx-auto">
+        <div className="mt-16 max-w-5xl mx-auto">
           <h2 className="text-lg font-bold text-t-text text-center mb-6">{t('billing.comparison')}</h2>
-          <div className="glass-card rounded-2xl overflow-hidden border border-t-overlay/10">
+          <div className="glass-card rounded-2xl overflow-hidden border border-t-overlay/10 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-t-overlay/10">
                   <th className="text-left px-6 py-4 text-t-text/50 font-medium">{t('billing.feature')}</th>
-                  <th className="text-center px-4 py-4 text-blue-400 font-semibold">{t('billing.freeAgents', 'Agents gratuits')}</th>
+                  <th className="text-center px-4 py-4 text-blue-400 font-semibold">Free</th>
                   <th className="text-center px-4 py-4 text-indigo-400 font-semibold">
-                    {t('billing.paidAgentsLabel', 'Agents payants')}
-                    <Crown className="w-3 h-3 inline ml-1" />
+                    Extra <Crown className="w-3 h-3 inline ml-1" />
+                  </th>
+                  <th className="text-center px-4 py-4 text-amber-400 font-semibold">
+                    BYO LLM <Key className="w-3 h-3 inline ml-1" />
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  [t('billing.compModel', 'Modèle IA'), 'GPT-4.1 Nano', 'Nano + Mini'],
-                  [t('billing.compMessages', 'Messages/jour'), '200', '500'],
-                  [t('billing.compMaxTokens', 'Tokens max / réponse'), '512', '2048'],
-                  [t('billing.compKnowledge', 'Knowledge base (docs)'), '2', '20'],
-                  [t('billing.compByoLlm', 'BYO LLM'), '—', <Check key="byo" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compWebhooks', 'Webhooks'), '—', <Check key="wh2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compAnalytics', 'Analytics'), t('billing.comp7d', '7 jours'), t('billing.comp90d', '90 jours + CSV')],
-                  [t('billing.compHistory', 'Historique chat'), t('billing.comp7d', '7 jours'), t('billing.comp90dPlain', '90 jours')],
-                  [t('billing.compBranding', '"Powered by GiLo"'), t('billing.compRequired', 'Obligatoire'), t('billing.compRemovable', 'Retirable')],
-                  [t('billing.compCustomDomain', 'Custom domain'), <Check key="cd1" className="w-4 h-4 text-green-400 inline" />, <Check key="cd2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compWidget', 'Widget embed'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compStore', 'Store'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compApi', 'API publique'), <Check key="a1" className="w-4 h-4 text-green-400 inline" />, <Check key="a2" className="w-4 h-4 text-green-400 inline" />],
-                  [t('billing.compSupport', 'Support prioritaire'), '—', <Check key="sp" className="w-4 h-4 text-green-400 inline" />],
-                ].map(([feature, free, paid], i) => (
+                  [t('billing.compPrice'), '$0', '$5.99/' + t('billing.month'), '$3.99/' + t('billing.month')],
+                  [t('billing.compModel'), 'GPT-4.1 Nano', 'Nano + Mini', 'Nano + Mini + ' + t('billing.compOwnKey')],
+                  [t('billing.compMessages'), '200', '500', t('billing.unlimited')],
+                  [t('billing.compMaxTokens'), '512', '2048', '2048'],
+                  [t('billing.compKnowledge'), '2', '10', '20'],
+                  [t('billing.compWebhooks'), '—', <Check key="wh2" className="w-4 h-4 text-green-400 inline" />, <Check key="wh3" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compAnalytics'), t('billing.comp7d'), t('billing.comp90d'), t('billing.comp90d')],
+                  [t('billing.compHistory'), t('billing.comp7d'), t('billing.comp90dPlain'), t('billing.comp90dPlain')],
+                  [t('billing.compBranding'), t('billing.compRequired'), t('billing.compRequired'), t('billing.compRemovable')],
+                  [t('billing.compCustomDomain'), <Check key="cd1" className="w-4 h-4 text-green-400 inline" />, <Check key="cd2" className="w-4 h-4 text-green-400 inline" />, <Check key="cd3" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compWidget'), <Check key="w1" className="w-4 h-4 text-green-400 inline" />, <Check key="w2" className="w-4 h-4 text-green-400 inline" />, <Check key="w3" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compStore'), <Check key="s1" className="w-4 h-4 text-green-400 inline" />, <Check key="s2" className="w-4 h-4 text-green-400 inline" />, <Check key="s3" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compApi'), <Check key="a1" className="w-4 h-4 text-green-400 inline" />, <Check key="a2" className="w-4 h-4 text-green-400 inline" />, <Check key="a3" className="w-4 h-4 text-green-400 inline" />],
+                  [t('billing.compSupport'), '—', <Check key="sp2" className="w-4 h-4 text-green-400 inline" />, <Check key="sp3" className="w-4 h-4 text-green-400 inline" />],
+                ].map(([feature, free, extra, byo], i) => (
                   <tr key={i} className={`border-b border-t-overlay/5 ${i % 2 === 0 ? 'bg-t-overlay/[0.02]' : ''}`}>
                     <td className="px-6 py-3 text-t-text/70">{feature}</td>
                     <td className="px-4 py-3 text-center text-t-text/50">{free}</td>
-                    <td className="px-4 py-3 text-center text-t-text/70 font-medium">{paid}</td>
+                    <td className="px-4 py-3 text-center text-t-text/70 font-medium">{extra}</td>
+                    <td className="px-4 py-3 text-center text-t-text/70 font-medium">{byo}</td>
                   </tr>
                 ))}
               </tbody>
@@ -334,15 +428,15 @@ export default function Billing() {
         </div>
 
         {/* BYO LLM highlight */}
-        <div className="mt-12 max-w-3xl mx-auto glass-card rounded-2xl p-6 border border-amber-500/20 animate-fade-in-up">
+        <div className="mt-12 max-w-5xl mx-auto glass-card rounded-2xl p-6 border border-amber-500/20 animate-fade-in-up">
           <div className="flex items-start gap-4">
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <Key className="w-6 h-6 text-amber-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-t-text mb-1">BYO LLM — {t('billing.byoTitle', 'Apportez votre propre clé API')}</h3>
+              <h3 className="text-base font-bold text-t-text mb-1">BYO LLM — {t('billing.byoTitle')}</h3>
               <p className="text-sm text-t-text/50 leading-relaxed">
-                {t('billing.byoDesc', 'Connectez votre propre clé OpenAI, Anthropic, Mistral ou tout fournisseur compatible. Coût GiLo = $0 sur le LLM. Vous payez directement votre fournisseur et gardez un contrôle total.')}
+                {t('billing.byoDesc')}
               </p>
             </div>
           </div>
@@ -354,20 +448,20 @@ export default function Billing() {
           <div className="space-y-3">
             {[
               {
-                q: t('billing.faq1q', 'Comment fonctionne la facturation ?'),
-                a: t('billing.faq1a', 'Vous avez 2 agents gratuits. Chaque agent supplémentaire coûte $3/mois. La facturation s\'adapte automatiquement au nombre d\'agents.'),
+                q: t('billing.faq1q'),
+                a: t('billing.faq1a'),
               },
               {
-                q: t('billing.faq2q', 'Puis-je annuler à tout moment ?'),
-                a: t('billing.faq2a', 'Oui, vous pouvez annuler ou réduire le nombre d\'agents à tout moment depuis le portail de gestion.'),
+                q: t('billing.faq2q'),
+                a: t('billing.faq2a'),
               },
               {
-                q: t('billing.faqByoQ', 'Qu\'est-ce que BYO LLM ?'),
-                a: t('billing.faqByoA', 'BYO LLM (Bring Your Own LLM) vous permet d\'utiliser votre propre clé API. GiLo ne fait que proxyer les requêtes — coût pour nous = $0, contrôle total pour vous.'),
+                q: t('billing.faqByoQ'),
+                a: t('billing.faqByoA'),
               },
               {
-                q: t('billing.faq4q', 'Quels moyens de paiement acceptez-vous ?'),
-                a: t('billing.faq4a', 'Nous acceptons toutes les cartes bancaires via Stripe (Visa, Mastercard, etc.).'),
+                q: t('billing.faq4q'),
+                a: t('billing.faq4a'),
               },
             ].map((item, i) => (
               <details key={i} className="glass-card rounded-xl border border-t-overlay/10 group">

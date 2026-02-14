@@ -14,6 +14,7 @@ const DAILY_LIMITS: Record<string, number> = {
   free: 200,
   pro: 500,
   paid: 500,
+  byo: Infinity,
 };
 
 // --------------- In-memory fallback ---------------
