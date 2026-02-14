@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Copy, Check, Key, Trash2, Code2, Terminal, RefreshCw, AlertTriangle, Shield, Globe, MessageSquare } from 'lucide-react';
+import { X, Copy, Check, Key, Trash2, Terminal, RefreshCw, AlertTriangle, Shield, Globe, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createApiKey, listApiKeys, revokeApiKey, ApiKeyResponse } from '../services/api';
 
@@ -348,8 +348,7 @@ chat("Hello!").then(console.log);`;
 
             {/* Code Snippets */}
             <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Code2 className="w-4 h-4 text-indigo-400" />
+              <div className="mb-3">
                 <label className="text-sm font-medium text-t-text/70">{t('apiIntegration.codeExamples')}</label>
               </div>
 

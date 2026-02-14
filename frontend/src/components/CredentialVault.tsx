@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Shield, Plus, Trash2, Eye, EyeOff, Key, Lock, RefreshCw, AlertTriangle, Check } from 'lucide-react';
+import { Trash2, Eye, EyeOff, RefreshCw, AlertTriangle, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { listCredentials, saveCredential, deleteCredential, CredentialEntry } from '../services/api';
 
@@ -91,26 +91,21 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-amber-400" />
           <h3 className="text-sm font-semibold text-t-text/80">
             {t('credentials.title', 'Credential Vault')}
           </h3>
-          <Lock className="w-3 h-3 text-green-400" />
-          <span className="text-[10px] text-green-400/60 font-mono">AES-256-GCM</span>
         </div>
         <button
           onClick={() => setShowAdd(!showAdd)}
           className="btn-outline-glow px-3 py-1.5 rounded-lg text-xs flex items-center gap-1"
         >
-          <Plus className="w-3 h-3" />
           {t('credentials.add', 'Add Credential')}
         </button>
       </div>
 
       {/* Security Info */}
       <div className="p-3 rounded-xl bg-green-500/5 border border-green-500/10">
-        <div className="flex items-start gap-2">
-          <Lock className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+        <div>
           <div>
             <p className="text-xs text-green-300/80 font-medium">
               {t('credentials.securityTitle', 'End-to-End Encrypted Storage')}
@@ -231,7 +226,6 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
               className="flex-1 btn-gradient px-3 py-2 text-sm rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {saving && <RefreshCw className="w-3 h-3 animate-spin" />}
-              <Lock className="w-3 h-3" />
               {t('credentials.saveEncrypted', 'Save Encrypted')}
             </button>
           </div>
@@ -245,7 +239,6 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
         </div>
       ) : credentials.length === 0 ? (
         <div className="text-center py-8 bg-t-overlay/[0.02] rounded-xl border border-dashed border-t-overlay/10">
-          <Key className="w-10 h-10 mx-auto mb-2 text-t-text/15" />
           <p className="text-sm text-t-text/30">
             {t('credentials.empty', 'No credentials stored yet')}
           </p>
@@ -273,7 +266,7 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300/70">
                       {cred.key}
                     </span>
-                    <Lock className="w-3 h-3 text-green-400/50" />
+
                   </div>
                   <p className="text-xs text-t-text/35 mt-0.5 font-mono">{cred.maskedValue}</p>
                 </div>
@@ -313,8 +306,8 @@ export default function CredentialVault({ agentId }: CredentialVaultProps) {
                     <td className="py-1.5 px-2 text-t-text/50">{cred.key}</td>
                     <td className="py-1.5 px-2 text-t-text/40 font-mono">{cred.maskedValue}</td>
                     <td className="py-1.5 px-2">
-                      <span className="text-green-400 flex items-center gap-1">
-                        <Lock className="w-2.5 h-2.5" /> Encrypted
+                      <span className="text-green-400">
+                        Encrypted
                       </span>
                     </td>
                   </tr>

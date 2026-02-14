@@ -351,7 +351,6 @@ export default function AgentConfig({ agentId, onClose }: AgentConfigProps) {
             {/* Agent Language */}
             <div>
               <label className="block text-sm font-medium text-t-text/60 mb-2">
-                <Globe className="w-3.5 h-3.5 inline mr-1.5" />
                 {t('agentConfig.language')}
               </label>
               <p className="text-xs text-t-text/35 mb-2">
